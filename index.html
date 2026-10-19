@@ -182,7 +182,12 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .sw-row{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
 .sw-t{font-weight:600}
 .sw-t span{color:var(--muted);font-weight:400;font-size:13px;margin-left:4px}
-.sws{display:flex;flex-wrap:wrap;gap:8px}
+.sws{display:flex;flex-wrap:wrap;gap:8px 6px}
+.swc{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:40px}
+.prc{font-style:normal;font-family:var(--display);font-weight:700;font-size:10px;line-height:1;color:var(--sodium);white-space:nowrap}
+.chip .prc{font-size:11px;margin-left:2px}
+.wopt .prc{font-size:11px}
+.sw.lk{opacity:.75}
 .lz .sw{background:radial-gradient(circle at 50% 50%, #fff 0 12%, var(--c) 45%, color-mix(in srgb, var(--c) 55%, #000) 100%);box-shadow:0 0 0 1px var(--line), 0 0 10px color-mix(in srgb, var(--c) 70%, transparent)}
 .sw{width:36px;height:36px;border-radius:50%;background:var(--c);border:3px solid var(--panel);box-shadow:0 0 0 1px var(--line)}
 .sw.chr{background:linear-gradient(170deg,var(--c1) 0%,var(--c2) 30%,var(--c3) 47%,var(--c4) 51%,var(--c5) 57%,var(--c6) 82%,var(--c7) 100%)}
@@ -488,6 +493,7 @@ function load(data){
     if(old.motor || old.cambio || old.nitro) S.tune[S.car] = {motor:conv(old.motor), cambio:conv(old.cambio), nitro:conv(old.nitro)};
   }
   S.upg = {patrocinio:(src.upg && src.upg.patrocinio) || 0};
+  cosMigrate();
 }
 // autosave: this device (localStorage) and the player's own cloud slot, newest wins on load
 const CLOUD = {ref:null, busy:false, again:false, last:"", told:false};
@@ -636,6 +642,8 @@ function pvApply(id, k){
   if(!pv || id !== S.car) return k;
   const o = Object.assign({}, k);
   if(pv.part) o[pv.part] = pv.tier;
+  if(pv.cos) o[pv.cos] = pv.val;
+  if(pv.stk) o.stickers = (o.stickers || []).concat([pv.stk]);
   if(pv.preset){
     const pr = PRESETS.find(x => x.id === pv.preset);
     if(pr){ Object.assign(o, pr.parts); o.wmodel = pr.wmodel; o.aro = presetAro(pr, carById(id)); if(pr.rim) o.rim = pr.rim; if(pr.orig) Object.entries(ORIG_LOOK).forEach(([f, v]) => { o[f] = Array.isArray(v) ? [] : v; }); }
@@ -705,8 +713,9 @@ function tuneOf(id){
 function carPerf(id, t){
   t = t || tuneOf(id);
   const c = carById(id);
-  return {vk:c.vk * (1 + 0.025 * t.motor) * (1 + 0.008 * (t.turbo || 0)) * (1 + partSum(id, "vel")),
-    t100:Math.max(1.8, c.t100 * (1 - 0.03 * t.cambio) * (1 - 0.015 * (t.pneu || 0)) * (1 - 0.01 * (t.turbo || 0)) * (1 - partSum(id, "arr")))};
+  // tuning makes a car sharper, never a different class of car: past a point you need a better car
+  return {vk:c.vk * (1 + 0.015 * t.motor) * (1 + 0.006 * (t.turbo || 0)) * (1 + partSum(id, "vel") * 0.7),
+    t100:Math.max(1.8, c.t100 * (1 - 0.018 * t.cambio) * (1 - 0.009 * (t.pneu || 0)) * (1 - 0.006 * (t.turbo || 0)) * (1 - partSum(id, "arr") * 0.7))};
 }
 function playerStats(t){
   t = t || tuneOf(S.car);
@@ -734,12 +743,23 @@ const LEAGUES = [
 const leagueOf = l => Math.min(LEAGUES.length - 1, Math.floor((l - 1) / 10));
 function rivalStats(l){
   const Lg = LEAGUES[leagueOf(l)], pos = l > LEAGUES.length * 10 ? 1 : ((l - 1) % 10) / 9;
-  const pe = Math.pow(pos, 0.8);
-  let vk = (Lg.v[0] + (Lg.v[1] - Lg.v[0]) * pe) * 1.03, t100 = (Lg.t[0] + (Lg.t[1] - Lg.t[0]) * pe) * 0.95;
+  // rivals get sharper league by league: the first chapter teaches, the later ones make you earn every win
+  const pe = Math.pow(pos, 0.75), lg = leagueOf(l);
+  let vk = (Lg.v[0] + (Lg.v[1] - Lg.v[0]) * pe) * (0.97 + 0.03 * lg), t100 = (Lg.t[0] + (Lg.t[1] - Lg.t[0]) * pe) * (1.02 - 0.03 * lg);
   const et = eventType(l);
-  if(isBoss(l)){ vk *= 1.05; t100 *= 0.92; }
-  if(et === "aposta"){ vk *= 1.02; t100 *= 0.97; }
-  if(et === "nemesis"){ vk *= 1.06; t100 *= 0.92; }
+  if(isBoss(l)){ vk *= lg ? 1.05 : 1.02; t100 *= lg ? 0.92 : 0.97; }
+  if(et === "aposta"){ vk *= 1.04; t100 *= 0.94; }
+  if(et === "nemesis"){ vk *= 1.08; t100 *= 0.88; }
+  const V = vk / 3.6;
+  return {vmax:V, vk, t100, A:accelFor(V, t100)};
+}
+// the street notices a fast car: when the player's car outclasses the league, rivals show up better prepared,
+// closing most of the gap, so an over-tuned car still wins but has to fight for it
+function rubberBand(rs, ps){
+  const k = leagueOf(S.level) ? 0.92 : 0.6;
+  let vk = rs.vk, t100 = rs.t100;
+  if(ps.vk > vk) vk += (ps.vk - vk) * k;
+  if(ps.t100 < t100) t100 -= (t100 - ps.t100) * k;
   const V = vk / 3.6;
   return {vmax:V, vk, t100, A:accelFor(V, t100)};
 }
@@ -1383,7 +1403,7 @@ function openSponsors(cost){
 function rewardFor(l, patro){
   if(patro === undefined) patro = S.upg.patrocinio;
   const et = eventType(l), fameK = 1 + Math.min(0.25, (S.fame || 0) / 80000);
-  return 26 * Math.pow(1.22, l - 1) * Math.pow(1.075, patro) * tokMoney() * fameK * (isBoss(l) ? 4 : et === "nemesis" ? 5 : et === "aposta" ? 2.5 : 1);
+  return 36 * Math.pow(1.21, l - 1) * Math.pow(1.065, patro) * tokMoney() * fameK * (isBoss(l) ? 4 : et === "nemesis" ? 5 : et === "aposta" ? 2.5 : 1);
 }
 function rivalName(l){
   const t = eventType(l);
@@ -1507,13 +1527,13 @@ function setTrackText(){
   document.getElementById("trackLen").textContent = R.track.name + " · " + R.track.distName + (R.rain ? " · pista molhada (+25%)" : "") + " · prêmio do evento " + money(Math.max(100, rewardFor(R.level) * 1.2 * (R.rain ? 1.25 : 1) * (1 + spBonus("event"))));
 }
 function newRace(track){
-  const ps = playerStats(), rs = rivalStats(S.level), tr = track || pickTrack();
-  const jit = 1 + (Math.random() * 0.04 - 0.02);
+  const ps = playerStats(), rs = rubberBand(rivalStats(S.level), ps), tr = track || pickTrack();
+  const jit = 1 + (Math.random() - 0.45) * Math.min(0.08, 0.03 + 0.01 * leagueOf(S.level));   // the rival's form on the night: some nights they hook up better
   smoke.length = 0;
   R = {L:tr.L, track:tr, distK:Math.sqrt(tr.L / 402), level:S.level, heat:S.series.heat, phase:"count", t:0, time:0, result:null, next:null, event:null,
     ppm:260 / Math.max(rs.vmax, ps.vmax * 0.9),
     p:{x:0, v:0, top:0, vmax:ps.vmax, A:ps.A, boost:ps.boost, ndur:ps.ndur, grip:ps.grip, tq:ps.tq, nitroT:0, used:false, fin:null, locked:tuneOf(S.car).nitro < 3},
-    r:{x:0, v:0, vmax:rs.vmax * jit, A:rs.A * jit, boost:leagueOf(S.level) >= 1 ? 0.05 + 0.015 * leagueOf(S.level) : 0, ndur:1.4 + 0.15 * leagueOf(S.level), nitroT:0, used:false, fin:null, color:rivalColor(S.level), model:rivalModel(S.level), look:rivalLook(S.level)}};
+    r:{x:0, v:0, vmax:rs.vmax * jit, A:rs.A * jit, boost:Math.max(leagueOf(S.level) >= 1 ? 0.06 + 0.02 * leagueOf(S.level) : 0.03, ps.boost * 0.92), ndur:Math.max(1.5 + 0.2 * leagueOf(S.level), ps.ndur * 0.92), tq:ps.tq * 0.92, nitroT:0, used:false, fin:null, color:rivalColor(S.level), model:rivalModel(S.level), look:rivalLook(S.level)}};
   if(S.series.rain === undefined) S.series.rain = (S.stats.wins + S.stats.losses) >= 3 && Math.random() < 0.3;
   R.rain = !!S.series.rain; R.flash = 0;
   const et = eventType(S.level), tagT = {boss:"CHEFE", nemesis:"DESAFIO", aposta:"APOSTA"}[et];
@@ -1558,7 +1578,7 @@ function step(dt){
     const nOn = p.nitroT > 0;
     if(nOn) p.nitroT = Math.max(0, p.nitroT - dt);
     p.v = Math.max(0, p.v + accel(p, nOn) * dt); p.x += p.v * dt; p.top = Math.max(p.top, p.v);
-    if(!r.used && r.boost && r.x >= R.L * 0.5){ r.used = true; r.nitroT = r.ndur; }
+    if(!r.used && r.boost && r.x >= R.L * 0.45){ r.used = true; r.nitroT = r.ndur; }
     const rN = r.nitroT > 0; if(rN) r.nitroT = Math.max(0, r.nitroT - dt);
     r.v = Math.max(0, r.v + accel(r, rN) * dt); r.x += r.v * dt;
     if(r.fin === null && r.x >= R.L) r.fin = R.time - (r.x - R.L) / Math.max(1, r.v);
@@ -1588,7 +1608,7 @@ function finish(){
   const win = R.r.fin === null || R.p.fin <= R.r.fin;
   if(R.r.fin === null) R.r.fin = R.time + (R.L - R.r.x) / Math.max(1, R.r.v);
   const base = rewardFor(R.level);
-  const amount = Math.max(win ? 60 : 25, base * R.distK * (win ? 0.12 * (1 + spBonus("win")) : 0.03) * (R.rain ? 1.2 : 1));
+  const amount = Math.max(win ? 60 : 25, base * R.distK * (win ? 0.14 * (1 + spBonus("win")) : 0.04) * (R.rain ? 1.2 : 1));
   pay(amount, R.time + 9.5);
   const mult = leagueOf(R.level) + 1;
   if(win){
@@ -2163,6 +2183,13 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     c.fillStyle = fill; c.beginPath(); c.moveTo(p1[0], p1[1]); c.lineTo(p2[0], p2[1]); c.arc(cx, cy, rr * k1, a - w1, a + w1); c.lineTo(p4[0], p4[1]); c.closePath(); c.fill();
   };
   const lw = k => Math.max(0.6, rr * k);
+  const cutFace = (fill, kR, holes) => {
+    c.fillStyle = fill; c.beginPath(); c.arc(cx, cy, rr * kR, 0, TAU); holes(); c.fill("evenodd");
+    // the cut edge: a dark wall on the lower side of each opening, a bright chamfer on the top
+    const ga = c.globalAlpha; c.globalAlpha = ga * 0.55; c.strokeStyle = "#07080b"; c.lineWidth = lw(0.03); c.beginPath(); holes(); c.stroke(); c.globalAlpha = ga;
+  };
+  const hCirc = (x, y, r0) => { c.moveTo(x + r0, y); c.arc(x, y, r0, 0, TAU); };
+  const hEll = (x, y, a, b, rot) => { c.moveTo(x + Math.cos(rot) * a, y + Math.sin(rot) * a); c.ellipse(x, y, a, b, rot, 0, TAU); };
   c.globalAlpha = 1 - blur * 0.7; c.lineCap = "round"; c.lineJoin = "round";
   let lugs = 5, capK = 0.17;
   if(style === "mesh"){
@@ -2205,31 +2232,27 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     for(let k = 0; k < 10; k++){ const a = spin + k * TAU / 10; curve(a, 0.22, a + 0.35, 0.58, a + 0.2, f - 0.03); }
     c.globalAlpha = 1; ring(f - 0.02, 0.08); ring(0.28, 0.07);
   } else if(style === "turbofan"){
-    c.fillStyle = m; circ(c, cx, cy, rr * 0.95); c.fill();
-    c.strokeStyle = "#0d0e12"; c.lineWidth = lw(0.1);
-    for(let k = 0; k < 12; k++){ const a = spin + k * TAU / 12; curve(a, 0.4, a + 0.12, 0.66, a + 0.42, 0.86); }
+    c.strokeStyle = m; c.lineWidth = lw(0.12);
+    for(let k = 0; k < 12; k++){ const a = spin + k * TAU / 12; curve(a, 0.3, a + 0.12, 0.62, a + 0.42, 0.93); }
+    c.strokeStyle = "rgba(255,255,255,.3)"; c.lineWidth = lw(0.025);
+    for(let k = 0; k < 12; k++){ const a = spin + k * TAU / 12 - 0.04; curve(a, 0.32, a + 0.1, 0.6, a + 0.4, 0.9); }
     c.globalAlpha = 1; ring(0.95, 0.07, shade(rim, -0.3)); ring(0.32, 0.06, shade(rim, -0.35)); capK = 0.24;
   } else if(style === "petal"){
     // dark dish with five polished petals
-    c.fillStyle = shade(rim, -0.55); circ(c, cx, cy, rr * f); c.fill();
     for(let k = 0; k < 5; k++){
       const a = spin + k * TAU / 5, p0 = P(a - 0.18, 0.2), p1 = P(a - 0.46, f - 0.06), pt = P(a, f - 0.01), p2 = P(a + 0.46, f - 0.06), p3 = P(a + 0.18, 0.2);
       c.fillStyle = chrome; c.beginPath(); c.moveTo(p0[0], p0[1]); c.quadraticCurveTo(p1[0], p1[1], pt[0], pt[1]); c.quadraticCurveTo(p2[0], p2[1], p3[0], p3[1]); c.closePath(); c.fill();
     }
-    c.globalAlpha = 1; capK = 0.22;
+    c.globalAlpha = 1; ring(f - 0.02, 0.06); capK = 0.22;
   } else if(style === "disco"){
     const dg2 = c.createRadialGradient(cx - rr * 0.3, cy - rr * 0.35, rr * 0.1, cx, cy, rr);
     dg2.addColorStop(0, shade(rim, 0.5)); dg2.addColorStop(0.7, rim); dg2.addColorStop(1, shade(rim, -0.4));
-    c.fillStyle = dg2; circ(c, cx, cy, rr * 0.95); c.fill();
-    c.fillStyle = "#0d0e12";
-    for(let k = 0; k < 6; k++){ const a = spin + k * TAU / 6, p = P(a, 0.74); c.beginPath(); c.ellipse(p[0], p[1], rr * 0.12, rr * 0.07, a + Math.PI / 2, 0, TAU); c.fill(); }
+    cutFace(dg2, 0.95, () => { for(let k = 0; k < 6; k++){ const a = spin + k * TAU / 6, p = P(a, 0.7); hEll(p[0], p[1], rr * 0.2, rr * 0.11, a + Math.PI / 2); } });
     c.globalAlpha = 1; ring(0.5, 0.03, shade(rim, -0.3)); ring(0.95, 0.06, shade(rim, -0.35)); capK = 0.22;
   } else if(style === "aco"){
     const sg = c.createRadialGradient(cx, cy, rr * 0.2, cx, cy, rr);
     sg.addColorStop(0, shade(rim, -0.1)); sg.addColorStop(1, shade(rim, -0.45));
-    c.fillStyle = sg; circ(c, cx, cy, rr * 0.96); c.fill();
-    c.fillStyle = "#0d0e12";
-    for(let k = 0; k < 8; k++){ const p = P(spin + k * TAU / 8, 0.64); circ(c, p[0], p[1], rr * 0.11); c.fill(); }
+    cutFace(sg, 0.96, () => { for(let k = 0; k < 8; k++){ const p = P(spin + k * TAU / 8, 0.63); hCirc(p[0], p[1], rr * 0.14); } });
     c.globalAlpha = 1; ring(0.88, 0.05, shade(rim, 0.3)); ring(0.96, 0.05, shade(rim, -0.5));
     c.fillStyle = chrome; circ(c, cx, cy, rr * 0.34); c.fill(); c.strokeStyle = "#5f6570"; c.lineWidth = lw(0.03); c.stroke();
     lugs = 0; capK = 0;
@@ -2238,7 +2261,6 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     for(let k = 0; k < 5; k++){ const a = spin + k * TAU / 5; seg(a, 0.22, a, 0.52); seg(a, 0.5, a - 0.24, f - 0.03); seg(a, 0.5, a + 0.24, f - 0.03); }
     c.globalAlpha = 1; ring(f - 0.02, 0.06);
   } else if(style === "cruz"){
-    c.fillStyle = shade(rim, -0.6); circ(c, cx, cy, rr * f); c.fill();
     for(let k = 0; k < 4; k++){ const a = spin + k * TAU / 4; wedge(a, 0.28, 0.42, 0.2, f - 0.02, m); c.strokeStyle = "rgba(255,255,255,.3)"; c.lineWidth = lw(0.03); seg(a - 0.24, 0.28, a - 0.36, f - 0.08); }
     c.globalAlpha = 1; ring(f - 0.02, 0.07); lugs = 4; capK = 0.22;
   } else if(style === "teia"){
@@ -2254,7 +2276,7 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     c.globalAlpha = 1; ring(f - 0.02, 0.06);
   } else if(style === "calota"){
     const sg = c.createRadialGradient(cx, cy, rr * 0.3, cx, cy, rr); sg.addColorStop(0, shade(rim, -0.15)); sg.addColorStop(1, shade(rim, -0.5));
-    c.fillStyle = sg; circ(c, cx, cy, rr * 0.97); c.fill();
+    cutFace(sg, 0.97, () => { for(let k = 0; k < 12; k++){ const a = spin + k * TAU / 12, p = P(a, 0.77); hEll(p[0], p[1], rr * 0.1, rr * 0.05, a + Math.PI / 2); } });
     c.globalAlpha = 1; ring(0.9, 0.05, shade(rim, 0.25));
     c.fillStyle = chrome; circ(c, cx, cy, rr * 0.58); c.fill();
     c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = lw(0.03); circ(c, cx, cy, rr * 0.58); c.stroke();
@@ -2272,8 +2294,7 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     lugs = 0; capK = 0.14;
   } else if(style === "telefone"){
     const dg3 = c.createRadialGradient(cx - rr * 0.25, cy - rr * 0.3, rr * 0.1, cx, cy, rr); dg3.addColorStop(0, shade(rim, 0.35)); dg3.addColorStop(1, shade(rim, -0.35));
-    c.fillStyle = dg3; circ(c, cx, cy, rr * 0.95); c.fill();
-    c.fillStyle = "#0d0e12"; for(let k = 0; k < 10; k++){ const p = P(spin + k * TAU / 10, 0.68); circ(c, p[0], p[1], rr * 0.15); c.fill(); }
+    cutFace(dg3, 0.95, () => { for(let k = 0; k < 10; k++){ const p = P(spin + k * TAU / 10, 0.68); hCirc(p[0], p[1], rr * 0.16); } });
     c.globalAlpha = 1; ring(0.95, 0.06, shade(rim, -0.4)); ring(0.42, 0.04, shade(rim, -0.25)); capK = 0.24;
   } else if(style === "drift"){
     c.strokeStyle = m; c.lineWidth = lw(0.08);
@@ -2293,7 +2314,6 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     }
   } else if(style === "torque"){
     // classic muscle five-spoke: spokes flare out to the rim, dark pockets between them
-    c.fillStyle = face; circ(c, cx, cy, rr * f); c.fill();
     for(let k = 0; k < 5; k++){
       const a = spin + k * TAU / 5;
       wedge(a, 0.16, 0.36, 0.22, f - 0.01, m);
@@ -2303,17 +2323,15 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     c.globalAlpha = 1; ring(0.34, 0.12, m); capK = 0.2;
   } else if(style === "slotmag"){
     // polished face with five long slots
-    c.fillStyle = m; circ(c, cx, cy, rr * f); c.fill();
+    cutFace(m, f, () => { for(let k = 0; k < 5; k++){ const a = spin + k * TAU / 5 + TAU / 10, p = P(a, 0.6); hEll(p[0], p[1], rr * 0.25, rr * 0.12, a); } });
     for(let k = 0; k < 5; k++){
       const a = spin + k * TAU / 5 + TAU / 10, p = P(a, 0.6);
-      c.fillStyle = "#0b0c10"; c.beginPath(); c.ellipse(p[0], p[1], rr * 0.24, rr * 0.105, a, 0, TAU); c.fill();
       c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = lw(0.03); c.beginPath(); c.ellipse(p[0], p[1], rr * 0.27, rr * 0.13, a, Math.PI * 0.9, Math.PI * 2.1); c.stroke();
     }
     c.globalAlpha = 1; ring(0.3, 0.05, "rgba(0,0,0,.3)"); capK = 0.2;
   } else if(style === "dayton"){
     // a hundred cross-laced chrome wires, a big hub and the two-ear knock-off
-    c.fillStyle = "#0e0f13"; circ(c, cx, cy, rr * f); c.fill();
-    c.strokeStyle = m; c.lineWidth = lw(0.013);
+    c.strokeStyle = m; c.lineWidth = lw(0.016);
     for(let k = 0; k < 50; k++){ const a = spin + k * TAU / 50; seg(a, 0.3, a + 0.62, f - 0.02); seg(a, 0.3, a - 0.62, f - 0.02); }
     c.lineWidth = lw(0.011);
     for(let k = 0; k < 36; k++){ const a = spin + (k + 0.5) * TAU / 36; seg(a, 0.26, a + 0.3, 0.62); }
@@ -2328,7 +2346,6 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     lugs = 0; capK = 0;
   } else if(style === "spinner"){
     // a chrome base wheel with a free-running spinner on top: it keeps turning when the car stops
-    c.fillStyle = face; circ(c, cx, cy, rr * f); c.fill();
     c.strokeStyle = m; c.lineWidth = lw(0.1);
     for(let k = 0; k < 6; k++){ const a = spin + k * TAU / 6; seg(a, 0.22, a, f - 0.03); }
     c.globalAlpha = 1;
@@ -2341,13 +2358,11 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     ring(0.24, 0.1, chrome); capK = 0.16;
   } else if(style === "vip"){
     // VIP style: a huge stepped chrome lip, small face with eight fine spokes
-    c.fillStyle = face; circ(c, cx, cy, rr * f); c.fill();
     c.strokeStyle = m; c.lineWidth = lw(0.05);
     for(let k = 0; k < 8; k++){ const a = spin + k * TAU / 8; seg(a - 0.06, 0.2, a - 0.1, f - 0.02); seg(a + 0.06, 0.2, a + 0.1, f - 0.02); }
     c.globalAlpha = 1; ring(f - 0.015, 0.03, "rgba(0,0,0,.5)"); capK = 0.16;
   } else if(style === "torcido"){
     // seven twisted double spokes, concave
-    c.fillStyle = face; circ(c, cx, cy, rr * f); c.fill();
     for(let k = 0; k < 7; k++){
       const a = spin + k * TAU / 7;
       [[-0.07, 0.22], [0.07, 0.42]].forEach(([o0, tw]) => {
@@ -2358,7 +2373,6 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     c.globalAlpha = 1; ring(f - 0.02, 0.06); ring(0.25, 0.08); capK = 0.18;
   } else if(style === "laminas"){
     // directional blades with open gaps
-    c.fillStyle = face; circ(c, cx, cy, rr * f); c.fill();
     for(let k = 0; k < 10; k++){
       const a = spin + k * TAU / 10, p0 = P(a - 0.07, 0.24), c1 = P(a + 0.12, 0.6), p1 = P(a + 0.5, f - 0.02), p2 = P(a + 0.7, f - 0.02), c2 = P(a + 0.28, 0.58), p3 = P(a + 0.07, 0.24);
       c.fillStyle = m; c.beginPath(); c.moveTo(p0[0], p0[1]); c.quadraticCurveTo(c1[0], c1[1], p1[0], p1[1]); c.arc(cx, cy, rr * (f - 0.02), a + 0.5, a + 0.7); c.quadraticCurveTo(c2[0], c2[1], p3[0], p3[1]); c.closePath(); c.fill();
@@ -2367,11 +2381,8 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     c.globalAlpha = 1; ring(f - 0.02, 0.06); ring(0.26, 0.09); capK = 0.18;
   } else if(style === "colmeia"){
     // honeycomb face: hexagonal windows in two rings
-    c.fillStyle = m; circ(c, cx, cy, rr * f); c.fill();
-    const hex = (a, k, hr) => { const p = P(a, k); c.beginPath(); for(let j = 0; j < 6; j++){ const b = a + j * TAU / 6; const x = p[0] + Math.cos(b) * hr, y = p[1] + Math.sin(b) * hr; j ? c.lineTo(x, y) : c.moveTo(x, y); } c.closePath(); c.fill(); };
-    c.fillStyle = "#0b0c10";
-    for(let k = 0; k < 6; k++) hex(spin + k * TAU / 6, 0.45, rr * 0.15);
-    for(let k = 0; k < 12; k++) hex(spin + (k + 0.5) * TAU / 12, 0.74, rr * 0.13);
+    const hexP = (a, k, hr) => { const p = P(a, k); for(let j = 0; j < 6; j++){ const b = a + j * TAU / 6; const x = p[0] + Math.cos(b) * hr, y = p[1] + Math.sin(b) * hr; j ? c.lineTo(x, y) : c.moveTo(x, y); } c.closePath(); };
+    cutFace(m, f, () => { for(let k = 0; k < 6; k++) hexP(spin + k * TAU / 6, 0.45, rr * 0.15); for(let k = 0; k < 12; k++) hexP(spin + (k + 0.5) * TAU / 12, 0.74, rr * 0.13); });
     c.strokeStyle = "rgba(255,255,255,.18)"; c.lineWidth = lw(0.015);
     for(let k = 0; k < 6; k++){ const p = P(spin + k * TAU / 6, 0.45); c.beginPath(); c.arc(p[0], p[1], rr * 0.17, Math.PI * 1.1, Math.PI * 1.6); c.stroke(); }
     c.globalAlpha = 1; ring(f - 0.02, 0.05, "rgba(0,0,0,.35)"); capK = 0.2;
@@ -2460,7 +2471,6 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     c.globalAlpha = 1; lugs = 0; capK = 0;
   } else if(style === "seis"){
     // six wide straight spokes from a raised hub to a stepped outer ring, the classic Japanese forged look
-    c.fillStyle = "#0b0c10"; circ(c, cx, cy, rr * f); c.fill();
     for(let k = 0; k < 6; k++){
       const a = spin + k * TAU / 6;
       wedge(a, 0.22, 0.27, 0.24, f - 0.08, m);
@@ -2472,7 +2482,6 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     ring(0.3, 0.14, m); ring(0.37, 0.018, "rgba(0,0,0,.4)"); capK = 0.17; lugs = 5;
   } else if(style === "xcruz"){
     // spokes cross in X pairs between hub and rim
-    c.fillStyle = face; circ(c, cx, cy, rr * f); c.fill();
     c.strokeStyle = m; c.lineWidth = lw(0.065);
     for(let k = 0; k < 6; k++){ const a = spin + k * TAU / 6; seg(a, 0.24, a + 0.5, f - 0.03); seg(a + 0.5, 0.24, a, f - 0.03); }
     c.globalAlpha = 1; ring(f - 0.02, 0.07); ring(0.26, 0.09); capK = 0.18;
@@ -6959,7 +6968,7 @@ const CK_KNOBC = [[null, "Original", "#1c1f26"], ["#1c1f26", "Preto", "#1c1f26"]
 function visGrid(title, key, items, current, cls){
   const curName = (items.find(it => it[0] === current) || items[0])[1];
   return '<div class="sw-row"><div class="sw-t">' + title + '<span>' + curName + '</span></div><div class="wgrid">' +
-    items.map(([v, n]) => '<button class="wopt" data-cos="' + key + '" data-val="' + v + '" aria-pressed="' + (v === current) + '"><canvas class="' + cls + '" data-v="' + v + '"></canvas><span>' + n + '</span></button>').join("") + '</div></div>';
+    items.map(([v, n]) => { const lp = cosOwned(key, v || null) ? 0 : cosPrice(key, v || null); return '<button class="wopt' + (lp ? " lk" : "") + '" data-cos="' + key + '" data-val="' + v + '" aria-label="' + n + '" aria-pressed="' + (v === current) + '"><canvas class="' + cls + '" data-v="' + v + '"></canvas><span>' + n + '</span>' + (lp ? '<i class="prc">' + money(lp) + '</i>' : '') + '</button>'; }).join("") + '</div></div>';
 }
 function swatchRow(title, key, items, current, attr){
   const curName = (items.find(it => it[0] === current) || items[0])[1];
@@ -6967,7 +6976,8 @@ function swatchRow(title, key, items, current, attr){
     items.map(([v, n, hex]) => {
       const on = v === current;
       const mr = key === "rim" && RIM_CHROME[v];
-      return '<button class="sw' + (mr ? " chr" : "") + (on ? " on" : "") + '" style="--c:' + (hex || v) + (mr ? mr.map((q, i) => ';--c' + (i + 1) + ':' + q).join("") : "") + '" data-' + (attr || "cos") + '="' + key + '" data-val="' + (v || "") + '" aria-label="' + n + '" aria-pressed="' + on + '"></button>';
+      const lp = attr === "pil" ? (pilOwned(key, v) ? 0 : pilPrice(key, v)) : (attr ? 0 : (cosOwned(key, v || null) ? 0 : cosPrice(key, v || null)));
+      return '<span class="swc">' + '<button class="sw' + (mr ? " chr" : "") + (on ? " on" : "") + (lp ? " lk" : "") + '" style="--c:' + (hex || v) + (mr ? mr.map((q, i) => ';--c' + (i + 1) + ':' + q).join("") : "") + '" data-' + (attr || "cos") + '="' + key + '" data-val="' + (v || "") + '" aria-label="' + n + '" aria-pressed="' + on + '"></button>' + (lp ? '<i class="prc">' + money(lp) + '</i>' : '') + '</span>';
     }).join("") + '</div></div>';
 }
 function chipRow(title, key, items, current, multi, attr){
@@ -6976,7 +6986,8 @@ function chipRow(title, key, items, current, multi, attr){
   return '<div class="sw-row"><div class="sw-t">' + title + '<span>' + curName + '</span></div><div class="chips">' +
     items.map(([v, n]) => {
       const on = multi ? current.includes(v) : v === current;
-      return '<button class="chip" ' + (multi ? 'data-stk="' + v + '"' : 'data-' + (attr || "cos") + '="' + key + '" data-val="' + v + '"') + ' aria-pressed="' + on + '">' + n + '</button>';
+      const lp = multi ? (on || cosOwned("stickers", v) ? 0 : cosPrice("stickers", v)) : attr === "pil" ? (pilOwned(key, v) ? 0 : pilPrice(key, v)) : attr ? 0 : (cosOwned(key, v || null) ? 0 : cosPrice(key, v || null));
+      return '<button class="chip' + (lp ? " lk" : "") + '" ' + (multi ? 'data-stk="' + v + '"' : 'data-' + (attr || "cos") + '="' + key + '" data-val="' + v + '"') + ' aria-pressed="' + on + '">' + n + (lp ? ' <i class="prc">' + money(lp) + '</i>' : '') + '</button>';
     }).join("") + '</div></div>';
 }
 // ready-made looks: one tap buys what is missing and installs the whole set
@@ -7008,6 +7019,7 @@ function applyPreset(pr){
   S.money -= cost;
   Object.entries(pr.parts).forEach(([id, tier]) => { if(tier > (k[id + "Max"] || 0)) k[id + "Max"] = tier; k[id] = tier; });
   k.wmodel = pr.wmodel; k.aro = presetAro(pr, car); if(pr.rim) k.rim = pr.rim;
+  markOwn(S.car + "|wmodel|" + k.wmodel); if(k.aro) markOwn(S.car + "|aro|" + k.aro); if(pr.rim) markOwn(S.car + "|rim|" + pr.rim);
   if(pr.orig) Object.entries(ORIG_LOOK).forEach(([f, v]) => { k[f] = Array.isArray(v) ? [] : v; });
   applyPlayerStats();
   if(cost) coinSfx();
@@ -7065,7 +7077,7 @@ function renderEstilo(){
   h += '<div class="sec">Rodas</div>';
   const wm = k.wmodel || "orig";
   h += '<div class="sw-row"><div class="sw-t">Modelo<span>' + (WHEELS.find(w => w[0] === wm) || WHEELS[0])[1] + '</span></div><div class="wgrid">' +
-    WHEELS.map(([id, n]) => '<button class="wopt" data-cos="wmodel" data-val="' + id + '" aria-pressed="' + (id === wm) + '"><canvas class="wth" data-w="' + id + '"></canvas><span>' + n + '</span></button>').join("") + '</div></div>';
+    WHEELS.map(([id, n]) => { const lp = cosOwned("wmodel", id) ? 0 : cosPrice("wmodel", id); return '<button class="wopt' + (lp ? " lk" : "") + '" data-cos="wmodel" data-val="' + id + '" aria-label="Roda ' + n + '" aria-pressed="' + (id === wm) + '"><canvas class="wth" data-w="' + id + '"></canvas><span>' + n + '</span>' + (lp ? '<i class="prc">' + money(lp) + '</i>' : '') + '</button>'; }).join("") + '</div></div>';
   const aros = [];
   for(let i = 13; i <= 20; i++) aros.push([i === car.inch ? "" : String(i), i + '"' + (i === car.inch ? " original" : "")]);
   h += chipRow("Aro: roda pequena ou grande", "aro", aros, k.aro && +k.aro !== car.inch ? String(k.aro) : "");
@@ -7095,7 +7107,7 @@ function renderPiloto(){
   h += chipRow("Tênis", "shoes", P_SHOES, P.shoes || "preto", false, "pil");
   const acc = P.acc || [];
   h += '<div class="sw-row"><div class="sw-t">Acessórios<span>' + (acc.length ? acc.length + (acc.length > 1 ? " ativos" : " ativo") : "Nenhum") + '</span></div><div class="chips">' +
-    P_ACC.map(([v, n]) => '<button class="chip" data-acc="' + v + '" aria-pressed="' + acc.includes(v) + '">' + n + '</button>').join("") + '</div></div>';
+    P_ACC.map(([v, n]) => { const lp = acc.includes(v) || pilOwned("acc", v) ? 0 : pilPrice("acc", v); return '<button class="chip' + (lp ? " lk" : "") + '" data-acc="' + v + '" aria-pressed="' + acc.includes(v) + '">' + n + (lp ? ' <i class="prc">' + money(lp) + '</i>' : '') + '</button>'; }).join("") + '</div></div>';
   return h;
 }
 function renderMissoes(){
@@ -7221,13 +7233,39 @@ const onPanelClick = e => {
       else pv = {preset:pr.id};
     }
   }
+  else if(t.dataset.cos && !cosOwned(t.dataset.cos, t.dataset.val || null)){
+    const key = t.dataset.cos, val = t.dataset.val || null, cost = cosPrice(key, val), nm = (t.getAttribute("aria-label") || t.textContent || "").replace(/\$[\d.,]+[KMBT]?/, "").trim();
+    pv = {cos:key, val};
+    if((key === "sound" || key === "turboSnd" || key === "exModel") && garageOpen) garageRev();
+    askBuy(nm || "Opção", cost, () => {
+      S.money -= cost; markOwn(S.car + "|" + key + "|" + val); custOf(S.car)[key] = val; coinSfx(); setTimeout(checkChal, 300);
+      toast(nm + " comprado!");
+    });
+    renderPanel(true); return;
+  }
   else if(t.dataset.cos){
     custOf(S.car)[t.dataset.cos] = t.dataset.val || null;
     setTimeout(checkChal, 300);
     if((t.dataset.cos === "sound" || t.dataset.cos === "turboSnd" || t.dataset.cos === "exModel") && garageOpen) garageRev();
   }
+  else if(t.dataset.pil && !pilOwned(t.dataset.pil, t.dataset.val)){
+    const key = t.dataset.pil, val = t.dataset.val, cost = pilPrice(key, val), nm = (t.getAttribute("aria-label") || t.textContent || "").replace(/\$[\d.,]+[KMBT]?/, "").trim();
+    askBuy(nm + " para o piloto", cost, () => { S.money -= cost; markOwn("pilot|" + key + "|" + val); S.pilot[key] = val; coinSfx(); }, true);
+    return;
+  }
   else if(t.dataset.pil){ S.pilot[t.dataset.pil] = t.dataset.val; }
+  else if(t.dataset.acc && !(S.pilot.acc || []).includes(t.dataset.acc) && !pilOwned("acc", t.dataset.acc)){
+    const val = t.dataset.acc, cost = pilPrice("acc", val), nm = t.textContent.replace(/\$[\d.,]+[KMBT]?/, "").trim();
+    askBuy(nm + " para o piloto", cost, () => { S.money -= cost; markOwn("pilot|acc|" + val); (S.pilot.acc || (S.pilot.acc = [])).push(val); coinSfx(); }, true);
+    return;
+  }
   else if(t.dataset.acc){ const a = S.pilot.acc || (S.pilot.acc = []), i = a.indexOf(t.dataset.acc); if(i >= 0) a.splice(i, 1); else a.push(t.dataset.acc); }
+  else if(t.dataset.stk && !(custOf(S.car).stickers || []).includes(t.dataset.stk) && !cosOwned("stickers", t.dataset.stk)){
+    const val = t.dataset.stk, cost = cosPrice("stickers", val), nm = "Adesivo " + t.textContent.replace(/\$[\d.,]+[KMBT]?/, "").trim();
+    pv = {stk:val};
+    askBuy(nm, cost, () => { S.money -= cost; markOwn(S.car + "|stickers|" + val); const k = custOf(S.car); (k.stickers || (k.stickers = [])).push(val); coinSfx(); setTimeout(checkChal, 300); });
+    renderPanel(true); return;
+  }
   else if(t.dataset.stk){
     const k = custOf(S.car); k.stickers = k.stickers || [];
     const i = k.stickers.indexOf(t.dataset.stk);
@@ -7271,9 +7309,46 @@ function toast(msg){
 
 /* ---------- buy confirmation ---------- */
 let buyGo = null;
-function askBuy(what, cost, go){
+// what each option costs: [base price, share of the car's price]; the dearer the car, the dearer its parts
+const COS_PRICE = {paint:[250, 0.03], finish:[200, 0.02], vinyl:[150, 0.015], vinylColor:[60, 0.005], stickers:[50, 0.004], neon:[400, 0.02], light:[120, 0.008],
+  flame:[150, 0.01], flameSize:[100, 0.006], ckCluster:[300, 0.012], ckTach:[250, 0.01], ckDash:[150, 0.006], ckWheel:[250, 0.01], ckWheelC:[80, 0.004],
+  ckKnob:[120, 0.006], ckKnobC:[60, 0.003], exModel:[300, 0.015], sound:[900, 0.05], turboSnd:[400, 0.02], wmodel:[450, 0.03], aro:[180, 0.012],
+  rim:[150, 0.01], tire:[200, 0.012], tireC:[60, 0.004], cal:[100, 0.006]};
+const PIL_PRICE = {hair:150, hairC:60, glasses:120, tattoo:250, outfit:200, suit:120, stripe:60, shoes:100, acc:150};
+const COS_FREE = {finish:"brilho", vinyl:"none", light:"#fff1c9", flame:"#ff9a1f", flameSize:"m", sound:"orig", wmodel:"orig", tire:"orig", tireC:"#f4f5f8", exModel:"orig"};
+const PIL_FREE = defaultPilot();
+const nicePrice = x => x < 1000 ? Math.round(x / 10) * 10 : (() => { const p = Math.pow(10, Math.floor(Math.log10(x)) - 1); return Math.round(x / p) * p; })();
+function cosFree(key, val){ return val === null || val === undefined || val === "" || val === "orig" || COS_FREE[key] === val || key === "sponsVis"; }
+function cosPrice(key, val, carId){
+  const pr = COS_PRICE[key]; if(!pr || cosFree(key, val)) return 0;
+  const car = carById(carId || S.car);
+  let mul = 1;
+  if(key === "rim" && RIM_CHROME[val]) mul = 2.5;
+  if(key === "wmodel" && {jdm6:1, dayton:1, vip:1, spinner:1, seis:1, drag:1}[val]) mul = 1.4;
+  if(key === "finish" && val !== "brilho") mul = val === "metal" ? 1.5 : 1.2;
+  if(key === "aro") mul = Math.max(1, Math.abs(+val - car.inch));
+  if(key === "sound") mul = 1.2;
+  return nicePrice(Math.max(pr[0], car.price * pr[1]) * mul * (1 - Math.min(0.5, spBonus("parts"))));
+}
+function pilPrice(key, val){ return (!PIL_PRICE[key] || PIL_FREE[key] === val || val === "none") ? 0 : PIL_PRICE[key]; }
+function cosOwned(key, val, carId){
+  if(cosFree(key, val) || !COS_PRICE[key]) return true;
+  return !!(S.own && S.own[(carId || S.car) + "|" + key + "|" + val]);
+}
+function pilOwned(key, val){ return !pilPrice(key, val) || !!(S.own && S.own["pilot|" + key + "|" + val]); }
+function markOwn(id){ if(!S.own) S.own = {}; S.own[id] = 1; }
+// saves from before the shop: whatever is already on a car or on the pilot stays owned
+function cosMigrate(){
+  if(S.ownV) return;
+  Object.entries(S.cust || {}).forEach(([cid, k]) => Object.keys(COS_PRICE).forEach(key => {
+    const v = k[key]; if(Array.isArray(v)) v.forEach(x => markOwn(cid + "|" + key + "|" + x)); else if(v !== undefined && v !== null) markOwn(cid + "|" + key + "|" + v);
+  }));
+  Object.keys(PIL_PRICE).forEach(key => { const v = S.pilot[key]; if(Array.isArray(v)) v.forEach(x => markOwn("pilot|" + key + "|" + x)); else if(v) markOwn("pilot|" + key + "|" + v); });
+  S.ownV = 1;
+}
+function askBuy(what, cost, go, noCar){
   const lack = cost - S.money;
-  el("buyTxt").textContent = what + " no " + carById(S.car).name;
+  el("buyTxt").textContent = what + (noCar ? "" : " no " + carById(S.car).name);
   el("buyAmt").textContent = cost ? money(cost) : "Grátis";
   el("buyLack").textContent = lack > 0 ? "Faltam " + money(lack) + " no caixa" : "";
   el("buyYes").disabled = lack > 0;
