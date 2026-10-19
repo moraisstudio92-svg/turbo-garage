@@ -608,8 +608,8 @@ const SW_STYLE = {carcara:"sport", tiziu:"sport", tsubame:"sport", harpia:"gt", 
   garanhao:"madrpm", cascavel:"classic", tubarao:"aluminio", garanhao5:"flatled", guepardo:"gt", rubi:"tela", mamangava:"flat", touro:"ledtop", tufao:"flat"};
 const AERO_KIND = [null, "lip", "duck", "pedestal", "swan", "ta"];
 // visual wing models (the Aerofólio part in Preparação keeps giving the downforce; this only changes the look)
-const WINGS = [["orig","Do kit"],["none","Sem asa"],["ug","Underground GT"],["ug2","Duplo estágio"],["bat","Batwing"],["loop","Arco"],["drag","Drag alto"],["chassis","Chassis GT"],["ducktop","Ducktail + asa"],["tri","Triplo"]];
-const WING_FIN = [["","Cor do carro"],["carbono","Carbono"],["preto","Preto fosco"],["cromo","Cromado"]];
+const WINGS = [["orig","Do kit"],["none","Sem asa"],["ug","GT pedestal"],["ug2","GT duplo estágio"],["bat","Swan neck"],["chassis","Time attack"],["drag","Pro Mod"],["loop","Daytona"],["tri","Asa de fábrica"],["evo","Asa dupla de fábrica"],["ducktop","Ducktail RS"]];
+const WING_FIN = [["","Original"],["carbono","Carbono"],["cor","Cor do carro"],["preto","Preto fosco"],["cromo","Alumínio polido"]];
 const TALAS = [["fino","Fino esticado"],["","Original"],["largo","Largo"],["xlargo","Extra largo"]];
 function custOf(id){
   if(!S.cust) S.cust = {};
@@ -3414,68 +3414,118 @@ function drawCar(c, x, baseY, s, key, color, o){
       c.globalAlpha = 0.96; c.fillStyle = eg2; poly(ep); c.fill(); c.globalAlpha = 1; c.strokeStyle = OUT; c.lineWidth = Math.max(0.4, 0.25 * s); c.stroke();
       c.strokeStyle = "rgba(255,255,255,.28)"; c.lineWidth = Math.max(0.4, 0.18 * s); line(xle - 0.6, yw + 0.25, xte + 0.1, yw + rise + thick * 0.5 + up - 0.2);
     }
-    // NFS-style wings: tall uprights, big endplates, multi-element and hoop wings, all drawn from the same airfoil
+    // Aftermarket and factory wings at real size (1 unit = 5.7 cm): a GT wing is ~30 cm of chord standing ~28 cm off the
+    // deck on aluminium uprights, with bolted carbon endplates. Seen from the side the two uprights line up, so one shows.
     if(typeof spoiler === "string" && spoiler.indexOf("nfs_") === 0){
-      const kind = spoiler.slice(4), sc = hb ? 0.7 : 1, WF = o.wingF || "";
-      const main = WF === "carbono" ? CARBON : WF === "preto" ? "#17191e" : WF === "cromo" ? "#cfd4dc" : color;
-      const epC = WF === "" ? CARBON : main, darkU = shade(WF === "" ? color : main, -0.32);
-      const blade = (xb, yb, xt, yt, wb, col) => { c.fillStyle = col; poly([[xb + wb, yb], [xb - wb, yb], [xt - wb * 0.55, yt], [xt + wb * 0.55, yt]]); c.fill(); c.strokeStyle = OUT; c.lineWidth = Math.max(0.4, 0.22 * s); c.stroke(); };
-      const endplate = (pts, smoothIt) => {
-        const ys = pts.map(p => p[1]), g = c.createLinearGradient(0, Y(Math.max(...ys)), 0, Y(Math.min(...ys)));
-        g.addColorStop(0, shade(epC, 0.35)); g.addColorStop(0.5, epC); g.addColorStop(1, shade(epC, -0.4));
-        c.fillStyle = g; if(smoothIt) smooth(pts); else poly(pts); c.fill(); c.strokeStyle = OUT; c.lineWidth = Math.max(0.5, 0.3 * s); c.stroke();
-        c.strokeStyle = "rgba(255,255,255,.3)"; c.lineWidth = Math.max(0.4, 0.2 * s); line(pts[0][0], pts[0][1] - 0.25, pts[1][0], pts[1][1] - 0.25);
+      const kind = spoiler.slice(4), sc = hb ? 0.85 : 1, WF = o.wingF || "";
+      const OEM = kind === "tri" || kind === "evo" || kind === "loop";
+      const wingC = WF === "carbono" ? CARBON : WF === "preto" ? "#16181c" : WF === "cromo" ? "#cfd4dc" : (OEM || WF === "cor") ? color : CARBON;
+      const epC = WF === "cromo" ? "#cfd4dc" : WF === "preto" ? "#16181c" : OEM ? (WF === "carbono" ? CARBON : color) : CARBON;
+      const ALU = WF === "cromo" ? "#aeb4be" : "#2a2d33";
+      const rr = (pts, r) => {
+        const P = pts.map(p => [X(p[0]), Y(p[1])]), R = r * s, n = P.length;
+        c.beginPath(); c.moveTo((P[0][0] + P[n - 1][0]) / 2, (P[0][1] + P[n - 1][1]) / 2);
+        for(let i = 0; i < n; i++){ const p = P[i], q = P[(i + 1) % n]; c.arcTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2, R); }
+        c.closePath();
       };
-      const bolts = (pts) => { c.fillStyle = "#d9dde4"; pts.forEach(p => { circ(c, X(p[0]), Y(p[1]), Math.max(0.35, 0.17 * s)); c.fill(); }); };
-      const xte = EX - (kind === "chassis" ? 3.6 : hb ? 1.2 : 1.0);
+      // a panel: vertical shading, carbon weave when it is carbon, a hard specular line along the top edge
+      const panel = (shape, col, yTop, yBot) => {
+        const g = c.createLinearGradient(0, Y(yTop), 0, Y(yBot));
+        g.addColorStop(0, shade(col, 0.42)); g.addColorStop(0.18, shade(col, 0.12)); g.addColorStop(0.55, col); g.addColorStop(1, shade(col, -0.45));
+        shape(); c.fillStyle = g; c.fill();
+        if(col === CARBON){
+          c.save(); shape(); c.clip(); c.strokeStyle = "rgba(255,255,255,.055)"; c.lineWidth = Math.max(0.4, 0.12 * s);
+          for(let d = -30; d < 30; d += 0.55){ line(EX - 12 + d, yBot - 1, EX - 12 + d + 14, yTop + 13); }
+          c.strokeStyle = "rgba(0,0,0,.18)"; for(let d = -30; d < 30; d += 0.55){ line(EX + 14 + d, yBot - 1, EX + d, yTop + 13); }
+          c.restore();
+        }
+        shape(); c.strokeStyle = OUT; c.lineWidth = Math.max(0.5, 0.26 * s); c.stroke();
+      };
+      const bolt = (bx, by) => { c.fillStyle = "#8d939d"; circ(c, X(bx), Y(by), Math.max(0.35, 0.11 * s)); c.fill(); c.fillStyle = "rgba(255,255,255,.55)"; circ(c, X(bx) - 0.03 * s, Y(by) - 0.03 * s, Math.max(0.15, 0.045 * s)); c.fill(); };
+      // endplate: a raked plate with rounded corners, bolted to the wing along its section line
+      const endplate = (xa, xb, topA, topB, botA, botB, r, xle, yw, ch, rise) => {
+        const pts = [[xa, topA], [xb, topB], [xb, botB], [xa, botA]];
+        panel(() => rr(pts, r), epC, Math.max(topA, topB), Math.min(botA, botB));
+        c.strokeStyle = "rgba(255,255,255,.4)"; c.lineWidth = Math.max(0.4, 0.14 * s); line(xa - 0.3, topA - 0.12, xb + 0.4, topB - 0.12);
+        if(ch) [0.15, 0.4, 0.65, 0.88].forEach(f => bolt(xle - ch * f, yw + rise * f - 0.02));
+      };
+      // pedestal upright: a blade in aluminium with lightening holes, raked back, on a base plate on the deck
+      const upright = (xm, yTop, wb, wt, col) => {
+        const xb = xm + 0.45, pts = [[xb + wb * 0.55, EY], [xb - wb * 0.45, EY], [xm - wt * 0.5, yTop], [xm + wt * 0.5, yTop]];
+        const g = c.createLinearGradient(X(xb - wb), 0, X(xb + wb), 0); g.addColorStop(0, shade(col, 0.35)); g.addColorStop(0.5, col); g.addColorStop(1, shade(col, -0.35));
+        c.fillStyle = g; poly(pts); c.fill(); c.strokeStyle = OUT; c.lineWidth = Math.max(0.4, 0.2 * s); c.stroke();
+        if(col === ALU){ c.fillStyle = "rgba(0,0,0,.55)"; [0.32, 0.62].forEach(f => { const yy = EY + (yTop - EY) * f, xx = xb + (xm - xb) * f; c.beginPath(); c.ellipse(X(xx), Y(yy), wb * 0.2 * s, (yTop - EY) * 0.1 * s, 0, 0, TAU); c.fill(); }); }
+        c.fillStyle = "#1b1d22"; rrectC(c, X(xb - wb * 0.9), Y(EY + 0.22), wb * 1.8 * s, 0.26 * s, 0.08 * s); c.fill();
+        bolt(xb + wb * 0.6, EY + 0.1); bolt(xb - wb * 0.6, EY + 0.1);
+      };
+      // swan neck: the upright comes up behind the wing and hooks over to bolt to its top surface
+      const swan = (xm, yTop, from) => {
+        const x0 = from ? from[0] : xm + 1.8, y0 = from ? from[1] : EY;
+        const path = () => { c.beginPath(); c.moveTo(X(x0), Y(y0)); c.bezierCurveTo(X(x0 - 0.2), Y(y0 + (yTop - y0) * 0.45), X(xm - 2.4), Y(yTop - 0.6), X(xm - 1.2), Y(yTop + 1.2)); c.quadraticCurveTo(X(xm - 0.6), Y(yTop + 1.6), X(xm + 0.2), Y(yTop + 0.15)); };
+        c.lineCap = "round"; path(); c.strokeStyle = OUT; c.lineWidth = Math.max(1.2, 0.72 * s); c.stroke();
+        path(); c.strokeStyle = ALU; c.lineWidth = Math.max(0.9, 0.55 * s); c.stroke();
+        path(); c.strokeStyle = "rgba(255,255,255,.22)"; c.lineWidth = Math.max(0.3, 0.14 * s); c.stroke();
+        if(!from){ c.fillStyle = "#1b1d22"; rrectC(c, X(x0 - 1), Y(EY + 0.22), 2 * s, 0.26 * s, 0.08 * s); c.fill(); }
+        bolt(xm + 0.15, yTop + 0.25);
+      };
       if(kind === "ducktop"){
-        if(hb) body([[EX + 11, EY + 0.1], [EX + 5, EY + 0.9], [EX - 0.6, EY + 1.9], [EX - 2.2, EY + 2.2], [EX - 2.4, EY + 1.5], [EX - 0.8, EY - 0.4], [EX + 4, EY - 0.3]]);
-        else body([[EX + 12, EY + 0.02], [EX + 6.5, EY + 0.55], [EX + 1.8, EY + 1.6], [EX - 0.4, EY + 2.15], [EX - 0.9, EY + 1.85], [EX - 0.4, EY + 0.2], [EX + 1.2, EY - 0.4]]);
-        sheen(EX + 8, EY + 0.6, EX - 0.2, EY + 1.95);
-        const ch = 6.4 * sc, yw = EY + 2.2 + 2.6 * sc, xle = xte + ch;
-        [xle - ch * 0.3, xle - ch * 0.72].forEach(mx => blade(mx, EY + 1.2, mx - 0.3, yw - 0.3, 0.42, darkU));
-        airfoil(xle, yw, ch, 0.62, ch * 0.06, main);
-        endplate([[xle - 0.6, yw + 1.0], [xte - 0.5, yw + 1.6], [xte - 0.6, yw - 0.9], [xle - 1.2, yw - 0.8]]);
+        // RS ducktail: the whole trailing edge of the lid sweeps up into a sharp lip
+        if(hb) body([[EX + 8, EY + 0.1], [EX + 4, EY + 0.8], [EX + 0.6, EY + 1.9], [EX - 1.2, EY + 2.3], [EX - 1.5, EY + 1.8], [EX - 0.8, EY - 0.4], [EX + 4, EY - 0.3]]);
+        else body([[EX + 9, EY + 0.02], [EX + 5, EY + 0.5], [EX + 1.6, EY + 1.55], [EX - 0.3, EY + 2.05], [EX - 0.75, EY + 1.8], [EX - 0.45, EY + 0.3], [EX + 1, EY - 0.3]]);
+        sheen(EX + 6, EY + 0.45, EX - 0.2, EY + 1.85);
       } else if(kind === "loop"){
-        // a hoop: the wing is the arch itself, rising off the deck and landing on the tail
-        const x0 = EX + 12 * sc, x1 = EX - 0.6, top = EY + 6.2 * sc, bw = Math.max(1, 1.5 * s * sc);
-        const arch = () => { c.beginPath(); c.moveTo(X(x0), Y(EY)); c.bezierCurveTo(X(x0 - 1.5 * sc), Y(top + 1.4 * sc), X(x1 + 3 * sc), Y(top + 1.2 * sc), X(x1), Y(EY + 0.2)); };
-        c.lineCap = "round"; arch(); c.strokeStyle = OUT; c.lineWidth = bw + Math.max(1, 0.5 * s); c.stroke();
-        const ag = c.createLinearGradient(0, Y(top + 1.4), 0, Y(EY)); ag.addColorStop(0, shade(main, 0.4)); ag.addColorStop(0.5, main); ag.addColorStop(1, shade(main, -0.4));
-        arch(); c.strokeStyle = ag; c.lineWidth = bw; c.stroke();
-        arch(); c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = Math.max(0.4, bw * 0.22); c.stroke();
-        bolts([[x0 - 0.5, EY + 0.5], [x1 + 0.4, EY + 0.7]]);
+        // Daytona: tall swept fins in body colour, the wing crossing between their tips
+        const H = 9.6 * sc, fb = EX + 6.6 * sc, rb = EX + 0.4;
+        const fin = [[fb, EY], [rb, EY], [rb - 1.8 * sc, EY + H], [rb + 2.3 * sc, EY + H]];
+        panel(() => rr(fin, 0.7), color, EY + H, EY);
+        c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = Math.max(0.4, 0.16 * s); line(fb - 0.3, EY + 0.3, rb + 2.2 * sc, EY + H - 0.15);
+        const ch = 4.6 * sc, xle = rb + 2.9 * sc, yw = EY + H - 1.3 * sc;
+        c.globalAlpha = 0.5; airfoil(xle, yw, ch, 1.0, ch * 0.08, shade(color, -0.25)); c.globalAlpha = 1;
+        [0.2, 0.5, 0.8].forEach(f => bolt(xle - ch * f, yw + ch * 0.08 * f));
+      } else if(kind === "tri" || kind === "evo"){
+        // factory-style wing in body colour: tall aero legs that grow out of the lid, thick main plane, turned-up tips
+        const ch = 5.4 * sc, h = (kind === "evo" ? 3.4 : 4.2) * sc, xte = EX - 0.1, xle = xte + ch, yw = EY + h, rise = ch * 0.07;
+        const xm = xle - ch * 0.5;
+        const leg = [[xm + 1.3, EY], [xm - 0.5, EY], [xm - 0.9, yw - 0.3], [xm - 0.05, yw - 0.3]];
+        panel(() => rr(leg, 0.3), color, yw, EY);
+        airfoil(xle, yw, ch, 0.9, rise, wingC);
+        if(kind === "evo"){
+          // the second, upper element on its own short legs
+          const ch2 = ch * 0.62, xle2 = xte + ch2 - 0.2, yw2 = yw + rise + 1.3 * sc;
+          panel(() => rr([[xle2 - ch2 * 0.3, yw + 0.4], [xle2 - ch2 * 0.65, yw + 0.4], [xle2 - ch2 * 0.6, yw2], [xle2 - ch2 * 0.35, yw2]], 0.2), color, yw2, yw);
+          airfoil(xle2, yw2, ch2, 1.0, ch2 * 0.08, wingC);
+        }
+        const tipTop = kind === "evo" ? yw + rise + 1.3 * sc + 0.9 : yw + rise + 1.4;
+        panel(() => rr([[xle - 0.9, yw + 0.7], [xte - 0.25, tipTop], [xte - 0.35, yw + rise - 0.6], [xle - 1.6, yw - 0.5]], 0.45), epC, tipTop, yw - 0.6);
       } else {
-        const P = {ug:[6.4, 9.6, 0.72], ug2:[6.0, 9.0, 0.7], bat:[6.8, 9.4, 0.72], drag:[10.5, 7.2, 0.42], chassis:[7.2, 10.4, 0.74], tri:[5.4, 8.2, 0.5]}[kind] || [6, 9, 0.7];
-        const h = P[0] * sc, ch = P[1] * sc, th = P[2], xle = xte + ch, yw = EY + h, rise = ch * (kind === "drag" ? 0.02 : 0.06);
-        const mp = [xle - ch * 0.28, xle - ch * 0.7];
+        const D = {ug:[5.2, 4.8, 0], ug2:[5.4, 4.9, 0], bat:[5.8, 5.4, 0], drag:[6.6, 6.6, 2.2], chassis:[6.2, 6.2, 3.0]}[kind] || [5.2, 4.8, 0];
+        const ch = D[0] * sc, h = D[1] * sc, xte = EX - 0.3 - D[2], xle = xte + ch, yw = EY + h, rise = ch * 0.12;
+        const xm = xle - ch * 0.48;
+        if(kind === "ug" || kind === "ug2") upright(xm, yw - 0.25, 1.5 * sc, 0.85 * sc, ALU);
+        if(kind === "drag"){
+          // Pro Mod: tubular struts with rod ends, a V under the wing and a long brace from the bumper
+          const tube = (x0, y0, x1, y1) => { c.strokeStyle = OUT; c.lineWidth = Math.max(0.9, 0.4 * s); line(x0, y0, x1, y1); c.strokeStyle = "#c3c8d0"; c.lineWidth = Math.max(0.6, 0.26 * s); line(x0, y0, x1, y1); bolt(x1, y1); bolt(x0, y0); };
+          tube(EX + 2.6, EY, xm + 0.8, yw - 0.4); tube(EX + 0.6, EY, xm - 1.2, yw - 0.4); tube(EX + 0.2, EY - 2.6, xte + 0.5, yw + rise - 0.5);
+        }
         if(kind === "chassis"){
-          // chassis-mounted: swan-neck uprights come up through the tail behind the bumper
-          [[0.9, shade(darkU, -0.2)], [0, darkU]].forEach(([dx, col]) => mp.forEach(mx => {
-            c.strokeStyle = col; c.lineWidth = Math.max(0.7, 0.62 * s * sc); c.lineCap = "round"; c.beginPath();
-            const bx = Math.max(EX + 0.6, mx + 2.2) + dx; c.moveTo(X(bx), Y(EY - 0.4)); c.bezierCurveTo(X(bx - 0.2), Y(EY + h * 0.6), X(mx + dx + 1.5), Y(yw + th + 1.5), X(mx + dx - 0.4), Y(yw + th * 0.6 + rise * 0.3)); c.stroke();
-          }));
-        } else {
-          mp.forEach(mx => blade(mx + 0.9, EY, mx + 0.7, yw - th * 0.6, kind === "drag" ? 0.32 : 0.55, shade(darkU, -0.25)));
-          mp.forEach(mx => blade(mx, EY, mx - 0.25, yw - th * 0.6, kind === "drag" ? 0.32 : 0.55, darkU));
-          if(kind === "drag"){ c.strokeStyle = darkU; c.lineWidth = Math.max(0.5, 0.28 * s); line(mp[0], EY + 0.3, mp[1] - 0.2, yw - 1.4); line(mp[1], EY + 0.3, mp[0] - 0.2, yw - 1.4); }
+          // through the bumper: a grommet where the mount comes out of the body
+          c.fillStyle = "#08090b"; c.beginPath(); c.ellipse(X(EX + 0.7), Y(EY - 2.6), 0.55 * s, 0.25 * s, 0, 0, TAU); c.fill();
+          swan(xm, yw + 0.05, [EX + 0.7, EY - 2.6]);
         }
-        // endplate behind the wing section so the profile reads in front of it
-        if(kind === "ug") endplate([[xle + 0.8, yw + 2.0], [xte - 1.0, yw + 3.2], [xte - 1.6, yw + 0.6], [xte - 0.6, yw - 2.2], [xle - 1.6, yw - 1.6], [xle + 0.4, yw - 0.2]]);
-        else if(kind === "ug2") endplate([[xle + 0.4, yw + 1.4], [xte - 1.6, yw + 4.6], [xte - 1.8, yw - 1.6], [xle - 0.8, yw - 1.4]]);
-        else if(kind === "bat"){
-          // batwing: a swooping plate with scalloped lower edge
-          const pts = [[xle + 1.2, yw + 1.0], [xle - ch * 0.4, yw + 2.4], [xte - 0.8, yw + 3.6], [xte - 2.4, yw + 1.4], [xte - 1.2, yw - 0.6], [xte + ch * 0.18, yw - 1.2], [xte + ch * 0.3, yw - 2.6], [xte + ch * 0.48, yw - 1.4], [xte + ch * 0.64, yw - 2.8], [xte + ch * 0.8, yw - 1.2], [xle + 0.6, yw - 0.6]];
-          endplate(pts, false);
+        if(kind === "bat") swan(xm, yw + 0.05);
+        airfoil(xle, yw, ch, 1.0, rise, wingC);
+        let topR = yw + rise + 1.5, topF = yw + 0.9, bot = yw - 1.5;
+        if(kind === "ug2" || kind === "chassis"){
+          // second element: a flap high over the trailing edge, slotted behind the main plane
+          const fch = ch * 0.42, fx = xte + fch * 0.78; airfoil(fx, yw + rise + 0.45, fch, 0.9, fch * 0.32, wingC);
+          topR = yw + rise + 2.3;
         }
-        else if(kind === "drag") endplate([[xle + 0.5, yw + 3.0], [xte - 0.7, yw + 3.6], [xte - 0.7, yw - 2.4], [xle + 0.5, yw - 2.0]]);
-        else if(kind === "chassis") endplate([[xle + 0.6, yw + 1.6], [xte - 0.4, yw + 2.4], [xte - 0.9, yw - 1.4], [xte + ch * 0.4, yw - 3.2], [xle + 0.2, yw - 2.2]], true);
-        else if(kind === "tri") endplate([[xle + 0.5, yw + 1.0], [xte - 1.2, yw + 4.4], [xte - 1.4, yw - 1.0], [xle - 0.6, yw - 1.0]]);
-        airfoil(xle, yw, ch, th, rise, main);
-        if(kind === "ug2") airfoil(xte + ch * 0.46, yw + rise + 1.4, ch * 0.5, th * 0.75, ch * 0.09, epC === CARBON ? CARBON : shade(main, -0.12));
-        if(kind === "tri"){ airfoil(xte + ch * 0.78, yw + rise + 1.3, ch * 0.78, th * 0.9, ch * 0.06, main); airfoil(xte + ch * 0.56, yw + rise + 2.7, ch * 0.58, th * 0.8, ch * 0.06, main); }
-        if(kind === "drag"){ c.fillStyle = darkU; poly([[xte + 0.25, yw + rise - 0.2], [xte - 0.15, yw + rise - 0.2], [xte - 0.15, yw + rise + 1.3], [xte + 0.25, yw + rise + 1.3]]); c.fill(); }
-        bolts([[xle - 0.2, yw - 0.4], [xte + 0.2, yw + rise - 0.4]]);
+        if(kind === "bat"){ topR = yw + rise + 2.0; bot = yw - 1.8; }
+        if(kind === "drag"){ topR = yw + rise + 2.6; topF = yw + 2.0; bot = yw - 2.6; }
+        if(kind === "chassis"){ topR = yw + rise + 2.8; topF = yw + 1.4; bot = yw - 2.4; }
+        endplate(xle - 0.55, xte - 0.45, topF, topR, bot + 0.4, bot, kind === "drag" ? 0.4 : 0.6, xle, yw, ch, rise);
+        // gurney flap peeking past the endplate on the trailing edge
+        c.fillStyle = "#101114"; poly([[xte - 0.45, yw + rise + 0.2], [xte - 0.62, yw + rise + 0.2], [xte - 0.62, yw + rise + 0.75], [xte - 0.45, yw + rise + 0.75]]); c.fill();
       }
     }
   }
@@ -4042,33 +4092,36 @@ function drawRear(c, cx, gy, k, key, color, look){
   } else if(sp === "lip" && !hatch){
     c.fillStyle = color; c.beginPath(); c.moveTo(cx - w * 0.44, by - bh); c.lineTo(cx - w * 0.46, by - bh - 0.06 * k); c.lineTo(cx + w * 0.46, by - bh - 0.06 * k); c.lineTo(cx + w * 0.44, by - bh); c.closePath(); c.fill(); c.stroke();
   }
-  // wings seen from behind: uprights, the wing slab across the car and the endplates, at the height the side view uses
-  const RW = {pedestal:[3, 0.9, 0.6], swan:[4.2, 0.9, 0.7], ta:[5.2, 0.95, 1.2], si:[0.8, 0.85, 0.4], nfs_ug:[6.4, 1.04, 4.6], nfs_ug2:[6, 1.04, 5.4], nfs_bat:[6.8, 1.06, 5.2],
-    nfs_drag:[10.5, 1.0, 5.6], nfs_chassis:[7.2, 1.12, 4.2], nfs_tri:[5.4, 1.0, 5.2], nfs_ducktop:[4.8, 0.9, 1.6], nfs_loop:[6.2, 0.9, 0]}[sp];
+  // wings seen from behind: uprights, the wing across the car and the endplates, at the heights the side view uses
+  const RW = {pedestal:[3, 0.9, 0.6], swan:[4.2, 0.9, 0.7], ta:[5.2, 0.95, 1.2], si:[0.8, 0.85, 0.4], nfs_ug:[4.8, 0.98, 3.0], nfs_ug2:[4.9, 0.98, 3.8], nfs_bat:[5.4, 1.0, 3.8],
+    nfs_drag:[6.6, 1.0, 5.2], nfs_chassis:[6.2, 1.08, 5.2], nfs_tri:[4.2, 0.92, 1.9], nfs_evo:[3.4, 0.9, 2.6], nfs_loop:[9.6, 0.94, 0]}[sp];
+  if(sp === "nfs_ducktop" && !hatch){
+    const dg = c.createLinearGradient(0, by - bh - 0.16 * k, 0, by - bh); dg.addColorStop(0, shade(color, 0.3)); dg.addColorStop(1, shade(color, -0.2));
+    c.fillStyle = dg; c.beginPath(); c.moveTo(cx - w * 0.46, by - bh); c.quadraticCurveTo(cx - w * 0.46, by - bh - 0.15 * k, cx - w * 0.4, by - bh - 0.15 * k); c.lineTo(cx + w * 0.4, by - bh - 0.15 * k); c.quadraticCurveTo(cx + w * 0.46, by - bh - 0.15 * k, cx + w * 0.46, by - bh); c.closePath(); c.fill(); c.stroke();
+  }
   if(RW){
-    const hk2 = hatch ? 0.7 : 1, base = hatch ? by - bh - ch : by - bh, yw = base - RW[0] * hk2 / U * k, half = w * RW[1] / 2, slab = Math.max(1.2, 0.075 * k);
-    const WF = look.wingF || "", main = WF === "carbono" ? CARBON : WF === "preto" ? "#17191e" : WF === "cromo" ? "#cfd4dc" : sp.indexOf("nfs_") === 0 || sp === "pedestal" || sp === "si" ? color : CARBON;
-    const epC = WF ? main : CARBON, upC = shade(WF ? main : color, -0.35);
-    const wg = c.createLinearGradient(0, yw - slab, 0, yw + slab); wg.addColorStop(0, shade(main, 0.35)); wg.addColorStop(0.5, main); wg.addColorStop(1, shade(main, -0.45));
+    const hk2 = hatch ? 0.85 : 1, base = hatch ? by - bh - ch : by - bh, yw = base - RW[0] * hk2 / U * k, half = w * RW[1] / 2, slab = Math.max(1, 0.05 * k);
+    const nfs = sp.indexOf("nfs_") === 0, OEMr = sp === "nfs_tri" || sp === "nfs_evo" || sp === "nfs_loop" || sp === "pedestal" || sp === "si";
+    const WF = look.wingF || "", main = WF === "carbono" ? CARBON : WF === "preto" ? "#16181c" : WF === "cromo" ? "#cfd4dc" : (OEMr || WF === "cor") ? color : CARBON;
+    const epC = WF === "cromo" ? "#cfd4dc" : WF === "preto" ? "#16181c" : OEMr ? main : CARBON, upC = WF === "cromo" ? "#aeb4be" : OEMr ? shade(color, -0.1) : "#2a2d33";
+    const wg = c.createLinearGradient(0, yw - slab, 0, yw + slab * 1.4); wg.addColorStop(0, shade(main, 0.45)); wg.addColorStop(0.35, main); wg.addColorStop(1, shade(main, -0.5));
     if(sp === "nfs_loop"){
-      c.lineCap = "round"; c.lineWidth = Math.max(2, 0.12 * k);
-      const arch = () => { c.beginPath(); c.moveTo(cx - half * 0.86, base); c.bezierCurveTo(cx - half * 0.95, yw - 0.1 * k, cx - half * 0.6, yw - 0.02 * k, cx, yw - 0.02 * k); c.bezierCurveTo(cx + half * 0.6, yw - 0.02 * k, cx + half * 0.95, yw - 0.1 * k, cx + half * 0.86, base); };
-      arch(); c.strokeStyle = OUT; c.lineWidth = Math.max(2.6, 0.15 * k); c.stroke(); arch(); c.strokeStyle = main; c.lineWidth = Math.max(2, 0.11 * k); c.stroke();
-      c.strokeStyle = "rgba(255,255,255,.3)"; c.lineWidth = Math.max(0.5, 0.025 * k); arch(); c.stroke(); c.lineCap = "round";
+      // Daytona fins: tall body-colour blades at the corners of the deck with the wing across their tips
+      [-1, 1].forEach(sd => { const fx = cx + sd * half * 0.92, fw = Math.max(1.6, 0.05 * k); const fg = c.createLinearGradient(fx - fw, 0, fx + fw, 0); fg.addColorStop(0, shade(color, sd < 0 ? 0.25 : -0.3)); fg.addColorStop(1, shade(color, sd < 0 ? -0.1 : 0.1));
+        c.fillStyle = fg; c.beginPath(); c.moveTo(fx - fw * 1.6, base); c.lineTo(fx + fw * 1.6, base); c.lineTo(fx + fw * 0.6, yw - slab * 2); c.lineTo(fx - fw * 0.6, yw - slab * 2); c.closePath(); c.fill(); c.stroke(); });
+      c.fillStyle = wg; rrectC(c, cx - half * 0.92, yw - slab, half * 1.84, slab * 2.2, slab * 0.6); c.fill(); c.stroke();
     } else {
-      if(sp === "nfs_chassis"){ c.strokeStyle = upC; c.lineWidth = Math.max(1.2, 0.05 * k); [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(cx + sd * w * 0.26, by - bh * 0.4); c.lineTo(cx + sd * w * 0.24, yw); c.stroke(); }); }
-      else { c.fillStyle = upC; [-1, 1].forEach(sd => { const ux = cx + sd * w * (sp === "nfs_drag" ? 0.22 : 0.3); c.beginPath(); c.moveTo(ux - 0.035 * k, base); c.lineTo(ux + 0.035 * k, base); c.lineTo(ux + 0.025 * k, yw); c.lineTo(ux - 0.025 * k, yw); c.closePath(); c.fill(); c.stroke(); }); }
-      const slabs = sp === "nfs_tri" ? [0, -0.13, -0.26] : sp === "nfs_ug2" ? [0, -0.14] : [0];
-      slabs.forEach((dy, i) => { c.fillStyle = wg; rrectC(c, cx - half * (1 - i * 0.02), yw + dy * k - slab, half * 2 * (1 - i * 0.02), slab * (i ? 1.4 : 2), slab * 0.5); c.fill(); c.strokeStyle = OUT; c.stroke(); });
-      if(sp === "nfs_drag"){ c.fillStyle = upC; c.fillRect(cx - half, yw - slab - 0.1 * k, half * 2, 0.04 * k); }
+      if(sp === "nfs_chassis"){ c.strokeStyle = OUT; c.lineWidth = Math.max(1.6, 0.045 * k); [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(cx + sd * w * 0.24, by - bh * 0.45); c.lineTo(cx + sd * w * 0.22, yw); c.stroke(); });
+        c.strokeStyle = upC; c.lineWidth = Math.max(1.2, 0.032 * k); [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(cx + sd * w * 0.24, by - bh * 0.45); c.lineTo(cx + sd * w * 0.22, yw); c.stroke(); }); }
+      else if(sp === "nfs_drag"){ c.strokeStyle = "#c3c8d0"; c.lineWidth = Math.max(1, 0.022 * k); [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(cx + sd * w * 0.36, base); c.lineTo(cx + sd * w * 0.18, yw); c.moveTo(cx + sd * w * 0.08, base); c.lineTo(cx + sd * w * 0.18, yw); c.stroke(); }); }
+      else { [-1, 1].forEach(sd => { const ux = cx + sd * w * (OEMr ? 0.33 : 0.27), uw = (OEMr ? 0.05 : 0.022) * k; c.fillStyle = upC; c.beginPath(); c.moveTo(ux - uw * 1.4, base); c.lineTo(ux + uw * 1.4, base); c.lineTo(ux + uw, yw); c.lineTo(ux - uw, yw); c.closePath(); c.fill(); c.strokeStyle = OUT; c.stroke(); }); }
+      const slabs = sp === "nfs_evo" ? [0, -0.075] : (sp === "nfs_ug2" || sp === "nfs_chassis") ? [0, -0.05] : [0];
+      slabs.forEach((dy, i) => { c.fillStyle = wg; rrectC(c, cx - half * (1 - i * 0.03), yw + dy * k - slab, half * 2 * (1 - i * 0.03), slab * (i ? 1.4 : 2.2), slab * 0.6); c.fill(); c.strokeStyle = OUT; c.stroke(); });
       if(RW[2] > 0.5){
-        // endplates seen edge-on: tall thin plates at the wing tips
-        const eh = RW[2] / U * k * hk2, top2 = yw - eh * (sp === "nfs_bat" ? 0.62 : 0.55) - (slabs.length - 1) * 0.13 * k * 0.5, ew = Math.max(1.4, 0.035 * k);
-        c.fillStyle = epC; [-1, 1].forEach(sd => {
-          const ex = cx + sd * half - (sd > 0 ? ew : 0);
-          rrectC(c, ex + (sd > 0 ? 0 : -ew * 0.4), top2, ew * 1.4, eh, ew * 0.4); c.fill(); c.strokeStyle = OUT; c.stroke();
-          if(sp === "nfs_bat"){ c.beginPath(); c.moveTo(ex + sd * ew, top2 + eh * 0.2); c.lineTo(ex + sd * ew * 3.2, top2 + eh * 0.55); c.lineTo(ex + sd * ew, top2 + eh * 0.85); c.closePath(); c.fill(); c.stroke(); }
-        });
+        // endplates seen edge-on: thin plates at the wing tips, taller than the wing
+        const eh = RW[2] / U * k * hk2, top2 = yw - eh * 0.58, ew = Math.max(1.2, 0.022 * k);
+        [-1, 1].forEach(sd => { const ex = cx + sd * half; const eg = c.createLinearGradient(0, top2, 0, top2 + eh); eg.addColorStop(0, shade(epC, 0.35)); eg.addColorStop(1, shade(epC, -0.35));
+          c.fillStyle = eg; rrectC(c, ex - ew / 2, top2, ew, eh, ew * 0.45); c.fill(); c.strokeStyle = OUT; c.stroke(); });
       }
     }
   }
@@ -7672,7 +7725,7 @@ function cosPrice(key, val, carId){
   if(key === "finish" && val !== "brilho") mul = val === "metal" ? 1.5 : 1.2;
   if(key === "aro") mul = Math.max(1, Math.abs(+val - car.inch));
   if(key === "sound") mul = 1.2;
-  if(key === "wing") mul = {ug2:1.3, bat:1.4, loop:1.2, drag:1.5, chassis:1.8, tri:1.6, ducktop:1.1}[val] || 1;
+  if(key === "wing") mul = {ug2:1.3, bat:1.4, loop:1.6, drag:1.5, chassis:1.9, tri:0.9, evo:1.1, ducktop:0.8}[val] || 1;
   if(key === "wingF" && val === "cromo") mul = 1.8;
   if(key === "tala") mul = {xlargo:1.6, largo:1.2}[val] || 1;
   return nicePrice(Math.max(pr[0], car.price * pr[1]) * mul * (1 - Math.min(0.5, spBonus("parts"))));
