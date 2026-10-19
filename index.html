@@ -459,7 +459,7 @@ const MISSION_SEQ = [
 
 /* ---------- state ---------- */
 function defaultPilot(){ return {name:"Você", gender:"m", skin:"#c68a62", hair:"curto", hairC:"#1b1410", suit:"#e5484d", stripe:"#eef0ea", glasses:"none",
-  height:"medio", weight:"medio", outfit:"macacao", shoes:"preto", tattoo:"none", acc:[]}; }
+  height:"medio", weight:"medio", outfit:"macacao", shoes:"preto", tattoo:"none", acc:[], pants:"jeans", gloves:"none", helmet:"none", helmetWear:"cabeca"}; }
 function defaultState(){
   return {money:100, tokens:0, level:1, maxLevel:1, car:"pardal", owned:["pardal"], sound:true, cam:"side", cust:{}, tune:{}, pilot:defaultPilot(),
     series:{me:0, op:0, heat:1},
@@ -493,7 +493,7 @@ function load(data){
     if(old.motor || old.cambio || old.nitro) S.tune[S.car] = {motor:conv(old.motor), cambio:conv(old.cambio), nitro:conv(old.nitro)};
   }
   S.upg = {patrocinio:(src.upg && src.upg.patrocinio) || 0};
-  cosMigrate();
+  cosMigrate(); pilotMigrate();
 }
 // autosave: this device (localStorage) and the player's own cloud slot, newest wins on load
 const CLOUD = {ref:null, busy:false, again:false, last:"", told:false};
@@ -607,6 +607,10 @@ const SW_STYLE = {carcara:"sport", tiziu:"sport", tsubame:"sport", harpia:"gt", 
   okami:"gt", jaguatirica:"oem4", furia:"gt", escorpiao:"gt", relampago:"race", cometa:"race",
   garanhao:"madrpm", cascavel:"classic", tubarao:"aluminio", garanhao5:"flatled", guepardo:"gt", rubi:"tela", mamangava:"flat", touro:"ledtop", tufao:"flat"};
 const AERO_KIND = [null, "lip", "duck", "pedestal", "swan", "ta"];
+// visual wing models (the Aerofólio part in Preparação keeps giving the downforce; this only changes the look)
+const WINGS = [["orig","Do kit"],["none","Sem asa"],["ug","Underground GT"],["ug2","Duplo estágio"],["bat","Batwing"],["loop","Arco"],["drag","Drag alto"],["chassis","Chassis GT"],["ducktop","Ducktail + asa"],["tri","Triplo"]];
+const WING_FIN = [["","Cor do carro"],["carbono","Carbono"],["preto","Preto fosco"],["cromo","Cromado"]];
+const TALAS = [["fino","Fino esticado"],["","Original"],["largo","Largo"],["xlargo","Extra largo"]];
 function custOf(id){
   if(!S.cust) S.cust = {};
   let c = S.cust[id];
@@ -669,8 +673,8 @@ function carLook(id){
   const inch = Math.max(13, Math.min(20, +k.aro || car.inch));
   return {color:k.paint || car.color, finish:k.finish, rim:k.rim || car.rim, caliper:k.cal || car.cal,
     wheelStyle:(k.wmodel && k.wmodel !== "orig") ? k.wmodel : (car.wmodel || "orig"), spokes:car.spokes, tire:k.tire || "orig", tireC:k.tireC || "#f4f5f8", wheelScale:1 + 0.012 * (inch - car.inch),
-    rimFrac:Math.min(0.88, Math.max(0.5, 0.5 + (inch - 13) * 0.045)),
-    spoiler:k.aero ? AERO_KIND[k.aero] : undefined,
+    rimFrac:Math.min(0.9, Math.max(0.48, (0.5 + (inch - 13) * 0.045) * ({fino:1.07, largo:0.95, xlargo:0.9}[k.tala] || 1))),
+    spoiler:k.wing === "none" ? null : (k.wing && k.wing !== "orig") ? "nfs_" + k.wing : k.aero ? AERO_KIND[k.aero] : undefined, wingF:k.wingF || "", tala:k.tala || "",
     kit:k.kit, drop:suspDrop(car, k.susp, k.kit), tip:k.escape, blower:k.blower || 0, light:k.light, flame:k.flame, flameSize:k.flameSize || "m", neon:k.neon,
     vinyl:k.vinyl, vinylColor:k.vinylColor, stickers:k.stickers || [], num:(CARS.indexOf(car) * 17 + 7) % 99, exModel:k.exModel || "orig",
     spons:k.sponsVis === "off" ? [] : [...new Set((S.spons || []).slice().reverse())].slice(0, 8)};
@@ -679,14 +683,20 @@ function carLook(id){
 /* ---------- pilot ---------- */
 const P_SKIN = [["#f1c7a5","Clara"],["#e0b08a","Média clara"],["#c68a62","Média"],["#9a6644","Morena"],["#6e4a33","Escura"]];
 const P_HAIR = [["curto","Curto"],["raspado","Raspado"],["topete","Topete"],["black","Black power"],["longo","Longo"],["rabo","Rabo de cavalo"],["coque","Coque"],["trancas","Tranças"],
-  ["dreads","Dreads"],["moicano","Moicano"],["careca","Careca"],["bone","Boné"],["capacete","Capacete"]];
+  ["dreads","Dreads"],["moicano","Moicano"],["careca","Careca"],["bone","Boné"]];
 const P_GENDER = [["m","Homem"],["f","Mulher"]];
 const P_HEIGHT = [["baixo","Baixo"],["medio","Médio"],["alto","Alto"]];
 const P_WEIGHT = [["magro","Magro"],["medio","Médio"],["forte","Forte"]];
-const P_OUTFIT = [["macacao","Macacão"],["camiseta","Camiseta"],["regata","Regata"],["jaqueta","Jaqueta"],["moletom","Moletom"]];
-const P_SHOES = [["branco","Tênis branco"],["preto","Tênis preto"],["vermelho","Tênis vermelho"],["cano","Cano alto"],["bota","Bota"]];
+const P_OUTFIT = [["macacao","Macacão"],["macacao2","Macacão duas cores"],["kart","Macacão kart"],["camiseta","Camiseta"],["polo","Polo da equipe"],["regata","Regata"],
+  ["jaqueta","Jaqueta"],["couro","Jaqueta de couro"],["moletom","Moletom"],["colete","Colete"]];
+const P_PANTS = [["jeans","Jeans"],["preta","Calça preta"],["cargo","Cargo"],["jogger","Jogger"],["bege","Sarja bege"]];
+const P_SHOES = [["preto","Tênis preto"],["branco","Tênis branco"],["vermelho","Tênis vermelho"],["cano","Cano alto"],["basquete","Basquete"],["runner","Corrida"],
+  ["corrida","Sapatilha de piloto"],["bota","Bota"],["chinelo","Chinelo"]];
+const P_GLOVES = [["none","Sem luvas"],["corrida","Luva de piloto"],["couro","Couro"],["meio","Meio-dedo"],["drift","Drift"]];
+const P_HELMET = [["none","Sem capacete"],["integral","Integral"],["f1","Fórmula"],["aberto","Aberto"],["retro","Retrô"],["drag","Drag bolha"],["carbono","Carbono"]];
+const P_HWEAR = [["cabeca","Na cabeça"],["braco","Debaixo do braço"]];
 const P_TATTOO = [["none","Nenhuma"],["braco","Braço fechado"],["tribal","Tribal"],["pescoco","Pescoço"],["rosto","Rosto"]];
-const P_ACC = [["corrente","Corrente"],["brinco","Brinco"],["relogio","Relógio"],["fone","Fone"],["luvas","Luvas"],["barba","Barba"]];
+const P_ACC = [["corrente","Corrente"],["brinco","Brinco"],["relogio","Relógio"],["fone","Fone"],["barba","Barba"]];
 const P_HAIRC = [["#1b1410","Preto"],["#4a2e1c","Castanho"],["#c9a24a","Loiro"],["#b5442e","Ruivo"],["#d9dde6","Platinado"],["#5ad6ff","Azul"],["#ff5fae","Rosa"]];
 const P_GLASSES = [["none","Sem óculos"],["sol","Óculos escuros"],["aviador","Aviador"]];
 function npcPilot(seed){
@@ -695,7 +705,8 @@ function npcPilot(seed){
   return {gender:fem ? "f" : "m", skin:pick(P_SKIN, 1), hair:fem ? ["longo", "rabo", "coque", "trancas", "black"][Math.floor(r(2) * 5)] : pick(P_HAIR.slice(0, 6), 2), hairC:pick(P_HAIRC.slice(0, 5), 3),
     suit:pick(PAINTS, 4), stripe:pick(VCOLORS, 5), glasses:r(6) > 0.7 ? "sol" : "none", height:["baixo", "medio", "alto"][Math.floor(r(8) * 3)], weight:["magro", "medio", "forte"][Math.floor(r(9) * 3)],
     outfit:r(10) > 0.45 ? "macacao" : ["camiseta", "jaqueta", "moletom", "regata"][Math.floor(r(11) * 4)], shoes:pick(P_SHOES, 12), tattoo:r(13) > 0.7 ? pick(P_TATTOO.slice(1), 14) : "none",
-    acc:[["corrente", 15], ["brinco", 16], ["relogio", 17], ["barba", 18]].filter(([a, k]) => r(k) > (a === "barba" && fem ? 2 : 0.72)).map(a => a[0])};
+    acc:[["corrente", 15], ["brinco", 16], ["relogio", 17], ["barba", 18]].filter(([a, k]) => r(k) > (a === "barba" && fem ? 2 : 0.72)).map(a => a[0]),
+    pants:pick(P_PANTS, 19), gloves:r(20) > 0.5 ? pick(P_GLOVES.slice(1), 21) : "none", helmet:r(22) > 0.55 ? pick(P_HELMET.slice(1), 23) : "none", helmetWear:"braco"};
 }
 
 /* ---------- performance (real units: km/h and 0-100 km/h in seconds) ---------- */
@@ -765,7 +776,8 @@ function rubberBand(rs, ps){
 }
 function drawWheelArt(ctx, wr, swS, o){
   o = o || {};
-  const acc = o.acc || "#ffb547", rimCol = o.rimCol, frac = o.frac || 0, blink = !!o.blink;
+  // the colour choice only touches the details: stitching, the top marker and the accent ring on the hub; the rim stays leather
+  const rimCol = o.rimCol, acc = rimCol || o.acc || "#ffb547", frac = o.frac || 0, blink = !!o.blink;
   const WP = (a, rr) => [Math.cos(a) * rr, Math.sin(a) * rr];
   const rimG = () => leatherG(shade(rimCol, 0.3), rimCol, shade(rimCol, -0.6));
   // shift lights recessed into the rim: a channel cut along the arc, curved lenses that fill from both ends to the centre
@@ -952,22 +964,22 @@ function drawWheelArt(ctx, wr, swS, o){
   ctx.lineCap = swS === "race" ? "round" : "butt";
   if(swS === "baquelite" || swS === "madrpm"){
     // thin rim with finger grips: bakelite ivory, or polished wood with the tach boss
-    const base = rimCol ? rimG() : swS === "madrpm" ? leatherG("#c07a3e", "#8a4a1f", "#4a230c") : leatherG("#fbf6e8", "#e8dfc6", "#a99e83");
+    const base = swS === "madrpm" ? leatherG("#c07a3e", "#8a4a1f", "#4a230c") : leatherG("#fbf6e8", "#e8dfc6", "#a99e83");
     ctx.strokeStyle = base; ctx.lineWidth = 4.2; ringPath(); ctx.stroke();
     ctx.strokeStyle = "rgba(0,0,0,.18)"; ctx.lineWidth = 0.6; for(let k = 0; k < 40; k++){ const a = k * TAU / 40, p0 = WP(a, wr - 2.1), p1 = WP(a, wr - 0.6); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); }
     ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.arc(0, 0, wr + 0.8, Math.PI * 1.1, Math.PI * 1.4); ctx.stroke();
   } else if(swS === "classic"){
-    const wood = rimCol ? rimG() : leatherG("#c07a3e", "#8a4a1f", "#4a230c");
+    const wood = leatherG("#c07a3e", "#8a4a1f", "#4a230c");
     ctx.strokeStyle = wood; ctx.lineWidth = 5.5; ringPath(); ctx.stroke();
     ctx.strokeStyle = "rgba(255,220,170,.25)"; ctx.lineWidth = 0.6;
     for(let k = 0; k < 3; k++){ ctx.beginPath(); ctx.arc(0, 0, wr - 1.5 + k * 1.5, Math.PI * (1.05 + k * 0.1), Math.PI * (1.35 + k * 0.12)); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, wr - 1.5 + k * 1.5, Math.PI * (1.6 + k * 0.08), Math.PI * (1.85 + k * 0.05)); ctx.stroke(); }
   } else if(swS === "rally" || swS === "deep"){
-    ctx.strokeStyle = rimCol ? rimG() : leatherG("#34363d", "#25272c", "#141519"); ctx.lineWidth = 9.5; ringPath(); ctx.stroke();
+    ctx.strokeStyle = leatherG("#34363d", "#25272c", "#141519"); ctx.lineWidth = 9.5; ringPath(); ctx.stroke();
     ctx.fillStyle = "rgba(255,255,255,.05)"; for(let k = 0; k < 90; k++){ const q = WP(k * TAU / 90, wr + ((k * 7) % 5 - 2)); ctx.fillRect(q[0], q[1], 0.8, 0.8); }
   } else if(swS === "race"){
-    ctx.strokeStyle = rimCol ? rimG() : leatherG("#2e3037", "#1c1e23", "#0c0d10"); ctx.lineWidth = 10; ringPath(); ctx.stroke();
+    ctx.strokeStyle = leatherG("#2e3037", "#1c1e23", "#0c0d10"); ctx.lineWidth = 10; ringPath(); ctx.stroke();
   } else {
-    const lth = rimCol ? rimG() : leatherG("#43464f", "#202228", "#0a0b0e");
+    const lth = leatherG("#43464f", "#202228", "#0a0b0e");
     ctx.strokeStyle = lth; ctx.lineWidth = swS === "oem" || swS === "oem4" || swS === "couro4" ? 7.5 : swS === "aluminio" ? 6 : 8.5; ringPath(); ctx.stroke();
     if(swS === "aluminio" || swS === "couro4"){ ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth = 0.5; for(let k = 0; k < 60; k++){ const a = k * TAU / 60, p0 = WP(a, wr - 2.6), p1 = WP(a, wr + 2.6); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke(); } }
     if(swS !== "oem4" && swS !== "aluminio" && swS !== "couro4"){
@@ -978,7 +990,7 @@ function drawWheelArt(ctx, wr, swS, o){
     }
     if(swS === "flat" || swS === "flatled"){
       ctx.fillStyle = "rgba(255,255,255,.1)"; for(let t = 0; t < 1; t += 0.008) for(const off of [-2.6, 0, 2.6]){ const a = Math.PI * (0.66 + 1.68 * t), q = WP(a, wr + off); if((t * 1000 | 0) % 2) ctx.fillRect(q[0] - 0.4, q[1] - 0.4, 0.8, 0.8); }
-      ctx.strokeStyle = "#ff3b3b"; ctx.lineWidth = 0.6; ctx.setLineDash([1.2, 1.2]); ctx.save(); ctx.scale((wr - 3.6) / wr, (wr - 3.6) / wr); ringPath(); ctx.restore(); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = rimCol || "#ff3b3b"; ctx.lineWidth = 0.6; ctx.setLineDash([1.2, 1.2]); ctx.save(); ctx.scale((wr - 3.6) / wr, (wr - 3.6) / wr); ringPath(); ctx.restore(); ctx.stroke(); ctx.setLineDash([]);
       if(swS === "flatled") rimLeds(Math.PI * 1.31, Math.PI * 1.69, 11, wr, 4);
     }
     if(swS === "sport" || swS === "gt" || swS === "tela" || swS === "ledtop"){
@@ -1003,9 +1015,22 @@ function drawWheelArt(ctx, wr, swS, o){
     ctx.beginPath(); ctx.arc(0, 0, wr + 0.6, Math.PI * (hi + 0.02), Math.PI * 1.92); ctx.stroke();
     ctx.lineCap = "butt";
   }
+  // baseball stitching in the chosen colour, both edges of the leather, and a stitched band where the thumbs rest
+  if(rimCol && swS !== "classic" && swS !== "baquelite" && swS !== "madrpm" && swS !== "race"){
+    const hw2 = swS === "rally" || swS === "deep" || swS === "race" ? 4.4 : swS === "oem" || swS === "oem4" || swS === "couro4" ? 3.4 : swS === "aluminio" ? 2.6 : 3.9;
+    ctx.save(); ctx.lineCap = "round";
+    [wr - hw2 + 0.9, wr + hw2 - 0.9].forEach(rr => {
+      for(let k = 0; k < 120; k++){
+        const a = k * TAU / 120; if(LEDW && a > Math.PI * 1.27 && a < Math.PI * 1.73) continue;
+        const p0 = WP(a, rr - 0.55), p1 = WP(a + 0.022, rr + 0.55);
+        ctx.strokeStyle = rgba(rimCol, 0.95); ctx.lineWidth = 0.55; ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
+      }
+    });
+    ctx.restore();
+  }
   // shift lights on the rim, centre marker
   if(swS === "rally"){ ctx.strokeStyle = acc; ctx.lineWidth = 9.6; ctx.lineCap = "butt"; ctx.beginPath(); ctx.arc(0, 0, wr, Math.PI * 1.47, Math.PI * 1.53); ctx.stroke(); }
-  else if(swS === "flat"){ ctx.strokeStyle = "#e5484d"; ctx.lineWidth = 9; ctx.lineCap = "butt"; ctx.beginPath(); ctx.arc(0, 0, wr, Math.PI * 1.475, Math.PI * 1.525); ctx.stroke(); }
+  else if(swS === "flat"){ ctx.strokeStyle = rimCol || "#e5484d"; ctx.lineWidth = 9; ctx.lineCap = "butt"; ctx.beginPath(); ctx.arc(0, 0, wr, Math.PI * 1.475, Math.PI * 1.525); ctx.stroke(); }
   else if(!LEDW && swS !== "classic" && swS !== "baquelite" && swS !== "madrpm"){ const tq = WP(Math.PI * 1.5, wr + 3.2); ctx.fillStyle = acc; ctx.fillRect(tq[0] - 1.6, tq[1] - 1.8, 3.2, 3.6); }
 }
 function drawClusterArt(ctx, cxl, cyl, wr, DS, o){
@@ -1422,7 +1447,7 @@ function rivalLook(l){
   const h = k => hash(l * 31 + k), boss = isBoss(l);
   return {rim:RIMS[Math.floor(h(1) * RIMS.length)][0], caliper:CALIPERS[Math.floor(h(2) * CALIPERS.length)][0],
     wheelStyle:boss ? "mesh" : WHEEL_IDS[1 + Math.floor(h(3) * (WHEEL_IDS.length - 2))], spokes:5, rimFrac:0.6 + h(4) * 0.22, kit:boss ? 2 + (l % 2) : Math.floor(h(5) * 2.6),
-    drop:boss ? 1.6 : [0, 0.8, 1.6][Math.floor(h(6) * 3)], spoiler:boss ? (l % 2 ? "ta" : "swan") : ["lip", undefined, "duck", "pedestal", undefined][Math.floor(h(7) * 5)],
+    drop:boss ? 1.6 : [0, 0.8, 1.6][Math.floor(h(6) * 3)], spoiler:boss ? (l % 2 ? "ta" : (l > 30 ? "nfs_chassis" : "swan")) : ["lip", undefined, "duck", "pedestal", undefined, "nfs_ug", "nfs_bat", "nfs_ug2"][Math.floor(h(7) * (l > 20 ? 8 : 5))],
     tire:TIRES[Math.floor(h(12) * TIRES.length)][0], tireC:TIRE_COLORS[Math.floor(h(13) * TIRE_COLORS.length)][0],
     vinyl:["none","listra","faixa","doistons","numero"][Math.floor(h(8) * 5)], vinylColor:VCOLORS[Math.floor(h(9) * VCOLORS.length)][0],
     stickers:h(10) > 0.5 ? ["tg"] : [], num:Math.floor(h(11) * 98) + 1, finish:"brilho"};
@@ -2086,6 +2111,18 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
   const tg = c.createRadialGradient(cx, cy, rr, cx, cy, r);
   tg.addColorStop(0, "#26282e"); tg.addColorStop(0.55, "#17181c"); tg.addColorStop(1, "#08090b");
   c.fillStyle = tg; circ(c, cx, cy, r); c.fill();
+  if((o.tala === "largo" || o.tala === "xlargo") && !offroad){
+    // a fat tyre squats on the road: the sidewall bulges at the contact patch
+    const bw = r * (o.tala === "xlargo" ? 0.98 : 0.84), bh = r * (o.tala === "xlargo" ? 0.11 : 0.07);
+    const bg = c.createLinearGradient(0, cy + r - bh * 2, 0, cy + r + bh * 0.4); bg.addColorStop(0, "#17181c"); bg.addColorStop(1, "#060708");
+    c.fillStyle = bg; c.beginPath(); c.ellipse(cx, cy + r - bh * 0.6, bw, bh * 1.4, 0, 0, TAU); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = Math.max(0.5, r * 0.025); c.beginPath(); c.ellipse(cx, cy + r - bh * 0.9, bw * 0.92, bh, 0, Math.PI * 1.05, Math.PI * 1.95); c.stroke();
+  }
+  if(o.tala === "fino" && !offroad){
+    // stretched tyre: the bead pulled tight on a wide rim shows as a bright angled lip right at the rim edge
+    c.strokeStyle = "rgba(255,255,255,.16)"; c.lineWidth = Math.max(0.6, r * 0.05); circ(c, cx, cy, rr * 1.07); c.stroke();
+    c.strokeStyle = "#050607"; c.lineWidth = Math.max(0.5, r * 0.025); circ(c, cx, cy, rr * 1.13); c.stroke();
+  }
   if(offroad){
     c.fillStyle = "#24262d";
     for(let k = 0; k < 20; k++){
@@ -2598,12 +2635,31 @@ function drawCar(c, x, baseY, s, key, color, o){
   c.fillStyle = "rgba(0,0,0,.6)"; c.beginPath(); c.ellipse(X(L / 2), Yw(-0.2), L * 0.47 * s, 1.3 * s, 0, 0, TAU); c.fill();
 
   if(o.lights){
-    const nx = X(L), ny = Y(M.head[0][1] - 1.5), g = c.createLinearGradient(nx, 0, nx + 190 * s, 0);
-    g.addColorStop(0, rgba(lightC, 0.42)); g.addColorStop(0.4, rgba(lightC, 0.16)); g.addColorStop(1, rgba(lightC, 0));
-    c.fillStyle = g; c.beginPath(); c.moveTo(nx, ny - 2 * s); c.lineTo(nx + 190 * s, ny - 14 * s); c.lineTo(nx + 190 * s, Yw(0)); c.lineTo(nx + 30 * s, Yw(0)); c.lineTo(nx, ny + 3 * s); c.fill();
-    const pool = c.createRadialGradient(nx + 55 * s, Yw(0), 2, nx + 55 * s, Yw(0), 75 * s);
-    pool.addColorStop(0, rgba(lightC, 0.3)); pool.addColorStop(1, rgba(lightC, 0));
-    c.fillStyle = pool; c.beginPath(); c.ellipse(nx + 55 * s, Yw(0), 75 * s, 4.5 * s, 0, 0, TAU); c.fill();
+    // headlight beam: it leaves the lamp glass at the lamp's own height and opens symmetrically around a slightly
+    // dipped axis, in soft layers, until the lower edge meets the road and pools there
+    const hys0 = M.head.map(p => p[1]), hT0 = Math.max(...hys0), hB0 = Math.min(...hys0);
+    const ox = Math.max(...M.head.map(p => p[0])) - 0.4, oy = (hT0 + hB0) / 2, h0 = Math.max(0.5, (hT0 - hB0) * 0.42);
+    const LB = 150, dip = 0.045, ex = ox + LB, ey = oy - LB * dip;
+    c.save(); c.beginPath(); c.rect(X(ox - 2), Y(oy + 60), (LB + 10) * s, Yw(0) - Y(oy + 60)); c.clip();
+    c.globalCompositeOperation = "screen";
+    // many thin layers instead of a few thick ones, so the falloff from the axis is smooth with no visible steps
+    const layers = []; for(let i = 0; i < 14; i++){ const f = i / 13; layers.push([2 + 26 * f * f, 0.07 - 0.03 * f]); }
+    layers.reverse().forEach(([spread, a]) => {
+      const g = c.createLinearGradient(X(ox), 0, X(ex), 0);
+      g.addColorStop(0, rgba(lightC, a)); g.addColorStop(0.25, rgba(lightC, a * 0.7)); g.addColorStop(0.6, rgba(lightC, a * 0.3)); g.addColorStop(1, rgba(lightC, 0));
+      c.fillStyle = g; c.beginPath();
+      c.moveTo(X(ox), Y(oy + h0)); c.quadraticCurveTo(X(ox + LB * 0.35), Y(oy - LB * 0.35 * dip + spread * 0.42), X(ex), Y(ey + spread));
+      c.lineTo(X(ex), Y(ey - spread)); c.quadraticCurveTo(X(ox + LB * 0.35), Y(oy - LB * 0.35 * dip - spread * 0.42), X(ox), Y(oy - h0)); c.closePath(); c.fill();
+    });
+    c.restore();
+    // where the lower edge of the beam lands: a soft, elongated hotspot on the road
+    const hitX = ox + Math.min(110, oy / (dip + 10 / LB * 0.9)), hx2 = X(ox + (hitX - ox) * 0.55);
+    c.save(); c.globalCompositeOperation = "screen";
+    c.translate(hx2, Yw(0)); c.scale(1, 0.07);
+    const pool = c.createRadialGradient(0, 0, 0, 0, 0, (hitX - ox) * 0.75 * s);
+    pool.addColorStop(0, rgba(lightC, 0.34)); pool.addColorStop(0.5, rgba(lightC, 0.14)); pool.addColorStop(1, rgba(lightC, 0));
+    c.fillStyle = pool; c.beginPath(); c.arc(0, 0, (hitX - ox) * 0.75 * s, 0, TAU); c.fill();
+    c.restore();
   }
 
   // wheel wells, wheels, then the body with cut-outs so lowered cars tuck the tyres
@@ -3358,6 +3414,70 @@ function drawCar(c, x, baseY, s, key, color, o){
       c.globalAlpha = 0.96; c.fillStyle = eg2; poly(ep); c.fill(); c.globalAlpha = 1; c.strokeStyle = OUT; c.lineWidth = Math.max(0.4, 0.25 * s); c.stroke();
       c.strokeStyle = "rgba(255,255,255,.28)"; c.lineWidth = Math.max(0.4, 0.18 * s); line(xle - 0.6, yw + 0.25, xte + 0.1, yw + rise + thick * 0.5 + up - 0.2);
     }
+    // NFS-style wings: tall uprights, big endplates, multi-element and hoop wings, all drawn from the same airfoil
+    if(typeof spoiler === "string" && spoiler.indexOf("nfs_") === 0){
+      const kind = spoiler.slice(4), sc = hb ? 0.7 : 1, WF = o.wingF || "";
+      const main = WF === "carbono" ? CARBON : WF === "preto" ? "#17191e" : WF === "cromo" ? "#cfd4dc" : color;
+      const epC = WF === "" ? CARBON : main, darkU = shade(WF === "" ? color : main, -0.32);
+      const blade = (xb, yb, xt, yt, wb, col) => { c.fillStyle = col; poly([[xb + wb, yb], [xb - wb, yb], [xt - wb * 0.55, yt], [xt + wb * 0.55, yt]]); c.fill(); c.strokeStyle = OUT; c.lineWidth = Math.max(0.4, 0.22 * s); c.stroke(); };
+      const endplate = (pts, smoothIt) => {
+        const ys = pts.map(p => p[1]), g = c.createLinearGradient(0, Y(Math.max(...ys)), 0, Y(Math.min(...ys)));
+        g.addColorStop(0, shade(epC, 0.35)); g.addColorStop(0.5, epC); g.addColorStop(1, shade(epC, -0.4));
+        c.fillStyle = g; if(smoothIt) smooth(pts); else poly(pts); c.fill(); c.strokeStyle = OUT; c.lineWidth = Math.max(0.5, 0.3 * s); c.stroke();
+        c.strokeStyle = "rgba(255,255,255,.3)"; c.lineWidth = Math.max(0.4, 0.2 * s); line(pts[0][0], pts[0][1] - 0.25, pts[1][0], pts[1][1] - 0.25);
+      };
+      const bolts = (pts) => { c.fillStyle = "#d9dde4"; pts.forEach(p => { circ(c, X(p[0]), Y(p[1]), Math.max(0.35, 0.17 * s)); c.fill(); }); };
+      const xte = EX - (kind === "chassis" ? 3.6 : hb ? 1.2 : 1.0);
+      if(kind === "ducktop"){
+        if(hb) body([[EX + 11, EY + 0.1], [EX + 5, EY + 0.9], [EX - 0.6, EY + 1.9], [EX - 2.2, EY + 2.2], [EX - 2.4, EY + 1.5], [EX - 0.8, EY - 0.4], [EX + 4, EY - 0.3]]);
+        else body([[EX + 12, EY + 0.02], [EX + 6.5, EY + 0.55], [EX + 1.8, EY + 1.6], [EX - 0.4, EY + 2.15], [EX - 0.9, EY + 1.85], [EX - 0.4, EY + 0.2], [EX + 1.2, EY - 0.4]]);
+        sheen(EX + 8, EY + 0.6, EX - 0.2, EY + 1.95);
+        const ch = 6.4 * sc, yw = EY + 2.2 + 2.6 * sc, xle = xte + ch;
+        [xle - ch * 0.3, xle - ch * 0.72].forEach(mx => blade(mx, EY + 1.2, mx - 0.3, yw - 0.3, 0.42, darkU));
+        airfoil(xle, yw, ch, 0.62, ch * 0.06, main);
+        endplate([[xle - 0.6, yw + 1.0], [xte - 0.5, yw + 1.6], [xte - 0.6, yw - 0.9], [xle - 1.2, yw - 0.8]]);
+      } else if(kind === "loop"){
+        // a hoop: the wing is the arch itself, rising off the deck and landing on the tail
+        const x0 = EX + 12 * sc, x1 = EX - 0.6, top = EY + 6.2 * sc, bw = Math.max(1, 1.5 * s * sc);
+        const arch = () => { c.beginPath(); c.moveTo(X(x0), Y(EY)); c.bezierCurveTo(X(x0 - 1.5 * sc), Y(top + 1.4 * sc), X(x1 + 3 * sc), Y(top + 1.2 * sc), X(x1), Y(EY + 0.2)); };
+        c.lineCap = "round"; arch(); c.strokeStyle = OUT; c.lineWidth = bw + Math.max(1, 0.5 * s); c.stroke();
+        const ag = c.createLinearGradient(0, Y(top + 1.4), 0, Y(EY)); ag.addColorStop(0, shade(main, 0.4)); ag.addColorStop(0.5, main); ag.addColorStop(1, shade(main, -0.4));
+        arch(); c.strokeStyle = ag; c.lineWidth = bw; c.stroke();
+        arch(); c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = Math.max(0.4, bw * 0.22); c.stroke();
+        bolts([[x0 - 0.5, EY + 0.5], [x1 + 0.4, EY + 0.7]]);
+      } else {
+        const P = {ug:[6.4, 9.6, 0.72], ug2:[6.0, 9.0, 0.7], bat:[6.8, 9.4, 0.72], drag:[10.5, 7.2, 0.42], chassis:[7.2, 10.4, 0.74], tri:[5.4, 8.2, 0.5]}[kind] || [6, 9, 0.7];
+        const h = P[0] * sc, ch = P[1] * sc, th = P[2], xle = xte + ch, yw = EY + h, rise = ch * (kind === "drag" ? 0.02 : 0.06);
+        const mp = [xle - ch * 0.28, xle - ch * 0.7];
+        if(kind === "chassis"){
+          // chassis-mounted: swan-neck uprights come up through the tail behind the bumper
+          [[0.9, shade(darkU, -0.2)], [0, darkU]].forEach(([dx, col]) => mp.forEach(mx => {
+            c.strokeStyle = col; c.lineWidth = Math.max(0.7, 0.62 * s * sc); c.lineCap = "round"; c.beginPath();
+            const bx = Math.max(EX + 0.6, mx + 2.2) + dx; c.moveTo(X(bx), Y(EY - 0.4)); c.bezierCurveTo(X(bx - 0.2), Y(EY + h * 0.6), X(mx + dx + 1.5), Y(yw + th + 1.5), X(mx + dx - 0.4), Y(yw + th * 0.6 + rise * 0.3)); c.stroke();
+          }));
+        } else {
+          mp.forEach(mx => blade(mx + 0.9, EY, mx + 0.7, yw - th * 0.6, kind === "drag" ? 0.32 : 0.55, shade(darkU, -0.25)));
+          mp.forEach(mx => blade(mx, EY, mx - 0.25, yw - th * 0.6, kind === "drag" ? 0.32 : 0.55, darkU));
+          if(kind === "drag"){ c.strokeStyle = darkU; c.lineWidth = Math.max(0.5, 0.28 * s); line(mp[0], EY + 0.3, mp[1] - 0.2, yw - 1.4); line(mp[1], EY + 0.3, mp[0] - 0.2, yw - 1.4); }
+        }
+        // endplate behind the wing section so the profile reads in front of it
+        if(kind === "ug") endplate([[xle + 0.8, yw + 2.0], [xte - 1.0, yw + 3.2], [xte - 1.6, yw + 0.6], [xte - 0.6, yw - 2.2], [xle - 1.6, yw - 1.6], [xle + 0.4, yw - 0.2]]);
+        else if(kind === "ug2") endplate([[xle + 0.4, yw + 1.4], [xte - 1.6, yw + 4.6], [xte - 1.8, yw - 1.6], [xle - 0.8, yw - 1.4]]);
+        else if(kind === "bat"){
+          // batwing: a swooping plate with scalloped lower edge
+          const pts = [[xle + 1.2, yw + 1.0], [xle - ch * 0.4, yw + 2.4], [xte - 0.8, yw + 3.6], [xte - 2.4, yw + 1.4], [xte - 1.2, yw - 0.6], [xte + ch * 0.18, yw - 1.2], [xte + ch * 0.3, yw - 2.6], [xte + ch * 0.48, yw - 1.4], [xte + ch * 0.64, yw - 2.8], [xte + ch * 0.8, yw - 1.2], [xle + 0.6, yw - 0.6]];
+          endplate(pts, false);
+        }
+        else if(kind === "drag") endplate([[xle + 0.5, yw + 3.0], [xte - 0.7, yw + 3.6], [xte - 0.7, yw - 2.4], [xle + 0.5, yw - 2.0]]);
+        else if(kind === "chassis") endplate([[xle + 0.6, yw + 1.6], [xte - 0.4, yw + 2.4], [xte - 0.9, yw - 1.4], [xte + ch * 0.4, yw - 3.2], [xle + 0.2, yw - 2.2]], true);
+        else if(kind === "tri") endplate([[xle + 0.5, yw + 1.0], [xte - 1.2, yw + 4.4], [xte - 1.4, yw - 1.0], [xle - 0.6, yw - 1.0]]);
+        airfoil(xle, yw, ch, th, rise, main);
+        if(kind === "ug2") airfoil(xte + ch * 0.46, yw + rise + 1.4, ch * 0.5, th * 0.75, ch * 0.09, epC === CARBON ? CARBON : shade(main, -0.12));
+        if(kind === "tri"){ airfoil(xte + ch * 0.78, yw + rise + 1.3, ch * 0.78, th * 0.9, ch * 0.06, main); airfoil(xte + ch * 0.56, yw + rise + 2.7, ch * 0.58, th * 0.8, ch * 0.06, main); }
+        if(kind === "drag"){ c.fillStyle = darkU; poly([[xte + 0.25, yw + rise - 0.2], [xte - 0.15, yw + rise - 0.2], [xte - 0.15, yw + rise + 1.3], [xte + 0.25, yw + rise + 1.3]]); c.fill(); }
+        bolts([[xle - 0.2, yw - 0.4], [xte + 0.2, yw + rise - 0.4]]);
+      }
+    }
   }
 
   // a supercharger through the bonnet (on the engine lid of mid and rear-engined cars): polished Roots case with fins,
@@ -3422,9 +3542,9 @@ function drawCar(c, x, baseY, s, key, color, o){
   // lights: dark housings, chrome reflectors, a projector lens and running-light strip; layered red tail lamps
   const centre = pts => [X(pts.reduce((a, p) => a + p[0], 0) / pts.length), Y(pts.reduce((a, p) => a + p[1], 0) / pts.length)];
   if(o.lights){
-    const [hx, hy] = centre(M.head), hg = c.createRadialGradient(hx, hy, 0, hx, hy, 8 * s);
-    hg.addColorStop(0, rgba(lightC, 0.55)); hg.addColorStop(1, rgba(lightC, 0));
-    c.fillStyle = hg; circ(c, hx, hy, 8 * s); c.fill();
+    const [hx, hy] = centre(M.head), hg = c.createRadialGradient(hx, hy, 0, hx, hy, 5 * s);
+    hg.addColorStop(0, rgba(lightC, 0.4)); hg.addColorStop(1, rgba(lightC, 0));
+    c.fillStyle = hg; circ(c, hx, hy, 5 * s); c.fill();
     const [tx, ty] = centre(M.tail), rg2 = c.createRadialGradient(tx, ty, 0, tx, ty, 6 * s);
     rg2.addColorStop(0, "rgba(255,40,40,.45)"); rg2.addColorStop(1, "rgba(255,40,40,0)");
     c.fillStyle = rg2; circ(c, tx, ty, 6 * s); c.fill();
@@ -3509,12 +3629,15 @@ function drawCar(c, x, baseY, s, key, color, o){
     } else if(SYs.fog){ c.fillStyle = "#14161b"; rrectC(c, X(L - 3.4), Y(bot + 2.6), 2.4 * s, 1.3 * s, 0.4 * s); c.fill(); c.fillStyle = "#fff6d0"; circ(c, X(L - 2.2), Y(bot + 1.95), 0.45 * s); c.fill(); }
   }
   if(o.lights){
-    // anamorphic flare through the lamp
-    const [fx0, fy0] = [X(M.head.reduce((a, q) => a + q[0], 0) / M.head.length), Y(M.head.reduce((a, q) => a + q[1], 0) / M.head.length)];
-    const fl = c.createLinearGradient(fx0 - 40 * s, 0, fx0 + 40 * s, 0); fl.addColorStop(0, rgba(lightC, 0)); fl.addColorStop(0.5, rgba(lightC, 0.55)); fl.addColorStop(1, rgba(lightC, 0));
-    c.fillStyle = fl; c.fillRect(fx0 - 40 * s, fy0 - 0.25 * s, 80 * s, Math.max(0.8, 0.5 * s));
-    const core = c.createRadialGradient(fx0, fy0, 0, fx0, fy0, 4 * s); core.addColorStop(0, "rgba(255,255,255,.85)"); core.addColorStop(0.3, rgba(lightC, 0.4)); core.addColorStop(1, rgba(lightC, 0));
-    c.fillStyle = core; circ(c, fx0, fy0, 4 * s); c.fill();
+    // bloom on the glass itself: bright where the lamp is, soft at the edge, centred on the lens and nothing else
+    const hys1 = M.head.map(p => p[1]), hxs1 = M.head.map(p => p[0]);
+    const fx0 = X((Math.max(...hxs1) * 2 + Math.min(...hxs1)) / 3), fy0 = Y((Math.max(...hys1) + Math.min(...hys1)) / 2), rb = Math.max(1.6, (Math.max(...hys1) - Math.min(...hys1)) * 0.9) * s;
+    c.save(); c.globalCompositeOperation = "screen";
+    const core = c.createRadialGradient(fx0, fy0, 0, fx0, fy0, rb * 2.2); core.addColorStop(0, "rgba(255,255,255,.9)"); core.addColorStop(0.18, rgba(lightC, 0.75)); core.addColorStop(0.5, rgba(lightC, 0.22)); core.addColorStop(1, rgba(lightC, 0));
+    c.fillStyle = core; circ(c, fx0, fy0, rb * 2.2); c.fill();
+    const fl = c.createLinearGradient(fx0 - rb * 3.5, 0, fx0 + rb * 3.5, 0); fl.addColorStop(0, rgba(lightC, 0)); fl.addColorStop(0.5, rgba(lightC, 0.3)); fl.addColorStop(1, rgba(lightC, 0));
+    c.fillStyle = fl; c.beginPath(); c.ellipse(fx0, fy0, rb * 3.5, rb * 0.22, 0, 0, TAU); c.fill();
+    c.restore();
   }
   {
     const tys = M.tail.map(p => p[1]), txs = M.tail.map(p => p[0]), tT = Math.max(...tys), tB = Math.min(...tys), tx0 = Math.min(...txs), tx1 = Math.max(...txs), TS = SYs.tail || "block";
@@ -3801,9 +3924,11 @@ function drawRear(c, cx, gy, k, key, color, look){
   }
   c.fillStyle = "rgba(0,0,0,.6)"; c.beginPath(); c.ellipse(cx, gy, w * 0.58, 0.1 * k, 0, 0, TAU); c.fill();
   // tyres with tread
-  const tw = (off ? 0.4 : 0.3) * k, th2 = (off ? 0.84 : 0.6) * k;
+  const TALA = {fino:0.74, largo:1.22, xlargo:1.45}[look.tala] || 1;
+  const tw = (off ? 0.4 : 0.3) * k * TALA, th2 = (off ? 0.84 : 0.6) * k;
   [-1, 1].forEach(sd => {
-    const tx = cx + sd * (w / 2 - tw / 2 - 0.02 * k) - tw / 2;
+    // wide tyres poke out past the fenders, stretched ones tuck in
+    const tx = cx + sd * (w / 2 - tw / 2 - 0.02 * k + (TALA - 1) * 0.3 * k * 1.1) - tw / 2;
     c.fillStyle = "#101114"; rrectC(c, tx, gy - th2, tw, th2, 0.08 * k); c.fill();
     c.strokeStyle = "#24262d"; c.lineWidth = Math.max(0.5, 0.02 * k);
     for(let i = 1; i < 5; i++){ c.beginPath(); c.moveTo(tx + 0.03 * k, gy - th2 * i / 5); c.lineTo(tx + tw - 0.03 * k, gy - th2 * i / 5); c.stroke(); }
@@ -3917,6 +4042,36 @@ function drawRear(c, cx, gy, k, key, color, look){
   } else if(sp === "lip" && !hatch){
     c.fillStyle = color; c.beginPath(); c.moveTo(cx - w * 0.44, by - bh); c.lineTo(cx - w * 0.46, by - bh - 0.06 * k); c.lineTo(cx + w * 0.46, by - bh - 0.06 * k); c.lineTo(cx + w * 0.44, by - bh); c.closePath(); c.fill(); c.stroke();
   }
+  // wings seen from behind: uprights, the wing slab across the car and the endplates, at the height the side view uses
+  const RW = {pedestal:[3, 0.9, 0.6], swan:[4.2, 0.9, 0.7], ta:[5.2, 0.95, 1.2], si:[0.8, 0.85, 0.4], nfs_ug:[6.4, 1.04, 4.6], nfs_ug2:[6, 1.04, 5.4], nfs_bat:[6.8, 1.06, 5.2],
+    nfs_drag:[10.5, 1.0, 5.6], nfs_chassis:[7.2, 1.12, 4.2], nfs_tri:[5.4, 1.0, 5.2], nfs_ducktop:[4.8, 0.9, 1.6], nfs_loop:[6.2, 0.9, 0]}[sp];
+  if(RW){
+    const hk2 = hatch ? 0.7 : 1, base = hatch ? by - bh - ch : by - bh, yw = base - RW[0] * hk2 / U * k, half = w * RW[1] / 2, slab = Math.max(1.2, 0.075 * k);
+    const WF = look.wingF || "", main = WF === "carbono" ? CARBON : WF === "preto" ? "#17191e" : WF === "cromo" ? "#cfd4dc" : sp.indexOf("nfs_") === 0 || sp === "pedestal" || sp === "si" ? color : CARBON;
+    const epC = WF ? main : CARBON, upC = shade(WF ? main : color, -0.35);
+    const wg = c.createLinearGradient(0, yw - slab, 0, yw + slab); wg.addColorStop(0, shade(main, 0.35)); wg.addColorStop(0.5, main); wg.addColorStop(1, shade(main, -0.45));
+    if(sp === "nfs_loop"){
+      c.lineCap = "round"; c.lineWidth = Math.max(2, 0.12 * k);
+      const arch = () => { c.beginPath(); c.moveTo(cx - half * 0.86, base); c.bezierCurveTo(cx - half * 0.95, yw - 0.1 * k, cx - half * 0.6, yw - 0.02 * k, cx, yw - 0.02 * k); c.bezierCurveTo(cx + half * 0.6, yw - 0.02 * k, cx + half * 0.95, yw - 0.1 * k, cx + half * 0.86, base); };
+      arch(); c.strokeStyle = OUT; c.lineWidth = Math.max(2.6, 0.15 * k); c.stroke(); arch(); c.strokeStyle = main; c.lineWidth = Math.max(2, 0.11 * k); c.stroke();
+      c.strokeStyle = "rgba(255,255,255,.3)"; c.lineWidth = Math.max(0.5, 0.025 * k); arch(); c.stroke(); c.lineCap = "round";
+    } else {
+      if(sp === "nfs_chassis"){ c.strokeStyle = upC; c.lineWidth = Math.max(1.2, 0.05 * k); [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(cx + sd * w * 0.26, by - bh * 0.4); c.lineTo(cx + sd * w * 0.24, yw); c.stroke(); }); }
+      else { c.fillStyle = upC; [-1, 1].forEach(sd => { const ux = cx + sd * w * (sp === "nfs_drag" ? 0.22 : 0.3); c.beginPath(); c.moveTo(ux - 0.035 * k, base); c.lineTo(ux + 0.035 * k, base); c.lineTo(ux + 0.025 * k, yw); c.lineTo(ux - 0.025 * k, yw); c.closePath(); c.fill(); c.stroke(); }); }
+      const slabs = sp === "nfs_tri" ? [0, -0.13, -0.26] : sp === "nfs_ug2" ? [0, -0.14] : [0];
+      slabs.forEach((dy, i) => { c.fillStyle = wg; rrectC(c, cx - half * (1 - i * 0.02), yw + dy * k - slab, half * 2 * (1 - i * 0.02), slab * (i ? 1.4 : 2), slab * 0.5); c.fill(); c.strokeStyle = OUT; c.stroke(); });
+      if(sp === "nfs_drag"){ c.fillStyle = upC; c.fillRect(cx - half, yw - slab - 0.1 * k, half * 2, 0.04 * k); }
+      if(RW[2] > 0.5){
+        // endplates seen edge-on: tall thin plates at the wing tips
+        const eh = RW[2] / U * k * hk2, top2 = yw - eh * (sp === "nfs_bat" ? 0.62 : 0.55) - (slabs.length - 1) * 0.13 * k * 0.5, ew = Math.max(1.4, 0.035 * k);
+        c.fillStyle = epC; [-1, 1].forEach(sd => {
+          const ex = cx + sd * half - (sd > 0 ? ew : 0);
+          rrectC(c, ex + (sd > 0 ? 0 : -ew * 0.4), top2, ew * 1.4, eh, ew * 0.4); c.fill(); c.strokeStyle = OUT; c.stroke();
+          if(sp === "nfs_bat"){ c.beginPath(); c.moveTo(ex + sd * ew, top2 + eh * 0.2); c.lineTo(ex + sd * ew * 3.2, top2 + eh * 0.55); c.lineTo(ex + sd * ew, top2 + eh * 0.85); c.closePath(); c.fill(); c.stroke(); }
+        });
+      }
+    }
+  }
   }
   const sp2 = off ? undefined : (look.spoiler !== undefined ? look.spoiler : M.spoiler);
   if(doCab && hatch && sp2){
@@ -3957,6 +4112,29 @@ function paintMinis(root){
     c.save(); c.beginPath(); c.rect(0, 0, 52, 52); c.clip();
     drawWheel(c, 26, 38, 30, {rim:look.rim, caliper:look.caliper, wheelStyle:look.wheelStyle, spokes:look.spokes, rimFrac:0.62, spin:-1.2, tire:v, tireC:look.tireC}, false, true);
     c.restore();
+  });
+  thumb("canvas.wgth", (c, v) => {
+    // the car's tail, close up, wearing that wing
+    const car = carById(S.car), look = carLook(S.car), M = MODELS[car.model] || MODELS.hatch, sc = 52 / 30;
+    const sp = v === "none" ? null : v === "orig" ? (custOf(S.car).aero ? AERO_KIND[custOf(S.car).aero] : undefined) : "nfs_" + v;
+    c.fillStyle = "#1a1d24"; c.fillRect(0, 0, 52, 52);
+    c.save(); c.beginPath(); c.rect(0, 0, 52, 52); c.clip();
+    drawCar(c, 3, 70 + (M.hatchback ? (M.roof - 24) * sc * 0.6 : 0), sc, car.model, look.color, Object.assign({}, look, {spoiler:sp, spin:0, neon:null, drop:0}));
+    c.restore();
+  });
+  thumb("canvas.tlth", (c, v) => {
+    // the tyre seen from behind: tread width and how the sidewall sits on the rim
+    const look = carLook(S.car), f = {fino:0.62, largo:1.3, xlargo:1.6}[v] || 1;
+    c.fillStyle = "#1a1d24"; c.fillRect(0, 0, 52, 52);
+    const tw = 13 * f, cx = 26, top = 8, bot = 46;
+    c.fillStyle = "rgba(0,0,0,.5)"; c.beginPath(); c.ellipse(cx, bot, tw * 0.75, 2.4, 0, 0, TAU); c.fill();
+    const g = c.createLinearGradient(cx - tw / 2, 0, cx + tw / 2, 0); g.addColorStop(0, "#08090b"); g.addColorStop(0.5, "#24262c"); g.addColorStop(1, "#08090b");
+    const bulge = v === "fino" ? -1.6 : v === "xlargo" ? 1.6 : v === "largo" ? 1 : 0.4;
+    c.fillStyle = g; c.beginPath(); c.moveTo(cx - tw / 2 + (v === "fino" ? 1.2 : 0), top); c.lineTo(cx + tw / 2 - (v === "fino" ? 1.2 : 0), top);
+    c.quadraticCurveTo(cx + tw / 2 + bulge, 27, cx + tw / 2, bot); c.lineTo(cx - tw / 2, bot); c.quadraticCurveTo(cx - tw / 2 - bulge, 27, cx - tw / 2 + (v === "fino" ? 1.2 : 0), top); c.fill();
+    c.strokeStyle = "#34373f"; c.lineWidth = 1; for(let yy = top + 4; yy < bot - 2; yy += 4){ c.beginPath(); c.moveTo(cx - tw / 2 + 2, yy); c.lineTo(cx + tw / 2 - 2, yy); c.stroke(); }
+    c.strokeStyle = "rgba(255,255,255,.12)"; c.beginPath(); c.moveTo(cx, top + 2); c.lineTo(cx, bot - 2); c.stroke();
+    c.fillStyle = look.rim; c.globalAlpha = 0.85; c.fillRect(cx - 13 * 0.78 / 2 - (v === "fino" ? 1.5 : 0), 25, 13 * 0.78 + (v === "fino" ? 3 : 0), 2.2); c.globalAlpha = 1;
   });
   thumb("canvas.exth", (c, v) => {
     // close-up of the rear bumper corner with the tip sticking out
@@ -4214,154 +4392,310 @@ function drawStarter(x, footY, phase, t, hh){
 
 /* pilot, drawn facing the viewer; h is roughly the height to the top of the head.
    Body, outfit, shoes, tattoos and accessories all come from the pilot profile. */
+// A real-proportioned driver seen from the front: about 7.5 heads tall, shaded like a figure under the garage lights,
+// not a mascot. Units: the figure is 100 tall from sole to crown; u converts to pixels.
 function drawPilot(c, x, footY, h, P0, pose, t){
-  const P = Object.assign({gender:"m", height:"medio", weight:"medio", outfit:"macacao", shoes:"preto", tattoo:"none", acc:[]}, P0);
-  const hk = {baixo:0.92, medio:1, alto:1.08}[P.height] || 1, wk = {magro:0.86, medio:1, forte:1.2}[P.weight] || 1, fem = P.gender === "f";
-  const u = h / 108 * hk, sk = P.skin, top = P.suit, st = P.stripe, hc = P.hairC, acc = P.acc || [], of = P.outfit;
-  const R2 = (x0, y0, w, hh, r) => { rrectC(c, x0, y0, w, hh, r); c.fill(); };
-  const Y = k => footY - k * u;
-  const pants = of === "macacao" ? top : of === "moletom" ? "#4a4f5a" : of === "regata" ? "#1b1d22" : of === "jaqueta" ? "#1f2f4f" : "#2f4a7a";
-  const longS = of === "macacao" || of === "jaqueta" || of === "moletom", shortS = of === "camiseta";
-  const gloves = of === "macacao" || acc.includes("luvas");
-  c.save(); c.lineCap = "round"; c.lineJoin = "round";
-  c.fillStyle = "rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(x, footY, 17 * u * wk, 3 * u, 0, 0, TAU); c.fill();
-  // legs
-  const lw = 9.5 * u * wk * (fem ? 0.94 : 1), lg = 1.4 * u;
-  const pg = c.createLinearGradient(x - 12 * u, 0, x + 12 * u, 0); pg.addColorStop(0, shade(pants, 0.12)); pg.addColorStop(1, shade(pants, -0.25));
-  c.fillStyle = pg; R2(x - lg - lw, Y(47), lw, 43 * u, 3 * u); R2(x + lg, Y(47), lw, 43 * u, 3 * u);
-  if(of === "macacao"){ c.fillStyle = st; c.fillRect(x - lg - lw + 0.6 * u, Y(45), 2 * u, 38 * u); c.fillRect(x + lg + lw - 2.6 * u, Y(45), 2 * u, 38 * u); }
-  else { c.strokeStyle = shade(pants, -0.35); c.lineWidth = Math.max(0.5, 0.7 * u); [x - lg - lw / 2, x + lg + lw / 2].forEach(lx => { c.beginPath(); c.moveTo(lx, Y(44)); c.lineTo(lx, Y(6)); c.stroke(); }); }
-  // shoes
-  const SH = {branco:["#f2f4f8", "#c9ced8", "#d93a3a"], preto:["#16181d", "#eef0f3", "#3a3f4a"], vermelho:["#d93a3a", "#f2f4f8", "#f2f4f8"], cano:[st, "#f2f4f8", top], bota:["#4a3020", "#2a1a10", "#6b4630"]}[P.shoes] || ["#16181d", "#eef0f3", "#3a3f4a"];
-  const tall = P.shoes === "cano" ? 9 : P.shoes === "bota" ? 11 : 6.5;
-  [-1, 1].forEach(sd => {
-    const sx0 = sd < 0 ? x - lg - lw - 2 * u : x + lg - 0.5 * u;
-    c.fillStyle = SH[0]; R2(sx0, Y(tall), lw + 2.5 * u, tall * u, 2 * u);
-    c.fillStyle = SH[1]; R2(sx0 - 0.4 * u, Y(2), lw + 3.3 * u, 2 * u, 1 * u);
-    c.fillStyle = SH[2]; c.fillRect(sx0 + 1.5 * u, Y(tall - 1.6), lw - 1 * u, Math.max(0.6, 1 * u));
-  });
-  // torso shape: broader shoulders for men, waist and hips for women
-  const sw = (of === "regata" ? 13 : 15) * u * wk * (fem ? 0.9 : 1), waist = (fem ? 11 : 13.6) * u * wk, hip = (fem ? 14.4 : 13.6) * u * wk;
-  const torso = () => {
-    c.beginPath(); c.moveTo(x - sw, Y(77)); c.quadraticCurveTo(x - sw, Y(83), x - sw + 5 * u, Y(83)); c.lineTo(x + sw - 5 * u, Y(83)); c.quadraticCurveTo(x + sw, Y(83), x + sw, Y(77));
-    c.quadraticCurveTo(x + waist + 1 * u, Y(66), x + waist, Y(60)); c.quadraticCurveTo(x + hip, Y(52), x + hip, Y(44)); c.lineTo(x - hip, Y(44)); c.quadraticCurveTo(x - hip, Y(52), x - waist, Y(60));
-    c.quadraticCurveTo(x - waist - 1 * u, Y(66), x - sw, Y(77)); c.closePath();
+  const P = Object.assign({gender:"m", height:"medio", weight:"medio", outfit:"macacao", shoes:"preto", tattoo:"none", acc:[], pants:"jeans", gloves:"none", helmet:"none", helmetWear:"cabeca"}, P0);
+  if((P.acc || []).includes("luvas") && P.gloves === "none") P.gloves = "corrida";
+  if(P.hair === "capacete"){ if(P.helmet === "none"){ P.helmet = "integral"; P.helmetWear = "cabeca"; } P.hair = "curto"; }
+  const hk = {baixo:0.93, medio:1, alto:1.07}[P.height] || 1, wk = {magro:0.88, medio:1, forte:1.17}[P.weight] || 1, fem = P.gender === "f";
+  const u = h / 104 * hk, sk = P.skin, top = P.suit, st = P.stripe, hc = P.hairC, acc = P.acc || [], of = P.outfit;
+  const Y = k => footY - k * u, X = k => x + k * u * wk;
+  const OL = "rgba(8,9,12,.55)", olw = Math.max(0.5, 0.35 * u);
+  const suitLike = of === "macacao" || of === "macacao2" || of === "kart";
+  const helmetOn = P.helmet !== "none" && P.helmetWear === "cabeca";
+  const helmetArm = P.helmet !== "none" && P.helmetWear === "braco";
+  const PANTS = {jeans:"#2e4a78", preta:"#1a1c21", cargo:"#4f5638", jogger:"#5c616c", bege:"#b9a27e"};
+  const pantsC = suitLike ? (of === "macacao2" ? st : top) : (PANTS[P.pants] || PANTS.jeans);
+  const shadeFill = (col, x0, x1, k) => { const g = c.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, shade(col, 0.16 * (k || 1))); g.addColorStop(0.55, col); g.addColorStop(1, shade(col, -0.32 * (k || 1))); return g; };
+  const path = pts => { c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); };
+  const smoothPath = pts => { c.beginPath(); c.moveTo((pts[0][0] + pts[pts.length - 1][0]) / 2, (pts[0][1] + pts[pts.length - 1][1]) / 2); for(let i = 0; i < pts.length; i++){ const p = pts[i], q = pts[(i + 1) % pts.length]; c.quadraticCurveTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2); } c.closePath(); };
+  const fillOL = (fs) => { c.fillStyle = fs; c.fill(); c.strokeStyle = OL; c.lineWidth = olw; c.stroke(); };
+  // tapered limb between two points with a rounded joint, shaded across its width
+  const limb = (a, b, w0, w1, col) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+    const g = c.createLinearGradient(a[0] + nx * w0, a[1] + ny * w0, a[0] - nx * w0, a[1] - ny * w0);
+    g.addColorStop(0, shade(col, -0.3)); g.addColorStop(0.45, col); g.addColorStop(1, shade(col, 0.14));
+    c.beginPath(); c.moveTo(a[0] + nx * w0, a[1] + ny * w0); c.lineTo(b[0] + nx * w1, b[1] + ny * w1);
+    c.arc(b[0], b[1], w1, Math.atan2(ny, nx), Math.atan2(ny, nx) - Math.PI, true);
+    c.lineTo(a[0] - nx * w0, a[1] - ny * w0); c.arc(a[0], a[1], w0, Math.atan2(-ny, -nx), Math.atan2(-ny, -nx) - Math.PI, true); c.closePath();
+    c.fillStyle = g; c.fill();
+    // outline only along the sides, so joints read as one continuous limb
+    c.strokeStyle = OL; c.lineWidth = olw; c.beginPath(); c.moveTo(a[0] + nx * w0, a[1] + ny * w0); c.lineTo(b[0] + nx * w1, b[1] + ny * w1); c.moveTo(a[0] - nx * w0, a[1] - ny * w0); c.lineTo(b[0] - nx * w1, b[1] - ny * w1); c.stroke();
+    return {nx, ny, L};
   };
-  if(of === "moletom"){ c.fillStyle = shade(top, -0.25); c.beginPath(); c.ellipse(x, Y(83), 10 * u, 5 * u, 0, 0, TAU); c.fill(); }
-  const tg = c.createLinearGradient(0, Y(84), 0, Y(44)); tg.addColorStop(0, shade(top, 0.15)); tg.addColorStop(1, shade(top, -0.3));
-  c.fillStyle = of === "jaqueta" ? shade(top, -0.1) : tg; torso(); c.fill();
-  if(of === "macacao"){
-    c.fillStyle = st; c.fillRect(x - sw, Y(69), sw * 2, 4 * u);
-    c.fillStyle = "#111317"; c.fillRect(x - hip, Y(47), hip * 2, 3.5 * u);
-    c.strokeStyle = shade(top, -0.4); c.lineWidth = Math.max(0.6, 1 * u); c.beginPath(); c.moveTo(x, Y(82)); c.lineTo(x, Y(47)); c.stroke();
-    c.fillStyle = "#ffb547"; R2(x + 4 * u, Y(63), 8 * u, 5 * u, 1 * u);
-  } else if(of === "camiseta" || of === "regata"){
-    c.fillStyle = sk; c.beginPath(); c.ellipse(x, Y(83), of === "regata" ? 6.5 * u : 5 * u, of === "regata" ? 4.5 * u : 3 * u, 0, 0, Math.PI); c.fill();
-    c.fillStyle = st; c.font = "italic 700 " + (7 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("TG", x, Y(66));
-    c.fillStyle = "rgba(0,0,0,.18)"; c.fillRect(x - hip, Y(46.5), hip * 2, 2.5 * u);
-  } else if(of === "jaqueta"){
-    c.fillStyle = st; R2(x - 4 * u, Y(82), 8 * u, 37 * u, 2 * u);
-    c.fillStyle = shade(top, -0.35); c.beginPath(); c.moveTo(x - 4 * u, Y(83)); c.lineTo(x - 9 * u, Y(83)); c.lineTo(x - 4 * u, Y(70)); c.closePath(); c.fill();
-    c.beginPath(); c.moveTo(x + 4 * u, Y(83)); c.lineTo(x + 9 * u, Y(83)); c.lineTo(x + 4 * u, Y(70)); c.closePath(); c.fill();
-    c.strokeStyle = "#c9ced8"; c.lineWidth = Math.max(0.5, 0.6 * u); c.beginPath(); c.moveTo(x - 4.5 * u, Y(80)); c.lineTo(x - 4.5 * u, Y(46)); c.moveTo(x + 4.5 * u, Y(80)); c.lineTo(x + 4.5 * u, Y(46)); c.stroke();
+  // elbow placed by two-bone IK, bending outward and down like a relaxed arm
+  const ik = (s0, hd, l1, l2, side) => {
+    const dx = hd[0] - s0[0], dy = hd[1] - s0[1], d = Math.min(l1 + l2 - 0.01, Math.hypot(dx, dy)), a = Math.atan2(dy, dx);
+    const cosB = (l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), b = Math.acos(Math.max(-1, Math.min(1, cosB)));
+    // of the two possible elbows, take the one that sits out to the side and low, as a relaxed arm does
+    const e1 = [s0[0] + Math.cos(a + b) * l1, s0[1] + Math.sin(a + b) * l1], e2 = [s0[0] + Math.cos(a - b) * l1, s0[1] + Math.sin(a - b) * l1];
+    const score = e => side * (e[0] - s0[0]) + 0.35 * (e[1] - s0[1]);
+    return score(e1) >= score(e2) ? e1 : e2;
+  };
+
+  c.save(); c.lineCap = "round"; c.lineJoin = "round";
+  // contact shadow
+  const shg = c.createRadialGradient(x, footY, 0, x, footY, 20 * u * wk); shg.addColorStop(0, "rgba(0,0,0,.45)"); shg.addColorStop(1, "rgba(0,0,0,0)");
+  c.fillStyle = shg; c.beginPath(); c.ellipse(x, footY, 20 * u * wk, 3.2 * u, 0, 0, TAU); c.fill();
+
+  // ---- body landmarks ----
+  const swH = (fem ? 10.6 : 12.6) * (of === "regata" ? 0.97 : 1), waistH = fem ? 6.6 : 8.4, hipH = fem ? 10 : 9.2;
+  const legW = fem ? 4.3 : 4.7, legGap = 0.9;
+  const legsX = [-(legGap + legW), legGap + legW].map(v => v * 0.98);
+  // ---- legs ----
+  const legCol = pantsC;
+  smoothPath([[X(-hipH + 0.2), Y(53)], [X(hipH - 0.2), Y(53)], [X(hipH - 0.4), Y(46)], [X(legGap + 0.6), Y(41.5)], [X(0), Y(42.8)], [X(-legGap - 0.6), Y(41.5)], [X(-hipH + 0.4), Y(46)]]);
+  c.fillStyle = shadeFill(legCol, X(-hipH), X(hipH)); c.fill();
+  [-1, 1].forEach(sd => {
+    const hipJ = [X(sd * (legGap + legW * 0.95)), Y(49)], knee = [X(sd * (legGap + legW * 0.75)), Y(27)], ank = [X(sd * (legGap + legW * 0.62)), Y(6)];
+    limb(hipJ, knee, legW * u * wk * 1.02, legW * u * wk * 0.8, legCol);
+    limb(knee, ank, legW * u * wk * 0.8, legW * u * wk * 0.58, legCol);
+    // seams, creases, pockets
+    c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = Math.max(0.4, 0.3 * u);
+    c.beginPath(); c.moveTo(knee[0] - sd * legW * 0.5 * u, knee[1] - 1.2 * u); c.quadraticCurveTo(knee[0], knee[1] + 0.6 * u, knee[0] + sd * legW * 0.4 * u, knee[1] - 1 * u); c.stroke();
+    if(suitLike){ c.strokeStyle = of === "macacao2" ? top : st; c.lineWidth = 1.4 * u; c.beginPath(); c.moveTo(hipJ[0] + sd * legW * 0.82 * u * wk, hipJ[1]); c.lineTo(ank[0] + sd * legW * 0.5 * u * wk, ank[1]); c.stroke(); }
+    else if(P.pants === "jeans"){ c.strokeStyle = "rgba(230,190,110,.55)"; c.lineWidth = Math.max(0.4, 0.25 * u); c.beginPath(); c.moveTo(hipJ[0] + sd * legW * 0.7 * u, hipJ[1]); c.lineTo(ank[0] + sd * legW * 0.5 * u, ank[1]); c.stroke(); }
+    else if(P.pants === "cargo"){ c.fillStyle = shade(legCol, -0.12); rrectC(c, knee[0] + sd * legW * 0.15 * u - 2.4 * u, Y(40), 4.8 * u, 7 * u, 0.8 * u); c.fill(); c.strokeStyle = "rgba(0,0,0,.35)"; c.stroke(); }
+    else if(P.pants === "jogger"){ c.fillStyle = shade(legCol, -0.2); rrectC(c, ank[0] - legW * 0.7 * u, Y(8.5), legW * 1.4 * u, 2.6 * u, 1 * u); c.fill(); }
+  });
+  // ---- shoes (front view: toe box, sole, laces) ----
+  const SHOE = {branco:["#f2f4f8", "#d9dde4", "#c9ced8"], preto:["#1a1c21", "#f2f4f8", "#3a3f4a"], vermelho:["#c8262b", "#f2f4f8", "#f2f4f8"], cano:[st, "#f2f4f8", top],
+    bota:["#5a3a22", "#2a1a10", "#7a5232"], corrida:[top, "#16181d", st], basquete:["#f2f4f8", "#f2f4f8", st], runner:["#3d8bff", "#f2f4f8", "#ffd23f"], chinelo:["#ffd23f", "#2e7d32", "#2e7d32"]}[P.shoes] || ["#1a1c21", "#f2f4f8", "#3a3f4a"];
+  const shoeTop = P.shoes === "bota" ? 12 : P.shoes === "cano" || P.shoes === "basquete" ? 10 : P.shoes === "corrida" ? 9 : P.shoes === "chinelo" ? 1.6 : 6.2;
+  [-1, 1].forEach(sd => {
+    const cx = X(sd * (legGap + legW * 0.62)) + sd * 0.6 * u, w = legW * 1.25 * u * wk;
+    if(P.shoes === "chinelo"){
+      c.fillStyle = sk; smoothPath([[cx - w * 0.75, Y(5.5)], [cx + w * 0.75, Y(5.5)], [cx + w * 0.95, Y(1.2)], [cx - w * 0.95, Y(1.2)]]); c.fill();
+      c.fillStyle = SHOE[0]; rrectC(c, cx - w, Y(1.3), w * 2, 1.3 * u, 0.6 * u); c.fill();
+      c.strokeStyle = SHOE[1]; c.lineWidth = 0.9 * u; c.beginPath(); c.moveTo(cx - w * 0.7, Y(2.2)); c.lineTo(cx, Y(4.4)); c.lineTo(cx + w * 0.7, Y(2.2)); c.stroke();
+      return;
+    }
+    const body = [[cx - w * 0.72, Y(shoeTop)], [cx + w * 0.72, Y(shoeTop)], [cx + w * 0.98, Y(2.6)], [cx + w * 1.02, Y(1.4)], [cx - w * 1.02, Y(1.4)], [cx - w * 0.98, Y(2.6)]];
+    smoothPath(body); fillOL(shadeFill(SHOE[0], cx - w, cx + w));
+    c.fillStyle = SHOE[1]; rrectC(c, cx - w * 1.04, Y(1.6), w * 2.08, 1.6 * u, 0.7 * u); c.fill(); c.strokeStyle = OL; c.lineWidth = olw; c.stroke();
+    if(P.shoes !== "bota"){
+      c.strokeStyle = shade(SHOE[0], lum(SHOE[0]) > 0.5 ? -0.35 : 0.45); c.lineWidth = Math.max(0.4, 0.3 * u);
+      for(let k = 0; k < 3; k++){ const yy = Y(shoeTop - 1.4 - k * 1.3); c.beginPath(); c.moveTo(cx - w * 0.3, yy); c.lineTo(cx + w * 0.3, yy); c.stroke(); }
+      c.fillStyle = SHOE[2]; c.beginPath(); c.ellipse(cx + sd * w * 0.62, Y(3.6), w * 0.26, 1.1 * u, sd * 0.4, 0, TAU); c.fill();
+    } else { c.fillStyle = "rgba(255,255,255,.12)"; c.fillRect(cx - w * 0.5, Y(shoeTop - 1), w, 0.6 * u); }
+  });
+
+  // ---- torso ----
+  const T = {
+    sh:[X(-swH), Y(81.5)], shR:[X(swH), Y(81.5)],
+  };
+  const torsoPts = [[X(-swH + 1.4), Y(83.6)], [X(swH - 1.4), Y(83.6)], [X(swH + 0.3), Y(80.5)], [X(swH - 0.4), Y(73)], [X(waistH + 0.6), Y(62)], [X(hipH), Y(52)], [X(hipH - 0.2), Y(47.5)],
+    [X(-hipH + 0.2), Y(47.5)], [X(-hipH), Y(52)], [X(-waistH - 0.6), Y(62)], [X(-swH + 0.4), Y(73)], [X(-swH - 0.3), Y(80.5)]];
+  const topCol = of === "couro" ? "#17181c" : top;
+  smoothPath(torsoPts); fillOL(shadeFill(topCol, X(-swH), X(swH)));
+  // chest and abdomen form, fabric folds
+  c.save(); smoothPath(torsoPts); c.clip();
+  const vg = c.createLinearGradient(0, Y(84), 0, Y(47)); vg.addColorStop(0, "rgba(255,255,255,.1)"); vg.addColorStop(0.35, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.22)");
+  c.fillStyle = vg; c.fillRect(X(-20), Y(86), 40 * u * wk, 40 * u);
+  c.strokeStyle = "rgba(0,0,0,.18)"; c.lineWidth = Math.max(0.4, 0.35 * u);
+  [[-1, 66], [1, 64], [-1, 56]].forEach(([sd, yy]) => { c.beginPath(); c.moveTo(X(sd * (waistH - 0.5)), Y(yy)); c.quadraticCurveTo(X(sd * 3), Y(yy - 1.5), X(sd * 0.5), Y(yy - 0.5)); c.stroke(); });
+  if(fem){ c.strokeStyle = "rgba(0,0,0,.2)"; c.lineWidth = Math.max(0.4, 0.4 * u); [-1, 1].forEach(sd => { c.beginPath(); c.arc(X(sd * 4), Y(72.5), 3.6 * u, Math.PI * 0.15, Math.PI * 0.85); c.stroke(); }); }
+  else { c.strokeStyle = "rgba(0,0,0,.14)"; c.beginPath(); c.moveTo(X(-6.5), Y(71.5)); c.quadraticCurveTo(X(0), Y(70), X(6.5), Y(71.5)); c.stroke(); }
+  // outfit details
+  if(of === "macacao" || of === "macacao2" || of === "kart"){
+    if(of === "macacao2"){ c.fillStyle = st; c.fillRect(X(-20), Y(64), 40 * u * wk, 17 * u); c.fillStyle = top; c.fillRect(X(-20), Y(64), 40 * u * wk, 2.2 * u); }
+    else { c.fillStyle = st; c.beginPath(); c.moveTo(X(-swH), Y(78)); c.lineTo(X(-3), Y(71)); c.lineTo(X(-3), Y(68.5)); c.lineTo(X(-swH), Y(75.5)); c.fill(); c.beginPath(); c.moveTo(X(swH), Y(78)); c.lineTo(X(3), Y(71)); c.lineTo(X(3), Y(68.5)); c.lineTo(X(swH), Y(75.5)); c.fill(); }
+    // zipper, belt, sponsor patches, collar
+    c.strokeStyle = "rgba(0,0,0,.45)"; c.lineWidth = Math.max(0.5, 0.45 * u); c.beginPath(); c.moveTo(X(0), Y(83)); c.lineTo(X(0), Y(50)); c.stroke();
+    c.fillStyle = "#14161b"; c.fillRect(X(-hipH), Y(54), 2 * hipH * u * wk, 2.4 * u);
+    c.fillStyle = "#c9ced8"; c.fillRect(X(-1.3), Y(54.2), 2.6 * u, 2.8 * u);
+    [["#ffd23f", 5.2, 74, 5, 2.2], ["#e5484d", -7.6, 73.5, 4.6, 2], ["#ffffff", 4.8, 60, 5.4, 2.2], ["#3d8bff", -7.4, 60.5, 5, 2]].forEach(([cc, px, py, pw, ph]) => {
+      c.fillStyle = cc; rrectC(c, X(px), Y(py), pw * u, ph * u, 0.4 * u); c.fill(); c.fillStyle = "rgba(0,0,0,.35)"; c.fillRect(X(px) + 0.8 * u, Y(py) + ph * u * 0.42, pw * u - 1.6 * u, Math.max(0.4, 0.35 * u));
+    });
+    c.fillStyle = shade(top, -0.3); rrectC(c, X(-4.2), Y(85.6), 8.4 * u * wk, 3 * u, 1.4 * u); c.fill();
+    if(of === "kart"){ c.fillStyle = "rgba(255,255,255,.85)"; c.font = "italic 800 " + (3.4 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("TG", X(0), Y(66)); }
+  } else if(of === "camiseta" || of === "polo" || of === "regata"){
+    if(of === "polo"){ c.fillStyle = shade(top, -0.18); path([[X(-3.6), Y(84)], [X(0), Y(80)], [X(3.6), Y(84)], [X(5.2), Y(82.4)], [X(0), Y(78.6)], [X(-5.2), Y(82.4)]]); c.fill(); c.fillStyle = st; c.fillRect(X(-0.6), Y(79.5), 1.2 * u, 6 * u);
+      c.fillStyle = st; c.font = "italic 800 " + (2.6 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("TG", X(5), Y(74)); }
+    else { c.fillStyle = shade(top, -0.25); c.beginPath(); c.ellipse(X(0), Y(83.6), (of === "regata" ? 4.6 : 3.6) * u, (of === "regata" ? 3.4 : 1.8) * u, 0, 0, Math.PI); c.fill();
+      c.fillStyle = st; c.font = "italic 800 " + (6 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("TG", X(0), Y(68)); }
+    c.fillStyle = "rgba(0,0,0,.2)"; c.fillRect(X(-hipH), Y(49), 2 * hipH * u * wk, 1.6 * u);
+  } else if(of === "jaqueta" || of === "couro"){
+    c.fillStyle = of === "couro" ? "#0d0e11" : shade(top, -0.3);
+    path([[X(-1), Y(84)], [X(-5.5), Y(84)], [X(-6.5), Y(76)], [X(-1), Y(68)]]); c.fill(); path([[X(1), Y(84)], [X(5.5), Y(84)], [X(6.5), Y(76)], [X(1), Y(68)]]); c.fill();
+    c.fillStyle = of === "couro" ? "#2a2c33" : st; c.fillRect(X(-1), Y(83), 2 * u, 34 * u);
+    c.strokeStyle = "#c9ced8"; c.lineWidth = Math.max(0.4, 0.35 * u); c.beginPath(); c.moveTo(X(0), Y(83)); c.lineTo(X(0), Y(49)); c.stroke();
+    if(of === "couro"){ c.strokeStyle = "rgba(255,255,255,.18)"; c.lineWidth = Math.max(0.4, 0.5 * u); [[-6, 70], [5, 66]].forEach(([px, py]) => { c.beginPath(); c.moveTo(X(px), Y(py)); c.lineTo(X(px + 3), Y(py - 0.3)); c.stroke(); }); }
+    c.fillStyle = of === "couro" ? "#202228" : shade(top, -0.4); c.fillRect(X(-hipH), Y(50.5), 2 * hipH * u * wk, 3 * u);
   } else if(of === "moletom"){
-    c.fillStyle = shade(top, -0.15); R2(x - 9 * u, Y(60), 18 * u, 10 * u, 3 * u);
-    c.strokeStyle = st; c.lineWidth = Math.max(0.6, 0.9 * u); c.beginPath(); c.moveTo(x - 3 * u, Y(82)); c.lineTo(x - 3.5 * u, Y(72)); c.moveTo(x + 3 * u, Y(82)); c.lineTo(x + 3.5 * u, Y(72)); c.stroke();
+    c.fillStyle = shade(top, -0.25); c.beginPath(); c.ellipse(X(0), Y(84), 6.5 * u, 3.4 * u, 0, 0, TAU); c.fill();
+    c.fillStyle = shade(top, -0.12); rrectC(c, X(-6.5), Y(61), 13 * u * wk, 8 * u, 2 * u); c.fill(); c.strokeStyle = "rgba(0,0,0,.3)"; c.stroke();
+    c.strokeStyle = "#e9ecf1"; c.lineWidth = Math.max(0.4, 0.4 * u); c.beginPath(); c.moveTo(X(-2), Y(82.5)); c.lineTo(X(-2.3), Y(75)); c.moveTo(X(2), Y(82.5)); c.lineTo(X(2.3), Y(75)); c.stroke();
+    c.fillStyle = shade(top, -0.2); c.fillRect(X(-hipH), Y(50), 2 * hipH * u * wk, 2.6 * u);
+  } else if(of === "colete"){
+    c.fillStyle = "#e9ecf1"; c.beginPath(); c.ellipse(X(0), Y(83.6), 3.6 * u, 1.8 * u, 0, 0, Math.PI); c.fill();
+    c.fillStyle = st; path([[X(-swH + 2.6), Y(82.8)], [X(-1), Y(82.8)], [X(-1), Y(48.5)], [X(-hipH), Y(48.5)], [X(-waistH - 0.6), Y(62)], [X(-swH + 1.6), Y(74)]]); c.fill();
+    path([[X(swH - 2.6), Y(82.8)], [X(1), Y(82.8)], [X(1), Y(48.5)], [X(hipH), Y(48.5)], [X(waistH + 0.6), Y(62)], [X(swH - 1.6), Y(74)]]); c.fill();
+    c.strokeStyle = "rgba(0,0,0,.25)"; c.lineWidth = Math.max(0.4, 0.4 * u); for(let yy = 78; yy > 50; yy -= 5){ c.beginPath(); c.moveTo(X(-hipH), Y(yy)); c.lineTo(X(-1), Y(yy)); c.moveTo(X(1), Y(yy)); c.lineTo(X(hipH), Y(yy)); c.stroke(); }
   }
-  // arms
-  const sh = [[x - sw + 2.5 * u, Y(76)], [x + sw - 2.5 * u, Y(76)]];
-  let hands;
-  if(pose === "trophy") hands = [[x - 22 * u, Y(52)], [x + 15 * u, Y(112)]];
-  else if(pose === "wave") hands = [[x - 21 * u, Y(50)], [x + 25 * u, Y(104) + Math.sin(t * 8) * 3 * u]];
-  else if(pose === "clap"){ const k = Math.abs(Math.sin(t * 7)); hands = [[x - 3 * u - k * 6 * u, Y(66)], [x + 3 * u + k * 6 * u, Y(66)]]; }
-  else hands = [[x - 20 * u * wk, Y(49)], [x + 20 * u * wk, Y(49)]];
-  const aw = 8.5 * u * wk * (fem ? 0.9 : 1), lerp = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
-  const seg = (a, b, col, w) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); };
-  sh.forEach((s0, i) => {
-    const hd = hands[i];
-    if(longS){
-      seg(s0, hd, of === "jaqueta" ? shade(top, -0.1) : top, aw);
-      if(of === "macacao") seg(s0, lerp(s0, hd, 0.5), st, 2 * u);
+  c.restore();
+
+  // ---- neck and head (drawn after the torso so the collar sits under the jaw) ----
+  const headCx = x, chinY = Y(87), crownY = Y(100), headW = (fem ? 4.5 : 4.9) * u, headH = (crownY - chinY) * -1;
+  const neckW = (fem ? 2.5 : 3.1) * u * Math.sqrt(wk);
+  c.fillStyle = shadeFill(sk, x - neckW, x + neckW, 0.8); c.beginPath(); c.moveTo(x - neckW, Y(89)); c.lineTo(x - neckW * 1.15, Y(83.6)); c.quadraticCurveTo(x, Y(82.4), x + neckW * 1.15, Y(83.6)); c.lineTo(x + neckW, Y(89)); c.closePath(); c.fill();
+  c.fillStyle = "rgba(0,0,0,.22)"; c.beginPath(); c.ellipse(x, Y(87.4), neckW * 1.05, 1.1 * u, 0, 0, Math.PI); c.fill();
+  if(suitLike){ c.fillStyle = shade(top, -0.28); rrectC(c, x - neckW * 1.25, Y(86.4), neckW * 2.5, 3.2 * u, 1.2 * u); c.fill(); c.fillStyle = st; c.fillRect(x - neckW * 1.25, Y(84.4), neckW * 2.5, 0.6 * u); }
+  if(acc.includes("corrente")){ c.strokeStyle = "#e8c04a"; c.lineWidth = Math.max(0.5, 0.45 * u); c.beginPath(); c.arc(x, Y(86.4), 3.6 * u, Math.PI * 0.18, Math.PI * 0.82); c.stroke(); c.fillStyle = "#e8c04a"; c.beginPath(); c.ellipse(x, Y(82.5), 0.8 * u, 1.1 * u, 0, 0, TAU); c.fill(); }
+  if(P.tattoo === "pescoco"){ c.strokeStyle = "rgba(25,32,45,.75)"; c.lineWidth = Math.max(0.4, 0.3 * u); c.beginPath(); c.arc(x + neckW * 0.4, Y(86), 1.1 * u, 0, TAU); c.moveTo(x - neckW * 0.7, Y(85)); c.lineTo(x - neckW * 0.2, Y(87.5)); c.stroke(); }
+
+  const hcx = headCx, hcy = Y(93.4);
+  const hairBack = () => {
+    c.fillStyle = shade(hc, -0.1);
+    const hs = P.hair;
+    if(hs === "longo"){ smoothPath([[hcx - headW * 1.2, Y(98)], [hcx + headW * 1.2, Y(98)], [hcx + headW * 1.3, Y(fem ? 80 : 85)], [hcx - headW * 1.3, Y(fem ? 80 : 85)]]); c.fill(); }
+    if(hs === "black"){ c.beginPath(); c.ellipse(hcx, Y(96.5), headW * 1.75, headH * 0.58, 0, 0, TAU); c.fill(); }
+    if(hs === "rabo"){ c.beginPath(); c.ellipse(hcx + headW * 0.9, Y(90), 1.5 * u, 4.5 * u, -0.25, 0, TAU); c.fill(); }
+    if(hs === "trancas") [-1, 1].forEach(sd => { for(let k = 0; k < 7; k++){ c.beginPath(); c.ellipse(hcx + sd * headW * 1.02, Y(93 - k * 1.5), 0.95 * u, 0.85 * u, 0, 0, TAU); c.fill(); } });
+    if(hs === "dreads"){ c.strokeStyle = shade(hc, -0.1); c.lineWidth = 1.2 * u; for(let k = -4; k <= 4; k++){ c.beginPath(); c.moveTo(hcx + k * headW * 0.24, Y(97)); c.quadraticCurveTo(hcx + k * headW * 0.32, Y(90), hcx + k * headW * 0.3, Y(84 + Math.abs(k) * 0.6)); c.stroke(); } }
+  };
+  if(!helmetOn) hairBack();
+  // ears
+  c.fillStyle = shade(sk, -0.06); [-1, 1].forEach(sd => { c.beginPath(); c.ellipse(hcx + sd * headW * 0.98, Y(93.2), 0.9 * u, 1.7 * u, 0, 0, TAU); c.fill(); });
+  if(acc.includes("brinco") && !helmetOn){ c.fillStyle = "#e8c04a"; [-1, 1].forEach(sd => { circ(c, hcx + sd * headW * 1.02, Y(91.6), 0.45 * u); c.fill(); }); }
+  // skull and jaw: wider at the cheekbones, tapering to the chin
+  const face = [[hcx - headW * 0.92, Y(97.5)], [hcx - headW, Y(93.5)], [hcx - headW * 0.86, Y(90)], [hcx - headW * (fem ? 0.5 : 0.58), Y(87.6)], [hcx, Y(86.9)],
+    [hcx + headW * (fem ? 0.5 : 0.58), Y(87.6)], [hcx + headW * 0.86, Y(90)], [hcx + headW, Y(93.5)], [hcx + headW * 0.92, Y(97.5)], [hcx, Y(100.2)]];
+  const fg = c.createRadialGradient(hcx - headW * 0.35, Y(95), headW * 0.2, hcx, Y(93.5), headW * 1.5);
+  fg.addColorStop(0, shade(sk, 0.12)); fg.addColorStop(0.6, sk); fg.addColorStop(1, shade(sk, -0.3));
+  smoothPath(face); fillOL(fg);
+  if(!helmetOn){
+    // features: brows, eyes with whites and iris, nose shadow, lips; small and placed where they are on a real face
+    const ey = Y(93.6), ex = headW * 0.42;
+    c.fillStyle = "rgba(0,0,0,.12)"; c.beginPath(); c.ellipse(hcx + headW * 0.15, Y(91.6), headW * 0.12, 1.6 * u, 0.1, 0, TAU); c.fill();
+    [-1, 1].forEach(sd => {
+      c.fillStyle = "#f4efe8"; c.beginPath(); c.ellipse(hcx + sd * ex, ey, headW * 0.19, 0.55 * u, 0, 0, TAU); c.fill();
+      c.fillStyle = "#3a2a1e"; circ(c, hcx + sd * ex, ey, 0.48 * u); c.fill(); c.fillStyle = "#0b0b0d"; circ(c, hcx + sd * ex, ey, 0.24 * u); c.fill();
+      c.strokeStyle = "rgba(20,14,10,.75)"; c.lineWidth = Math.max(0.4, 0.32 * u); c.beginPath(); c.ellipse(hcx + sd * ex, ey + 0.1 * u, headW * 0.2, 0.62 * u, 0, Math.PI * 1.08, Math.PI * 1.92); c.stroke();
+      c.strokeStyle = shade(hc, -0.15); c.lineWidth = Math.max(0.5, (fem ? 0.38 : 0.55) * u); c.beginPath(); c.moveTo(hcx + sd * ex * 0.45, Y(94.9)); c.quadraticCurveTo(hcx + sd * ex, Y(95.6), hcx + sd * ex * 1.55, Y(95)); c.stroke();
+    });
+    c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = Math.max(0.4, 0.3 * u); c.beginPath(); c.moveTo(hcx - headW * 0.12, Y(93)); c.quadraticCurveTo(hcx - headW * 0.18, Y(91.2), hcx - headW * 0.05, Y(90.9)); c.stroke();
+    c.fillStyle = "rgba(60,30,25,.45)"; [-1, 1].forEach(sd => { c.beginPath(); c.ellipse(hcx + sd * headW * 0.1, Y(90.8), 0.3 * u, 0.2 * u, 0, 0, TAU); c.fill(); });
+    const lipC = fem ? "#a8505a" : shade(sk, -0.28);
+    c.fillStyle = lipC; c.beginPath(); c.moveTo(hcx - headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(89.7), hcx + headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(88.5), hcx - headW * 0.3, Y(89.2)); c.fill();
+    c.strokeStyle = "rgba(40,20,15,.55)"; c.lineWidth = Math.max(0.4, 0.25 * u); c.beginPath(); c.moveTo(hcx - headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(89.05), hcx + headW * 0.3, Y(89.2)); c.stroke();
+    if(acc.includes("barba") && !fem){
+      c.fillStyle = rgba(hc, 0.85); c.beginPath(); c.moveTo(hcx - headW * 0.98, Y(93)); c.quadraticCurveTo(hcx - headW * 0.9, Y(88.4), hcx, Y(86.6)); c.quadraticCurveTo(hcx + headW * 0.9, Y(88.4), hcx + headW * 0.98, Y(93));
+      c.lineTo(hcx + headW * 0.7, Y(91)); c.quadraticCurveTo(hcx, Y(90.4), hcx - headW * 0.7, Y(91)); c.closePath(); c.fill();
+      c.fillStyle = sk; c.beginPath(); c.ellipse(hcx, Y(89.2), headW * 0.32, 0.7 * u, 0, 0, TAU); c.fill(); c.fillStyle = lipC; c.beginPath(); c.ellipse(hcx, Y(89.2), headW * 0.26, 0.32 * u, 0, 0, TAU); c.fill();
+    }
+    if(P.tattoo === "rosto"){ c.fillStyle = "rgba(25,32,45,.8)"; c.beginPath(); c.ellipse(hcx + headW * 0.62, Y(91.8), 0.3 * u, 0.5 * u, 0, 0, TAU); c.fill(); }
+    // hair on top
+    const hs = P.hair, cap = (ext, y0) => { c.beginPath(); c.moveTo(hcx - headW * 1.02, Y(y0 || 94)); c.quadraticCurveTo(hcx - headW * 1.12, Y(101 + ext), hcx, Y(101.2 + ext)); c.quadraticCurveTo(hcx + headW * 1.12, Y(101 + ext), hcx + headW * 1.02, Y(y0 || 94)); c.quadraticCurveTo(hcx + headW * 0.6, Y(97.6), hcx, Y(98)); c.quadraticCurveTo(hcx - headW * 0.6, Y(97.6), hcx - headW * 1.02, Y(y0 || 94)); c.fill(); };
+    const hg2 = c.createLinearGradient(0, Y(102), 0, Y(94)); hg2.addColorStop(0, shade(hc, 0.1)); hg2.addColorStop(0.5, hc); hg2.addColorStop(1, shade(hc, -0.25)); c.fillStyle = hg2;
+    if(["curto", "longo", "black", "rabo", "coque", "trancas", "dreads"].includes(hs)) cap(0.4, hs === "longo" || hs === "trancas" ? 90 : 94);
+    if(hs === "topete"){ cap(0.2, 95); c.beginPath(); c.moveTo(hcx - headW * 0.95, Y(98)); c.quadraticCurveTo(hcx - headW * 0.6, Y(103.6), hcx + headW * 0.5, Y(102.8)); c.quadraticCurveTo(hcx + headW * 1.05, Y(101.6), hcx + headW * 0.95, Y(98.5)); c.closePath(); c.fill(); }
+    if(hs === "raspado"){ c.globalAlpha = 0.45; cap(-0.3, 95); c.globalAlpha = 1; }
+    if(hs === "coque"){ c.beginPath(); c.ellipse(hcx, Y(102.4), 2.2 * u, 1.8 * u, 0, 0, TAU); c.fill(); }
+    if(hs === "moicano"){ c.globalAlpha = 0.4; cap(-0.3, 95); c.globalAlpha = 1; rrectC(c, hcx - 1.2 * u, Y(104), 2.4 * u, 6 * u, 1.2 * u); c.fill(); }
+    if(hs === "careca"){ c.fillStyle = "rgba(255,255,255,.2)"; c.beginPath(); c.ellipse(hcx - headW * 0.3, Y(98.6), headW * 0.35, 0.9 * u, -0.3, 0, TAU); c.fill(); }
+    if(hs === "bone"){ c.fillStyle = st; cap(0.8, 95.5); c.fillStyle = shade(st, -0.25); c.beginPath(); c.ellipse(hcx, Y(96), headW * 1.25, 1.2 * u, 0, 0, Math.PI); c.fill(); c.fillStyle = top; circ(c, hcx, Y(101.6), 0.5 * u); c.fill(); }
+    if(hs !== "careca" && hs !== "raspado" && hs !== "bone" && hs !== "moicano"){ c.strokeStyle = "rgba(255,255,255,.14)"; c.lineWidth = Math.max(0.3, 0.25 * u); for(let k = -2; k <= 2; k++){ c.beginPath(); c.moveTo(hcx + k * headW * 0.3, Y(100.5)); c.quadraticCurveTo(hcx + k * headW * 0.38, Y(99), hcx + k * headW * 0.45, Y(97.4)); c.stroke(); } }
+    if(P.glasses === "sol" || P.glasses === "aviador"){
+      c.fillStyle = P.glasses === "sol" ? "rgba(8,10,14,.92)" : "rgba(30,44,60,.85)"; c.strokeStyle = P.glasses === "sol" ? "#0b0d12" : "#d4af37"; c.lineWidth = Math.max(0.4, 0.3 * u);
+      [-1, 1].forEach(sd => { c.beginPath(); c.ellipse(hcx + sd * ex, ey + 0.1 * u, headW * 0.32, (P.glasses === "sol" ? 0.95 : 1.15) * u, 0, 0, TAU); c.fill(); c.stroke(); });
+      c.beginPath(); c.moveTo(hcx - ex * 0.35, ey); c.lineTo(hcx + ex * 0.35, ey); c.stroke();
+      c.fillStyle = "rgba(255,255,255,.35)"; [-1, 1].forEach(sd => { c.fillRect(hcx + sd * ex - headW * 0.18, ey - 0.5 * u, headW * 0.12, 0.25 * u); });
+    }
+    if(acc.includes("fone")){ c.strokeStyle = "#1b1d22"; c.lineWidth = 0.9 * u; c.beginPath(); c.arc(hcx, Y(94), headW * 1.12, Math.PI * 1.02, Math.PI * 1.98); c.stroke(); c.fillStyle = st; [-1, 1].forEach(sd => { rrectC(c, hcx + sd * headW * 1.08 - 1.1 * u, Y(95.4), 2.2 * u, 3.6 * u, 0.9 * u); c.fill(); }); }
+  }
+
+  // ---- the helmet ----
+  const HELM = P.helmet;
+  const helmet = (hx, hy, sc, onHead) => {
+    const R0 = headW * 1.45 * sc, top2 = hy - R0 * 1.12, bot2 = hy + R0 * 0.72, shellC = HELM === "carbono" ? "#1a1c21" : HELM === "retro" ? "#eef0f3" : top;
+    const shell = () => {
+      c.beginPath();
+      if(HELM === "aberto" || HELM === "retro"){ c.moveTo(hx - R0, hy + R0 * 0.35); c.bezierCurveTo(hx - R0 * 1.06, top2, hx + R0 * 1.06, top2, hx + R0, hy + R0 * 0.35); c.lineTo(hx + R0 * 0.82, hy + R0 * 0.62); c.lineTo(hx - R0 * 0.82, hy + R0 * 0.62); }
+      else if(HELM === "drag"){ c.ellipse(hx, hy - R0 * 0.1, R0 * 1.06, R0 * 1.06, 0, 0, TAU); }
+      else { c.moveTo(hx - R0 * 0.92, bot2); c.bezierCurveTo(hx - R0 * 1.12, hy - R0 * 0.2, hx - R0 * 0.95, top2, hx, top2); c.bezierCurveTo(hx + R0 * 0.95, top2, hx + R0 * 1.12, hy - R0 * 0.2, hx + R0 * 0.92, bot2); c.quadraticCurveTo(hx, bot2 + R0 * 0.12, hx - R0 * 0.92, bot2); }
+      c.closePath();
+    };
+    const sg = c.createRadialGradient(hx - R0 * 0.4, hy - R0 * 0.55, R0 * 0.1, hx, hy, R0 * 1.3);
+    sg.addColorStop(0, shade(shellC, 0.45)); sg.addColorStop(0.45, shellC); sg.addColorStop(1, shade(shellC, -0.45));
+    shell(); fillOL(sg);
+    c.save(); shell(); c.clip();
+    if(HELM === "carbono"){ c.fillStyle = "rgba(255,255,255,.06)"; for(let i = -12; i < 12; i++) for(let j = -12; j < 12; j++) if((i + j) % 2 === 0) c.fillRect(hx + i * R0 * 0.12, hy + j * R0 * 0.12, R0 * 0.12, R0 * 0.12); }
+    // livery: stripes in the detail colour
+    c.fillStyle = HELM === "retro" ? top : st; c.fillRect(hx - R0 * 0.12, top2 - 2, R0 * 0.24, R0 * 2.4);
+    if(HELM === "f1" || HELM === "integral" || HELM === "carbono"){ c.fillStyle = HELM === "carbono" ? top : st; c.beginPath(); c.ellipse(hx, hy + R0 * 0.1, R0 * 1.2, R0 * 0.4, 0, Math.PI, TAU); c.globalAlpha = 0.5; c.fill(); c.globalAlpha = 1; }
+    c.restore();
+    if(HELM === "aberto" || HELM === "retro"){
+      // open face: the face shows, with goggles on the shell
+      if(!onHead){ c.fillStyle = "#121318"; c.beginPath(); c.ellipse(hx, hy + R0 * 0.1, R0 * 0.62, R0 * 0.55, 0, 0, TAU); c.fill(); }
+      c.fillStyle = "#2a2c33"; rrectC(c, hx - R0 * 0.8, hy - R0 * 0.55, R0 * 1.6, R0 * 0.3, R0 * 0.12); c.fill();
+      [-1, 1].forEach(sd => { const g = c.createRadialGradient(hx + sd * R0 * 0.35, hy - R0 * 0.45, 0, hx + sd * R0 * 0.35, hy - R0 * 0.4, R0 * 0.22); g.addColorStop(0, "#9fd0ff"); g.addColorStop(1, "#1d3a5a"); c.fillStyle = g; c.beginPath(); c.ellipse(hx + sd * R0 * 0.35, hy - R0 * 0.4, R0 * 0.22, R0 * 0.16, 0, 0, TAU); c.fill(); c.strokeStyle = "#c9ced8"; c.lineWidth = Math.max(0.4, R0 * 0.04); c.stroke(); });
     } else {
-      seg(s0, hd, sk, aw * 0.85);
-      if(shortS) seg(s0, lerp(s0, hd, 0.36), top, aw * 1.05);
-      // tattoos on bare arms
+      // visor: tinted, reflecting the lights, with its pivot and the chin bar under it
+      const vy = HELM === "drag" ? hy - R0 * 0.15 : hy - R0 * 0.05, vh = HELM === "drag" ? R0 * 0.62 : HELM === "f1" ? R0 * 0.28 : R0 * 0.42;
+      const vg2 = c.createLinearGradient(0, vy - vh / 2, 0, vy + vh / 2); vg2.addColorStop(0, "#5d6f88"); vg2.addColorStop(0.35, "#1b2433"); vg2.addColorStop(0.55, "#2c3a52"); vg2.addColorStop(1, "#06080c");
+      c.fillStyle = vg2; c.beginPath(); c.ellipse(hx, vy, R0 * (HELM === "drag" ? 0.82 : 0.86), vh / 2, 0, 0, TAU); c.fill(); c.strokeStyle = "#0b0d12"; c.lineWidth = Math.max(0.5, R0 * 0.05); c.stroke();
+      c.fillStyle = "rgba(255,255,255,.45)"; c.beginPath(); c.ellipse(hx - R0 * 0.35, vy - vh * 0.22, R0 * 0.28, vh * 0.1, -0.15, 0, TAU); c.fill();
+      [-1, 1].forEach(sd => { c.fillStyle = "#2a2c33"; circ(c, hx + sd * R0 * 0.86, vy, R0 * 0.08); c.fill(); });
+      if(HELM !== "drag"){ c.fillStyle = shade(shellC, -0.25); c.beginPath(); c.ellipse(hx, bot2 - R0 * 0.18, R0 * 0.42, R0 * 0.12, 0, 0, TAU); c.fill(); c.fillStyle = "#0b0d12"; for(let k = -2; k <= 2; k++) c.fillRect(hx + k * R0 * 0.12 - R0 * 0.03, bot2 - R0 * 0.24, R0 * 0.06, R0 * 0.1); }
+      if(HELM === "f1"){ c.fillStyle = shade(shellC, -0.3); rrectC(c, hx - R0 * 0.22, top2 - R0 * 0.12, R0 * 0.44, R0 * 0.22, R0 * 0.08); c.fill(); c.fillStyle = "#0b0d12"; c.fillRect(hx - R0 * 0.14, top2 - R0 * 0.06, R0 * 0.28, R0 * 0.08); }
+    }
+  };
+  if(helmetOn){ helmet(hcx, Y(93.4), 1, true); if(HELM === "aberto" || HELM === "retro"){ /* face drawn above, shows through */ } }
+
+  // ---- arms (after the torso so they sit in front of it) ----
+  const shL = [X(-swH + 0.8), Y(80.6)], shR = [X(swH - 0.8), Y(80.6)];
+  let hands;
+  if(pose === "trophy") hands = [[X(-hipH - 3), Y(45)], [X(9), Y(104)]];
+  else if(pose === "wave") hands = [[X(-hipH - 3), Y(45)], [X(16 + Math.sin(t * 8) * 1.6), Y(96)]];
+  else if(pose === "clap"){ const k = Math.abs(Math.sin(t * 7)); hands = [[X(-1.6 - k * 3.2), Y(66)], [X(1.6 + k * 3.2), Y(66)]]; }
+  else hands = [[X(-hipH - 3.2), Y(44)], [X(hipH + 3.2), Y(44)]];
+  if(helmetArm && pose !== "clap") hands[0] = [X(-hipH - 2.6), Y(56)];
+  const longS = suitLike || of === "jaqueta" || of === "couro" || of === "moletom", shortS = of === "camiseta" || of === "polo" || of === "colete";
+  const sleeve = of === "couro" ? "#17181c" : of === "colete" ? "#e9ecf1" : top;
+  const upperL = 15.5 * u, foreL = 14.5 * u;
+  [shL, shR].forEach((s0, i) => {
+    const hd = hands[i], sd = i ? 1 : -1, el = ik(s0, hd, upperL, foreL, sd);
+    const aw0 = (fem ? 2.6 : 3.1) * u * wk, aw1 = (fem ? 2.1 : 2.5) * u * wk, aw2 = (fem ? 1.5 : 1.8) * u * wk;
+    if(longS){ limb(s0, el, aw0 * 1.08, aw1 * 1.05, sleeve); limb(el, hd, aw1 * 1.05, aw2 * 1.15, sleeve);
+      if(suitLike){ const g = limb; c.strokeStyle = st; c.lineWidth = 0.9 * u; c.beginPath(); c.moveTo(s0[0] + sd * aw0 * 0.6, s0[1]); c.lineTo(el[0] + sd * aw1 * 0.6, el[1]); c.lineTo(hd[0] + sd * aw2 * 0.5, hd[1]); c.stroke();
+        c.fillStyle = shade(top, -0.3); c.beginPath(); c.ellipse(hd[0], hd[1] - (hd[1] - el[1]) * 0.08, aw2 * 1.25, aw2 * 0.6, Math.atan2(hd[1] - el[1], hd[0] - el[0]) + Math.PI / 2, 0, TAU); c.fill(); }
+      if(of === "jaqueta"){ c.fillStyle = st; c.beginPath(); c.ellipse(hd[0], hd[1] - (hd[1] - el[1]) * 0.08, aw2 * 1.2, aw2 * 0.55, Math.atan2(hd[1] - el[1], hd[0] - el[0]) + Math.PI / 2, 0, TAU); c.fill(); }
+    } else {
+      limb(s0, el, aw0 * 0.95, aw1 * 0.9, sk); limb(el, hd, aw1 * 0.9, aw2, sk);
+      if(shortS){ const mid = [s0[0] + (el[0] - s0[0]) * 0.45, s0[1] + (el[1] - s0[1]) * 0.45]; limb(s0, mid, aw0 * 1.12, aw0 * 1.05, sleeve); }
+      if(of === "regata"){ c.fillStyle = shade(top, -0.1); c.beginPath(); c.ellipse(s0[0] - sd * 0.6 * u, s0[1] + 1.6 * u, 1.4 * u, 2.6 * u, 0, 0, TAU); c.fill(); }
       if(P.tattoo === "braco" || P.tattoo === "tribal"){
-        const a0 = shortS ? 0.42 : 0.12;
-        c.strokeStyle = "rgba(25,32,45,.8)"; c.lineWidth = Math.max(0.6, 1.1 * u);
-        for(let k = 0; k < 7; k++){
-          const q = lerp(s0, hd, a0 + (0.86 - a0) * k / 6), nx = -(hd[1] - s0[1]), ny = hd[0] - s0[0], nl = Math.hypot(nx, ny) || 1, o = aw * 0.32;
-          c.beginPath();
-          if(P.tattoo === "tribal"){ c.moveTo(q[0] - nx / nl * o, q[1] - ny / nl * o); c.lineTo(q[0] + (hd[0] - s0[0]) * 0.04, q[1] + (hd[1] - s0[1]) * 0.04); c.lineTo(q[0] + nx / nl * o, q[1] + ny / nl * o); }
-          else { c.arc(q[0], q[1], aw * (k % 2 ? 0.18 : 0.26), 0, TAU); }
-          c.stroke();
-        }
+        c.strokeStyle = "rgba(25,32,45,.75)"; c.lineWidth = Math.max(0.4, 0.35 * u);
+        const pts2 = [0.25, 0.45, 0.65, 0.85].map(k => [el[0] + (hd[0] - el[0]) * k, el[1] + (hd[1] - el[1]) * k]).concat(shortS ? [] : [[s0[0] + (el[0] - s0[0]) * 0.6, s0[1] + (el[1] - s0[1]) * 0.6]]);
+        pts2.forEach(q => { c.beginPath(); if(P.tattoo === "tribal"){ c.moveTo(q[0] - aw1 * 0.5, q[1] - 0.6 * u); c.quadraticCurveTo(q[0], q[1] + 0.8 * u, q[0] + aw1 * 0.5, q[1] - 0.6 * u); } else c.arc(q[0], q[1], aw2 * 0.45, 0, TAU); c.stroke(); });
       }
     }
-    if(acc.includes("relogio") && i === 0){ const q = lerp(s0, hd, 0.86); c.fillStyle = "#c9ced8"; circ(c, q[0], q[1], aw * 0.42); c.fill(); c.fillStyle = "#16181d"; circ(c, q[0], q[1], aw * 0.27); c.fill(); }
+    if(acc.includes("relogio") && i === 0){ const q = [el[0] + (hd[0] - el[0]) * 0.86, el[1] + (hd[1] - el[1]) * 0.86]; c.fillStyle = "#c9ced8"; c.beginPath(); c.ellipse(q[0], q[1], aw2 * 1.05, aw2 * 0.55, 0, 0, TAU); c.fill(); c.fillStyle = "#16181d"; circ(c, q[0], q[1], aw2 * 0.4); c.fill(); }
+    // hand: palm and fingers, gloved or bare
+    const G = P.gloves, gc = G === "corrida" ? top : G === "couro" ? "#1a1b1f" : G === "drift" ? st : G === "meio" ? "#26282e" : sk;
+    const ang = Math.atan2(hd[1] - el[1], hd[0] - el[0]), hl = 4.4 * u, hw = 1.75 * u * Math.sqrt(wk);
+    c.save(); c.translate(hd[0], hd[1]); c.rotate(ang - Math.PI / 2);
+    const handG = c.createLinearGradient(-hw, 0, hw, 0); handG.addColorStop(0, shade(gc, -0.25)); handG.addColorStop(0.5, gc); handG.addColorStop(1, shade(gc, 0.1));
+    c.beginPath(); c.moveTo(-hw, -0.4 * u); c.lineTo(-hw * 1.05, hl * 0.55); c.quadraticCurveTo(-hw * 0.9, hl, 0, hl * 1.05); c.quadraticCurveTo(hw * 0.9, hl, hw * 1.05, hl * 0.55); c.lineTo(hw, -0.4 * u); c.closePath(); fillOL(handG);
+    if(G === "meio"){ c.fillStyle = sk; c.beginPath(); c.moveTo(-hw * 1.02, hl * 0.62); c.quadraticCurveTo(-hw * 0.9, hl, 0, hl * 1.05); c.quadraticCurveTo(hw * 0.9, hl, hw * 1.02, hl * 0.62); c.closePath(); c.fill(); }
+    c.strokeStyle = "rgba(0,0,0,.3)"; c.lineWidth = Math.max(0.3, 0.22 * u); for(let k = -1; k <= 1; k++){ c.beginPath(); c.moveTo(k * hw * 0.5, hl * 0.6); c.lineTo(k * hw * 0.55, hl * 0.98); c.stroke(); }
+    c.fillStyle = shade(gc, -0.08); c.beginPath(); c.ellipse(-sd * hw * 0.95, hl * 0.35, hw * 0.4, hl * 0.32, sd * 0.4, 0, TAU); c.fill();
+    if(G === "corrida" || G === "drift"){ c.fillStyle = G === "drift" ? "#14161b" : st; c.fillRect(-hw, -0.6 * u, hw * 2, 1.1 * u); }
+    c.restore();
   });
-  c.fillStyle = gloves ? "#111317" : sk; hands.forEach(hp => { circ(c, hp[0], hp[1], 4.6 * u); c.fill(); });
-  // trophy
+  // trophy in the raised hand
   if(pose === "trophy"){
-    const [tx, ty] = hands[1];
-    c.fillStyle = "#e8c04a"; c.strokeStyle = "#8a6a14"; c.lineWidth = Math.max(0.6, 1 * u);
-    c.beginPath(); c.moveTo(tx - 9 * u, ty - 22 * u); c.lineTo(tx + 9 * u, ty - 22 * u); c.quadraticCurveTo(tx + 8 * u, ty - 9 * u, tx, ty - 7 * u); c.quadraticCurveTo(tx - 8 * u, ty - 9 * u, tx - 9 * u, ty - 22 * u); c.fill(); c.stroke();
-    c.beginPath(); c.arc(tx - 10 * u, ty - 17 * u, 3.5 * u, Math.PI * 0.5, Math.PI * 1.5); c.stroke();
-    c.beginPath(); c.arc(tx + 10 * u, ty - 17 * u, 3.5 * u, Math.PI * 1.5, Math.PI * 0.5); c.stroke();
-    c.fillRect(tx - 2 * u, ty - 8 * u, 4 * u, 5 * u); R2(tx - 6 * u, ty - 4 * u, 12 * u, 3.5 * u, 1 * u);
-    c.fillStyle = "rgba(255,255,255,.6)"; c.fillRect(tx - 5 * u, ty - 20 * u, 2 * u, 8 * u);
+    const [tx, ty] = hands[1], tu = u * 1.1;
+    const gg = c.createLinearGradient(tx - 6 * tu, 0, tx + 6 * tu, 0); gg.addColorStop(0, "#8a6a14"); gg.addColorStop(0.35, "#ffe58a"); gg.addColorStop(0.6, "#e8c04a"); gg.addColorStop(1, "#7a5a10");
+    c.fillStyle = gg; c.strokeStyle = "#5a4208"; c.lineWidth = Math.max(0.5, 0.4 * tu);
+    c.beginPath(); c.moveTo(tx - 5.5 * tu, ty - 15 * tu); c.lineTo(tx + 5.5 * tu, ty - 15 * tu); c.quadraticCurveTo(tx + 5 * tu, ty - 6.5 * tu, tx, ty - 5.5 * tu); c.quadraticCurveTo(tx - 5 * tu, ty - 6.5 * tu, tx - 5.5 * tu, ty - 15 * tu); c.fill(); c.stroke();
+    c.beginPath(); c.arc(tx - 6.4 * tu, ty - 11.5 * tu, 2.2 * tu, Math.PI * 0.5, Math.PI * 1.5); c.stroke(); c.beginPath(); c.arc(tx + 6.4 * tu, ty - 11.5 * tu, 2.2 * tu, Math.PI * 1.5, Math.PI * 0.5); c.stroke();
+    c.fillRect(tx - 1 * tu, ty - 5.6 * tu, 2 * tu, 3 * tu); rrectC(c, tx - 3.5 * tu, ty - 3 * tu, 7 * tu, 2 * tu, 0.5 * tu); c.fill();
   }
-  // neck, chain
-  c.fillStyle = sk; c.fillRect(x - 4 * u, Y(88), 8 * u, 8 * u);
-  if(P.tattoo === "pescoco"){ c.strokeStyle = "rgba(25,32,45,.8)"; c.lineWidth = Math.max(0.5, 0.8 * u); c.beginPath(); c.arc(x + 1.5 * u, Y(84.5), 2 * u, 0, TAU); c.moveTo(x - 3 * u, Y(82)); c.lineTo(x - 1 * u, Y(86)); c.stroke(); }
-  if(acc.includes("corrente")){ c.strokeStyle = "#e8c04a"; c.lineWidth = Math.max(0.6, 1.1 * u); c.beginPath(); c.arc(x, Y(86), 6 * u, Math.PI * 0.2, Math.PI * 0.8); c.stroke(); c.fillStyle = "#e8c04a"; circ(c, x, Y(79.5), 1.6 * u); c.fill(); }
-  // head
-  const hy = Y(97), hr = 11 * u, hs = P.hair;
-  c.fillStyle = hc;
-  if(hs === "black"){ circ(c, x, hy - 4 * u, hr * 1.55); c.fill(); }
-  if(hs === "longo"){ R2(x - 13 * u, hy - 8 * u, 26 * u, (fem ? 30 : 24) * u, 6 * u); }
-  if(hs === "rabo"){ c.beginPath(); c.ellipse(x + 12 * u, hy + 4 * u, 4 * u, 11 * u, -0.3, 0, TAU); c.fill(); }
-  if(hs === "trancas") [-1, 1].forEach(sd => { for(let k = 0; k < 6; k++){ circ(c, x + sd * 10.5 * u, hy + 2 * u + k * 3.4 * u, 2.3 * u); c.fill(); } });
-  if(hs === "dreads"){ c.strokeStyle = hc; c.lineWidth = 2.6 * u; for(let k = -3; k <= 3; k++){ if(Math.abs(k) < 2) continue; c.beginPath(); c.moveTo(x + k * 3.4 * u, hy - 4 * u); c.lineTo(x + k * 4 * u, hy + 13 * u); c.stroke(); } }
-  c.fillStyle = sk;
-  circ(c, x - hr, hy + 1 * u, 2.6 * u); c.fill(); circ(c, x + hr, hy + 1 * u, 2.6 * u); c.fill();
-  if(acc.includes("brinco")){ c.fillStyle = "#e8c04a"; circ(c, x - hr, hy + 4 * u, 1.2 * u); c.fill(); circ(c, x + hr, hy + 4 * u, 1.2 * u); c.fill(); c.fillStyle = sk; }
-  c.beginPath(); c.ellipse(x, hy, hr * (fem ? 0.94 : 1), hr * (fem ? 1.02 : 1), 0, 0, TAU); c.fill();
-  c.fillStyle = hc;
-  const cap = (ext) => { c.beginPath(); c.arc(x, hy - 1 * u, hr + ext, Math.PI * 1.03, Math.PI * 1.97); c.closePath(); c.fill(); };
-  if(["curto", "longo", "black", "topete", "rabo", "coque", "trancas", "dreads"].includes(hs)) cap(1.2 * u);
-  if(hs === "longo" && fem){ R2(x - hr - 1.5 * u, hy - 3 * u, 4 * u, 16 * u, 2 * u); R2(x + hr - 2.5 * u, hy - 3 * u, 4 * u, 16 * u, 2 * u); }
-  if(hs === "raspado"){ c.globalAlpha = 0.55; cap(0.3 * u); c.globalAlpha = 1; }
-  if(hs === "topete"){ c.beginPath(); c.ellipse(x - 1 * u, hy - hr - 1 * u, 8 * u, 4.5 * u, -0.2, 0, TAU); c.fill(); }
-  if(hs === "coque"){ circ(c, x, hy - hr - 4 * u, 5 * u); c.fill(); }
-  if(hs === "moicano"){ R2(x - 3 * u, hy - hr - 6 * u, 6 * u, 12 * u, 3 * u); }
-  if(hs === "careca"){ c.fillStyle = "rgba(255,255,255,.22)"; c.beginPath(); c.ellipse(x - 3 * u, hy - 6 * u, 4 * u, 2 * u, -0.4, 0, TAU); c.fill(); }
-  if(hs === "bone"){
-    c.fillStyle = st; cap(1.6 * u); R2(x - 2 * u, hy - 6.5 * u, 17 * u, 3 * u, 1.5 * u);
-    c.fillStyle = top; circ(c, x, hy - 9 * u, 2.4 * u); c.fill();
-  }
-  if(hs !== "capacete"){
-    if(acc.includes("barba")){ c.fillStyle = shade(hc, 0.05); c.beginPath(); c.arc(x, hy + 1 * u, hr * 0.98, Math.PI * 0.08, Math.PI * 0.92); c.quadraticCurveTo(x, hy + 3 * u, x + hr * 0.97, hy + 2.5 * u); c.fill(); }
-    c.fillStyle = "#111317"; circ(c, x - 4 * u, hy + 0.5 * u, 1.4 * u); c.fill(); circ(c, x + 4 * u, hy + 0.5 * u, 1.4 * u); c.fill();
-    if(fem){ c.strokeStyle = "#111317"; c.lineWidth = Math.max(0.5, 0.6 * u); [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(x + sd * 4 * u + sd * 1 * u, hy - 0.6 * u); c.lineTo(x + sd * 4 * u + sd * 2.6 * u, hy - 1.8 * u); c.stroke(); }); }
-    if(fem){ c.fillStyle = "#b5444e"; c.beginPath(); c.ellipse(x, hy + 4.4 * u, 2.6 * u, 1.1 * u, 0, 0, TAU); c.fill(); }
-    else { c.strokeStyle = "#5a2a1e"; c.lineWidth = Math.max(0.6, 1.1 * u); c.beginPath(); c.arc(x, hy + 3 * u, 3.2 * u, Math.PI * 0.2, Math.PI * 0.8); c.stroke(); }
-    if(P.tattoo === "rosto"){ c.fillStyle = "rgba(25,32,45,.85)"; c.beginPath(); c.ellipse(x + 5 * u, hy + 3.6 * u, 0.7 * u, 1.2 * u, 0, 0, TAU); c.fill(); }
-    if(P.glasses === "sol"){ c.fillStyle = "#0b0d12"; R2(x - 9 * u, hy - 2.5 * u, 18 * u, 5 * u, 2 * u); }
-    if(P.glasses === "aviador"){
-      c.fillStyle = "rgba(20,30,40,.85)"; c.strokeStyle = "#d4af37"; c.lineWidth = Math.max(0.5, 0.8 * u);
-      [-4.5, 4.5].forEach(d => { c.beginPath(); c.ellipse(x + d * u, hy + 0.5 * u, 4 * u, 3.4 * u, 0, 0, TAU); c.fill(); c.stroke(); });
-    }
-    if(acc.includes("fone")){
-      c.strokeStyle = "#1b1d22"; c.lineWidth = 2 * u; c.beginPath(); c.arc(x, hy - 1 * u, hr + 2 * u, Math.PI * 1.05, Math.PI * 1.95); c.stroke();
-      c.fillStyle = st; [-1, 1].forEach(sd => { R2(x + sd * (hr + 1 * u) - 2.5 * u, hy - 3 * u, 5 * u, 8 * u, 2 * u); });
-    }
-  } else {
-    c.fillStyle = top; circ(c, x, hy - 1 * u, hr * 1.35); c.fill();
-    c.fillStyle = st; c.fillRect(x - 2 * u, hy - hr * 1.35, 4 * u, hr * 1.2);
-    c.fillStyle = "#16202e"; R2(x - 11 * u, hy - 4 * u, 22 * u, 8 * u, 4 * u);
-    c.fillStyle = "rgba(255,255,255,.35)"; c.fillRect(x - 8 * u, hy - 2.5 * u, 6 * u, 1.2 * u);
-  }
+  // helmet carried under the arm
+  if(helmetArm && pose !== "clap") helmet(X(-hipH - 4), Y(58), 0.82, false);
   c.restore();
 }
 
@@ -5780,7 +6114,7 @@ function drawCockpit(now){
   {
     const btk = pvApply(S.car, KC).blower || 0;
     if(btk){
-      const cxb = W * 0.6 + (drv.steer || 0) * W * 0.01, base = H * 0.418, wv = Math.sin(now * 42) * (0.6 + (drv.rpm || 900) / 3000) * 0.35;
+      const cxb = W * 0.6, base = H * 0.418, wv = 0;   // bolted to the engine: it moves only with the car itself
       const bw = W * [0, 0.13, 0.14, 0.15][btk], ch2 = H * 0.085, pl = H * 0.012;
       const aluC = (y0, y1) => { const g = ctx.createLinearGradient(0, y1, 0, y0); g.addColorStop(0, "#f2f5fa"); g.addColorStop(0.4, "#b9c0ca"); g.addColorStop(0.7, "#7d838e"); g.addColorStop(1, "#c9ced8"); return g; };
       ctx.save(); ctx.translate(0, wv);
@@ -6962,7 +7296,7 @@ const CK_DASH = [[null, "Original", "#2c2e33"], ["#121316", "Preto", "#121316"],
 const CK_WHEEL = [["", "Sobe com o stage"], ["oem", "Original"], ["couro4", "Anos 80 de 4 raios"], ["baquelite", "Antigo de baquelite"], ["classic", "Madeira"], ["madrpm", "Madeira com conta-giro"],
   ["aluminio", "Alumínio vazado anos 70"], ["sport", "Esportivo"], ["ledtop", "Esportivo com LED de giro"], ["flat", "Base reta esportivo"], ["flatled", "Base reta com giro digital"],
   ["rally", "Concha funda"], ["deep", "Drift concha suede"], ["gt", "GT carbono"], ["tela", "GT com contagiro"], ["race", "Corrida"]];
-const CK_WHEELC = [[null, "Original", "#202228"], ["#202228", "Couro preto", "#202228"], ["#6b4426", "Couro marrom", "#6b4426"], ["#a0622d", "Madeira", "#a0622d"], ["#c8121b", "Vermelho", "#c8121b"], ["#2f63d6", "Azul", "#2f63d6"], ["#c9a27a", "Caramelo", "#c9a27a"], ["#e9ecf1", "Branco", "#e9ecf1"]];
+const CK_WHEELC = [[null, "Original", "#202228"], ["#e5484d", "Costura vermelha", "#e5484d"], ["#2f8fe6", "Costura azul", "#2f8fe6"], ["#ffd23f", "Costura amarela", "#ffd23f"], ["#ff8a1f", "Costura laranja", "#ff8a1f"], ["#3ee66b", "Costura verde", "#3ee66b"], ["#a855f7", "Costura roxa", "#a855f7"], ["#ff4fa0", "Costura rosa", "#ff4fa0"], ["#eef0f3", "Costura branca", "#eef0f3"], ["#d4af37", "Costura dourada", "#d4af37"]];
 const CK_KNOB = [["", "Sobe com o stage"], ["couro", "Bola de couro"], ["alu", "Alumínio"], ["seq", "Sequencial"]];
 const CK_KNOBC = [[null, "Original", "#1c1f26"], ["#1c1f26", "Preto", "#1c1f26"], ["#c9ced8", "Prata", "#c9ced8"], ["#c8121b", "Vermelho", "#c8121b"], ["#2f8fe6", "Azul", "#2f8fe6"], ["#d4af37", "Dourado", "#d4af37"], ["#63d692", "Verde", "#63d692"], ["#8a5cf6", "Roxo", "#8a5cf6"]];
 function visGrid(title, key, items, current, cls){
@@ -7053,6 +7387,9 @@ function renderEstilo(){
   h += chipRow("Tipo de ronco", "sound", SOUNDS, k.sound || "orig");
   if((tuneOf(S.car).turbo || 0) > 0 || (SND[S.car] || {}).turbo) h += chipRow("Válvula do turbo", "turboSnd", [["espirro", "Espirro (blow-off)"], ["flutter", "Flutter (tututu)"]], k.turboSnd || ((SND[S.car] || {}).flutter ? "flutter" : "espirro"));
   else h += '<div class="ph"><span>Instale o Turbo na Preparação para escolher espirro ou flutter.</span></div>';
+  h += '<div class="sec">Aerofólio</div>';
+  h += visGrid("Modelo da asa", "wing", WINGS, k.wing || "orig", "wgth");
+  if(k.wing && k.wing !== "orig" && k.wing !== "none") h += chipRow("Acabamento da asa", "wingF", WING_FIN, k.wingF || "");
   h += '<div class="sec">Pintura</div>';
   h += swatchRow("Cor", "paint", [[null, "Original", car.color]].concat(PAINTS), k.paint);
   h += chipRow("Acabamento", "finish", FINISHES, k.finish);
@@ -7069,7 +7406,7 @@ function renderEstilo(){
   h += visGrid("Contagiro extra", "ckTach", TACHS, k.ckTach || "", "tcth");
   h += swatchRow("Cor do painel", "ckDash", CK_DASH, k.ckDash || null);
   h += visGrid("Modelo do volante", "ckWheel", CK_WHEEL, k.ckWheel || "", "swth");
-  h += swatchRow("Cor do volante", "ckWheelC", CK_WHEELC, k.ckWheelC || null);
+  h += swatchRow("Costura e detalhes do volante", "ckWheelC", CK_WHEELC, k.ckWheelC || null);
   h += chipRow("Modelo do câmbio", "ckKnob", CK_KNOB, k.ckKnob || "");
   h += swatchRow("Cor do câmbio", "ckKnobC", CK_KNOBC, k.ckKnobC || null);
   h += '<div class="sec">Escapamento</div>';
@@ -7083,6 +7420,7 @@ function renderEstilo(){
   h += chipRow("Aro: roda pequena ou grande", "aro", aros, k.aro && +k.aro !== car.inch ? String(k.aro) : "");
   h += swatchRow("Cor da roda", "rim", [[null, "Original", car.rim]].concat(RIMS), k.rim);
   h += visGrid("Pneu", "tire", TIRES, k.tire || "orig", "tith");
+  h += visGrid("Tala do pneu: fino ou largo", "tala", TALAS, k.tala || "", "tlth");
   h += swatchRow("Cor das letras do pneu", "tireC", TIRE_COLORS, k.tireC || "#f4f5f8");
   h += swatchRow("Pinça de freio", "cal", [[null, "Original", car.cal]].concat(CALIPERS), k.cal);
   return h;
@@ -7104,7 +7442,12 @@ function renderPiloto(){
   h += chipRow("Roupa", "outfit", P_OUTFIT, P.outfit || "macacao", false, "pil");
   h += swatchRow("Cor da roupa", "suit", PAINTS, P.suit, "pil");
   h += swatchRow("Cor dos detalhes", "stripe", VCOLORS, P.stripe, "pil");
-  h += chipRow("Tênis", "shoes", P_SHOES, P.shoes || "preto", false, "pil");
+  if(!["macacao", "macacao2", "kart"].includes(P.outfit || "macacao")) h += chipRow("Calça", "pants", P_PANTS, P.pants || "jeans", false, "pil");
+  h += chipRow("Calçado", "shoes", P_SHOES, P.shoes || "preto", false, "pil");
+  h += chipRow("Luvas", "gloves", P_GLOVES, P.gloves || "none", false, "pil");
+  h += '<div class="sec">Capacete</div>';
+  h += chipRow("Modelo", "helmet", P_HELMET, P.helmet || "none", false, "pil");
+  if((P.helmet || "none") !== "none") h += chipRow("Usar", "helmetWear", P_HWEAR, P.helmetWear || "cabeca", false, "pil");
   const acc = P.acc || [];
   h += '<div class="sw-row"><div class="sw-t">Acessórios<span>' + (acc.length ? acc.length + (acc.length > 1 ? " ativos" : " ativo") : "Nenhum") + '</span></div><div class="chips">' +
     P_ACC.map(([v, n]) => { const lp = acc.includes(v) || pilOwned("acc", v) ? 0 : pilPrice("acc", v); return '<button class="chip' + (lp ? " lk" : "") + '" data-acc="' + v + '" aria-pressed="' + acc.includes(v) + '">' + n + (lp ? ' <i class="prc">' + money(lp) + '</i>' : '') + '</button>'; }).join("") + '</div></div>';
@@ -7313,12 +7656,13 @@ let buyGo = null;
 const COS_PRICE = {paint:[250, 0.03], finish:[200, 0.02], vinyl:[150, 0.015], vinylColor:[60, 0.005], stickers:[50, 0.004], neon:[400, 0.02], light:[120, 0.008],
   flame:[150, 0.01], flameSize:[100, 0.006], ckCluster:[300, 0.012], ckTach:[250, 0.01], ckDash:[150, 0.006], ckWheel:[250, 0.01], ckWheelC:[80, 0.004],
   ckKnob:[120, 0.006], ckKnobC:[60, 0.003], exModel:[300, 0.015], sound:[900, 0.05], turboSnd:[400, 0.02], wmodel:[450, 0.03], aro:[180, 0.012],
-  rim:[150, 0.01], tire:[200, 0.012], tireC:[60, 0.004], cal:[100, 0.006]};
-const PIL_PRICE = {hair:150, hairC:60, glasses:120, tattoo:250, outfit:200, suit:120, stripe:60, shoes:100, acc:150};
+  rim:[150, 0.01], tire:[200, 0.012], tireC:[60, 0.004], cal:[100, 0.006], wing:[700, 0.035], wingF:[150, 0.008], tala:[300, 0.015]};
+const PIL_PRICE = {hair:150, hairC:60, glasses:120, tattoo:250, outfit:200, suit:120, stripe:60, shoes:100, acc:150, pants:100, gloves:120, helmet:400};
+const PIL_MUL = {"outfit|couro":1.6, "outfit|kart":1.4, "outfit|macacao2":1.3, "helmet|carbono":2.4, "helmet|f1":1.8, "helmet|drag":1.5, "helmet|retro":1.2, "gloves|drift":1.3, "gloves|couro":1.2, "shoes|corrida":1.5, "shoes|basquete":1.3, "shoes|chinelo":0.4};
 const COS_FREE = {finish:"brilho", vinyl:"none", light:"#fff1c9", flame:"#ff9a1f", flameSize:"m", sound:"orig", wmodel:"orig", tire:"orig", tireC:"#f4f5f8", exModel:"orig"};
 const PIL_FREE = defaultPilot();
 const nicePrice = x => x < 1000 ? Math.round(x / 10) * 10 : (() => { const p = Math.pow(10, Math.floor(Math.log10(x)) - 1); return Math.round(x / p) * p; })();
-function cosFree(key, val){ return val === null || val === undefined || val === "" || val === "orig" || COS_FREE[key] === val || key === "sponsVis"; }
+function cosFree(key, val){ return val === null || val === undefined || val === "" || val === "orig" || COS_FREE[key] === val || key === "sponsVis" || (key === "wing" && val === "none"); }
 function cosPrice(key, val, carId){
   const pr = COS_PRICE[key]; if(!pr || cosFree(key, val)) return 0;
   const car = carById(carId || S.car);
@@ -7328,9 +7672,12 @@ function cosPrice(key, val, carId){
   if(key === "finish" && val !== "brilho") mul = val === "metal" ? 1.5 : 1.2;
   if(key === "aro") mul = Math.max(1, Math.abs(+val - car.inch));
   if(key === "sound") mul = 1.2;
+  if(key === "wing") mul = {ug2:1.3, bat:1.4, loop:1.2, drag:1.5, chassis:1.8, tri:1.6, ducktop:1.1}[val] || 1;
+  if(key === "wingF" && val === "cromo") mul = 1.8;
+  if(key === "tala") mul = {xlargo:1.6, largo:1.2}[val] || 1;
   return nicePrice(Math.max(pr[0], car.price * pr[1]) * mul * (1 - Math.min(0.5, spBonus("parts"))));
 }
-function pilPrice(key, val){ return (!PIL_PRICE[key] || PIL_FREE[key] === val || val === "none") ? 0 : PIL_PRICE[key]; }
+function pilPrice(key, val){ return (!PIL_PRICE[key] || PIL_FREE[key] === val || val === "none") ? 0 : nicePrice(PIL_PRICE[key] * (PIL_MUL[key + "|" + val] || 1)); }
 function cosOwned(key, val, carId){
   if(cosFree(key, val) || !COS_PRICE[key]) return true;
   return !!(S.own && S.own[(carId || S.car) + "|" + key + "|" + val]);
@@ -7345,6 +7692,14 @@ function cosMigrate(){
   }));
   Object.keys(PIL_PRICE).forEach(key => { const v = S.pilot[key]; if(Array.isArray(v)) v.forEach(x => markOwn("pilot|" + key + "|" + x)); else if(v) markOwn("pilot|" + key + "|" + v); });
   S.ownV = 1;
+}
+// the pilot screen grew separate gloves and helmets: carry the old choices over once
+function pilotMigrate(){
+  const P = S.pilot; if(!P) return;
+  const acc = P.acc || [];
+  if(acc.includes("luvas")){ P.acc = acc.filter(a => a !== "luvas"); if(!P.gloves || P.gloves === "none"){ P.gloves = "corrida"; markOwn("pilot|gloves|corrida"); } }
+  if(P.hair === "capacete"){ P.hair = "curto"; if(!P.helmet || P.helmet === "none"){ P.helmet = "integral"; P.helmetWear = "cabeca"; markOwn("pilot|helmet|integral"); } }
+  ["pants", "gloves", "helmet", "helmetWear"].forEach(k => { if(P[k] === undefined) P[k] = defaultPilot()[k]; });
 }
 function askBuy(what, cost, go, noCar){
   const lack = cost - S.money;
