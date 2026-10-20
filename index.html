@@ -417,7 +417,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v144</span>
+  <span id="tgVer">v145</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -530,7 +530,7 @@ const CARS = [
   {id:"landau", name:"Landô", tag:"Sedã de luxo com teto de vinil", spec:"5.0 V8 · 199 cv · 3 marchas automático", model:"landau", vk:205, t100:8.0, inch:15, price:95000, color:"#8a9a96", rim:"#e9ecf0", cal:"#3a3d45", spokes:10, wmodel:"landau", tire:"faixafina", rimK:1.09},
   {id:"gaviao",      name:"Gavião GTI 1.8T",  tag:"Hatch alemão turbo",        spec:"1.8 20V turbo · 180 cv · 5 marchas",    model:"golf",         vk:225, t100:7.3,  inch:17, price:60000,      color:"#1b1d22", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
   {id:"silvinha", name:"Silvinha S15", tag:"Cupê japonês de tração traseira", spec:"2.0 turbo · 250 cv · 6 marchas", model:"s15", vk:240, t100:6.2, inch:17, price:280000, color:"#e8d01f", rim:"#2a2e37", cal:"#d93a3a", spokes:5},
-  {id:"mia",         name:"MIA BLACK",        tag:"Sedã Si FA5 preto, turbo e rebaixado", spec:"2.0 16V i-VTEC turbo · 6 marchas · corta a 8.000 rpm", model:"fa5", vk:248, t100:5.8, inch:18, price:120000, color:"#0c0e12", rim:"#c3c8cf", cal:"#3a3d45", spokes:6, wmodel:"jdm6", baseDrop:0.8, banner:"@MIA_BLACKFA5"},
+  {id:"mia",         name:"MIA BLACK",        tag:"Sedã Si FA5 preto, turbo e rebaixado", spec:"2.0 16V i-VTEC turbo · 300 cv · 6 marchas · corta a 8.000 rpm", model:"fa5", vk:248, t100:5.8, inch:18, price:120000, color:"#0c0e12", rim:"#c3c8cf", cal:"#3a3d45", spokes:6, wmodel:"jdm6", baseDrop:0.8, banner:"@MIA_BLACKFA5"},
   {id:"bavaro", name:"Bávaro E46", tag:"Cupê alemão de 6 em linha", spec:"3.2 6 cil. · 343 cv · corta a 8.000 rpm", model:"e46", vk:255, t100:5.2, inch:18, price:300000, color:"#2a3f8f", rim:"#c9d0da", cal:"#2f63d6", spokes:5},
   {id:"potro", name:"Potro Cobra", tag:"Pony car V8 conversível", spec:"4.6 V8 32V · 390 cv · 5 marchas", model:"pony", vk:225, t100:6.0, inch:18, price:280000, color:"#f2cd38", rim:"#dfe3e8", cal:"#3a3d45", spokes:5, wmodel:"deep5", rimK:1.32},
   {id:"carregador", name:"Carregador 70", tag:"Muscle car de bloco grande", spec:"7.2 V8 · 375 cv · 4 marchas", model:"muscle", vk:230, t100:5.9, inch:15, price:800000, color:"#1b1d22", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
@@ -671,6 +671,10 @@ const PARTS = [
     tiers:[{n:"Original"}, {n:"Street", vel:0.005, arr:0.02}, {n:"Dub", vel:0.01, arr:0.035}, {n:"Pro", vel:0.01, arr:0.045}, {n:"Chora boy", vel:0.012, arr:0.05}]},
   {id:"escape", name:"Escapamento", k:0.8, desc:"Original: silencioso de fábrica. Esportivo: discreto, mas grosso e encorpado. Direto: sem silencioso, muito barulho e pipoco. Full Inox 4\": absurdo de alto, estourado, e no corte faz PÁ PÁ PÁ PÁ",
     tiers:[{n:"Original"}, {n:"Esportivo", vel:0.01, nitro:0.03}, {n:"Direto", vel:0.015, nitro:0.06}, {n:"Full Inox 4pol", vel:0.02, nitro:0.08}]},
+  {id:"filtro", name:"Filtro e admissão", k:0.7, desc:"Esportivo: filtro de alto fluxo no lugar do original. Intake: tubo de admissão de ar frio com filtro cônico. Duplo fluxo: duas entradas de ar, o motor respira muito mais e o chiado da admissão aparece no ronco",
+    tiers:[{n:"Original"}, {n:"Filtro esportivo", vel:0.01, arr:0.01, hp:1}, {n:"Intake", vel:0.017, arr:0.016, hp:1}, {n:"Duplo fluxo", vel:0.025, arr:0.022, hp:1}]},
+  {id:"comb", name:"Combustível", k:0.5, desc:"Gasolina comum de fábrica. Aditivada: queima mais limpa, um pouco mais de força. Álcool: com o mapa de injeção acertado, rende bem mais potência",
+    tiers:[{n:"Gasolina comum"}, {n:"Gasolina aditivada", vel:0.008, arr:0.008, hp:1}, {n:"Álcool", vel:0.02, arr:0.02, hp:1}]},
   {id:"blower", name:"Blower", k:1.4, desc:"Compressor Roots saindo pelo capô, com o assobio do compressor no ronco. Quanto maior, mais arrancada",
     tiers:[{n:"Sem blower"}, {n:"6-71 com chapéu", vel:0.012, arr:0.03}, {n:"8-71 com scoop alto", vel:0.02, arr:0.045}, {n:"14-71 bug catcher", vel:0.028, arr:0.06}]}
 ];
@@ -760,6 +764,7 @@ function partCost(p, i){
 const fmtPct = v => (Math.round(v * 1000) / 10).toLocaleString("pt-BR") + "%";
 function partEff(t){
   const out = [];
+  if(t.hp){ const h0 = hpStock(S.car); if(h0) out.push("+" + Math.max(1, Math.round(h0 * (Math.pow(1 + t.vel * 0.7, 3) - 1))) + " cv"); }
   if(t.vel) out.push("+" + fmtPct(t.vel) + " vel.");
   if(t.arr) out.push("+" + fmtPct(t.arr) + " arranque");
   if(t.nitro) out.push("+" + fmtPct(t.nitro) + " nitro");
@@ -3679,13 +3684,24 @@ function drawCar(c, x, baseY, s, key, color, o){
     const ROUND_TAIL = key === "bug";
     // where the tail actually is: the trunk's rear edge on a sedan, the roof's rear edge on a hatch
     const roofPts = M.pts.filter(p => p[1] >= M.roof - 1.3 && p[0] < L * 0.5), RX = roofPts.length ? Math.min(...roofPts.map(p => p[0])) : 6;
-    const deckPts = M.pts.filter(p => p[0] < L * 0.25 && Math.abs(p[1] - deck) < 0.9), TX = deckPts.length ? Math.min(...deckPts.map(p => p[0])) : 2;
-    const EX = hb ? RX : TX, EY = hb ? M.roof - 0.3 : deck;          // trailing edge the spoiler grows from
+    let lidY = deck;
+    { let best = -1e9; const xx = L * 0.1; M.pts.forEach((a, i) => { const b = M.pts[(i + 1) % M.pts.length]; if((a[0] - xx) * (b[0] - xx) <= 0 && a[0] !== b[0]){ const yy = a[1] + (b[1] - a[1]) * (xx - a[0]) / (b[0] - a[0]); if(yy > best) best = yy; } }); if(!hb && best > 0 && deck - best > 0.6) lidY = best; }
+    const deckPts = M.pts.filter(p => p[0] < L * 0.25 && Math.abs(p[1] - lidY) < 0.9), TX = deckPts.length ? Math.min(...deckPts.map(p => p[0])) : 2;
+    // the top of the body outline at x: the highest crossing of the outline there
+    const topAt = xx => { let best = -1e9; const P = M.pts; for(let i = 0; i < P.length; i++){ const a = P[i], b = P[(i + 1) % P.length]; if((a[0] - xx) * (b[0] - xx) <= 0 && a[0] !== b[0]){ const yy = a[1] + (b[1] - a[1]) * (xx - a[0]) / (b[0] - a[0]); if(yy > best) best = yy; } } return best > -1e8 ? best : deck; };
+    const EX = ROUND_TAIL ? 7.4 : hb ? RX : TX;
+    const EY = ROUND_TAIL ? topAt(EX + 5.2) : hb ? M.roof - 0.3 : Math.min(deck, topAt(EX + 0.2));   // trailing edge the spoiler grows from
+    const BASE = xx => hb ? EY : topAt(xx);   // the surface an upright stands on
     const sheen = (x0, y0, x1, y1) => { c.strokeStyle = "rgba(255,255,255,.45)"; c.lineWidth = Math.max(0.4, 0.22 * s); line(x0, y0, x1, y1); };
     if(ROUND_TAIL && (spoiler === "lip" || spoiler === "duck")){
-      const k = spoiler === "duck" ? 1.6 : 1;
-      body([[12, 25.2], [7.5, 23.4 + 0.35 * k], [3.5, 20.6 + 0.75 * k], [1.3, 18.6 + 1.0 * k], [0.7, 19.0 + 0.85 * k], [0.9, 17.9], [3, 20.3], [7, 23.1]]);
-      sheen(8, 23.6 + 0.35 * k, 1.6, 19 + 0.95 * k);
+      if(spoiler === "lip"){
+        body([[10.9, 18.95], [10.03, 18.17], [8.45, 16.82], [7.1, 15.62], [6.35, 16.2], [6.05, 16.95], [7.2, 17.45], [9.3, 18.42]]);
+        sheen(9.9, 18.65, 6.4, 17.05);
+      } else {
+        body([[13.0, 20.55], [11.85, 19.5], [10.03, 18.17], [8.45, 16.82], [6.86, 15.4], [5.9, 15.05], [5.25, 17.4], [4.75, 18.6], [6.2, 18.85], [9.6, 19.75]]);
+        c.fillStyle = "#121318"; poly([[5.2, 17.6], [5.0, 18.25], [9.8, 19.2], [9.6, 18.6]]); c.fill();
+        sheen(12.2, 20.25, 5.1, 18.75);
+      }
     } else if(spoiler === "lip" || spoiler === "roof"){
       // Aba: a slim kick on the trailing edge, painted
       if(hb) body([[EX + 7, EY + 0.1], [EX + 3, EY + 0.45], [EX - 1.1, EY + 0.95], [EX - 1.5, EY + 0.6], [EX - 0.9, EY - 0.35], [EX + 2.5, EY - 0.3]]);
@@ -3706,7 +3722,7 @@ function drawCar(c, x, baseY, s, key, color, o){
       const chord = si ? 5.4 : hb ? (ta ? 7.2 : sw ? 6.4 : 5.6) : (ta ? 9.6 : sw ? 8.4 : 7.4);
       const thick = si ? 0.34 : ta ? 0.78 : sw ? 0.7 : 0.68, rise = chord * (ta ? 0.07 : si ? 0.035 : 0.05);
       const xte = EX - (si ? -0.4 : hb ? 1.4 : 0.9), xle = xte + chord, yw = EY + h;
-      const baseY2 = (xx) => hb ? EY - 0.2 - Math.max(0, (xx - EX)) * 0.0 : EY;
+      const baseY2 = (xx) => hb ? EY - 0.2 : BASE(xx);
       const main = spoiler === "pedestal" ? color : CARBON, far = shade(sw ? "#8b929e" : (spoiler === "pedestal" ? color : CARBON), -0.35);
       const mpos = [xle - chord * 0.28, xle - chord * 0.7];
       const mounts = (col, dx, w) => {
@@ -3775,32 +3791,38 @@ function drawCar(c, x, baseY, s, key, color, o){
       };
       // pedestal upright: a blade in aluminium with lightening holes, raked back, on a base plate on the deck
       const upright = (xm, yTop, wb, wt, col) => {
-        const xb = xm + 0.45, pts = [[xb + wb * 0.55, EY], [xb - wb * 0.45, EY], [xm - wt * 0.5, yTop], [xm + wt * 0.5, yTop]];
+        const xb = xm + 0.45, EB = BASE(xb), pts = [[xb + wb * 0.55, BASE(xb + wb * 0.55)], [xb - wb * 0.45, BASE(xb - wb * 0.45)], [xm - wt * 0.5, yTop], [xm + wt * 0.5, yTop]];
         const g = c.createLinearGradient(X(xb - wb), 0, X(xb + wb), 0); g.addColorStop(0, shade(col, 0.35)); g.addColorStop(0.5, col); g.addColorStop(1, shade(col, -0.35));
         c.fillStyle = g; poly(pts); c.fill(); c.strokeStyle = OUT; c.lineWidth = Math.max(0.4, 0.2 * s); c.stroke();
-        if(col === ALU){ c.fillStyle = "rgba(0,0,0,.55)"; [0.32, 0.62].forEach(f => { const yy = EY + (yTop - EY) * f, xx = xb + (xm - xb) * f; c.beginPath(); c.ellipse(X(xx), Y(yy), wb * 0.2 * s, (yTop - EY) * 0.1 * s, 0, 0, TAU); c.fill(); }); }
-        c.fillStyle = "#1b1d22"; rrectC(c, X(xb - wb * 0.9), Y(EY + 0.22), wb * 1.8 * s, 0.26 * s, 0.08 * s); c.fill();
-        bolt(xb + wb * 0.6, EY + 0.1); bolt(xb - wb * 0.6, EY + 0.1);
+        if(col === ALU){ c.fillStyle = "rgba(0,0,0,.55)"; [0.32, 0.62].forEach(f => { const yy = EB + (yTop - EB) * f, xx = xb + (xm - xb) * f; c.beginPath(); c.ellipse(X(xx), Y(yy), wb * 0.2 * s, (yTop - EB) * 0.1 * s, 0, 0, TAU); c.fill(); }); }
+        c.fillStyle = "#1b1d22"; rrectC(c, X(xb - wb * 0.9), Y(EB + 0.22), wb * 1.8 * s, 0.26 * s, 0.08 * s); c.fill();
+        bolt(xb + wb * 0.6, EB + 0.1); bolt(xb - wb * 0.6, EB + 0.1);
       };
       // swan neck: the upright comes up behind the wing and hooks over to bolt to its top surface
       const swan = (xm, yTop, from) => {
-        const x0 = from ? from[0] : xm + 1.8, y0 = from ? from[1] : EY;
+        const x0 = from ? from[0] : xm + 1.8, y0 = from ? from[1] : BASE(xm + 1.8);
         const path = () => { c.beginPath(); c.moveTo(X(x0), Y(y0)); c.bezierCurveTo(X(x0 - 0.2), Y(y0 + (yTop - y0) * 0.45), X(xm - 2.4), Y(yTop - 0.6), X(xm - 1.2), Y(yTop + 1.2)); c.quadraticCurveTo(X(xm - 0.6), Y(yTop + 1.6), X(xm + 0.2), Y(yTop + 0.15)); };
         c.lineCap = "round"; path(); c.strokeStyle = OUT; c.lineWidth = Math.max(1.2, 0.72 * s); c.stroke();
         path(); c.strokeStyle = ALU; c.lineWidth = Math.max(0.9, 0.55 * s); c.stroke();
         path(); c.strokeStyle = "rgba(255,255,255,.22)"; c.lineWidth = Math.max(0.3, 0.14 * s); c.stroke();
-        if(!from){ c.fillStyle = "#1b1d22"; rrectC(c, X(x0 - 1), Y(EY + 0.22), 2 * s, 0.26 * s, 0.08 * s); c.fill(); }
+        if(!from){ c.fillStyle = "#1b1d22"; rrectC(c, X(x0 - 1), Y(y0 + 0.22), 2 * s, 0.26 * s, 0.08 * s); c.fill(); }
         bolt(xm + 0.15, yTop + 0.25);
       };
       if(kind === "ducktop"){
         // RS ducktail: the whole trailing edge of the lid sweeps up into a sharp lip
+        if(ROUND_TAIL){
+          body([[13.0, 20.55], [11.85, 19.5], [10.03, 18.17], [8.45, 16.82], [6.86, 15.4], [5.9, 15.05], [5.25, 17.4], [4.75, 18.6], [6.2, 18.85], [9.6, 19.75]]);
+          c.fillStyle = "#121318"; poly([[5.2, 17.6], [5.0, 18.25], [9.8, 19.2], [9.6, 18.6]]); c.fill();
+          sheen(12.2, 20.25, 5.1, 18.75);
+        } else {
         if(hb) body([[EX + 8, EY + 0.1], [EX + 4, EY + 0.8], [EX + 0.6, EY + 1.9], [EX - 1.2, EY + 2.3], [EX - 1.5, EY + 1.8], [EX - 0.8, EY - 0.4], [EX + 4, EY - 0.3]]);
         else body([[EX + 9, EY + 0.02], [EX + 5, EY + 0.5], [EX + 1.6, EY + 1.55], [EX - 0.3, EY + 2.05], [EX - 0.75, EY + 1.8], [EX - 0.45, EY + 0.3], [EX + 1, EY - 0.3]]);
         sheen(EX + 6, EY + 0.45, EX - 0.2, EY + 1.85);
+        }
       } else if(kind === "loop"){
         // Daytona: tall swept fins in body colour, the wing crossing between their tips
         const H = 9.6 * sc, fb = EX + 6.6 * sc, rb = EX + 0.4;
-        const fin = [[fb, EY], [rb, EY], [rb - 1.8 * sc, EY + H], [rb + 2.3 * sc, EY + H]];
+        const fin = [[fb, BASE(fb) - 0.1], [rb, BASE(rb) - 0.1], [rb - 1.8 * sc, EY + H], [rb + 2.3 * sc, EY + H]];
         panel(() => rr(fin, 0.7), color, EY + H, EY);
         c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = Math.max(0.4, 0.16 * s); line(fb - 0.3, EY + 0.3, rb + 2.2 * sc, EY + H - 0.15);
         const ch = 4.6 * sc, xle = rb + 2.9 * sc, yw = EY + H - 1.3 * sc;
@@ -3810,8 +3832,8 @@ function drawCar(c, x, baseY, s, key, color, o){
         // factory-style wing in body colour: tall aero legs that grow out of the lid, thick main plane, turned-up tips
         const ch = 5.4 * sc, h = (kind === "evo" ? 3.4 : 4.2) * sc, xte = EX - 0.1, xle = xte + ch, yw = EY + h, rise = ch * 0.07;
         const xm = xle - ch * 0.5;
-        const leg = [[xm + 1.3, EY], [xm - 0.5, EY], [xm - 0.9, yw - 0.3], [xm - 0.05, yw - 0.3]];
-        panel(() => rr(leg, 0.3), color, yw, EY);
+        const leg = [[xm + 1.3, BASE(xm + 1.3) - 0.1], [xm - 0.5, BASE(xm - 0.5) - 0.1], [xm - 0.9, yw - 0.3], [xm - 0.05, yw - 0.3]];
+        panel(() => rr(leg, 0.3), color, yw, BASE(xm));
         airfoil(xle, yw, ch, 0.9, rise, wingC);
         if(kind === "evo"){
           // the second, upper element on its own short legs
@@ -3830,7 +3852,7 @@ function drawCar(c, x, baseY, s, key, color, o){
         if(kind === "drag"){
           // Pro Mod: tubular struts with rod ends, a V under the wing and a long brace from the bumper
           const tube = (x0, y0, x1, y1) => { c.strokeStyle = OUT; c.lineWidth = Math.max(0.9, 0.4 * s); line(x0, y0, x1, y1); c.strokeStyle = "#c3c8d0"; c.lineWidth = Math.max(0.6, 0.26 * s); line(x0, y0, x1, y1); bolt(x1, y1); bolt(x0, y0); };
-          tube(EX + 2.6, EY, xm + 0.8, yw - 0.4); tube(EX + 0.6, EY, xm - 1.2, yw - 0.4); tube(EX + 0.2, EY - 2.6, xte + 0.5, yw + rise - 0.5);
+          tube(EX + 2.6, BASE(EX + 2.6), xm + 0.8, yw - 0.4); tube(EX + 0.6, BASE(EX + 0.6), xm - 1.2, yw - 0.4); tube(EX + 0.2, EY - 2.6, xte + 0.5, yw + rise - 0.5);
         }
         if(kind === "chassis"){
           // through the bumper: a grommet where the mount comes out of the body
@@ -3876,6 +3898,20 @@ function drawCar(c, x, baseY, s, key, color, o){
     c.fillStyle = "#c9ced8"; circ(c, X(px), Y(py), pr * 0.28 * s); c.fill();
     // snout between pulley and case
     c.fillStyle = alu(py - 0.6, py + 0.6); rrectC(c, X(Math.min(px, bx + f * cw / 2)), Y(py + 0.55), Math.abs(px - (bx + f * cw / 2)) * s, 1.1 * s, 0.2 * s); c.fill(); edge();
+    // the intake riser: from the plate down to the panel wherever the panel falls away under the case
+    {
+      const x0 = bx - cw / 2 - 0.25, x1 = bx + cw / 2 + 0.25, N = 10, low = [];
+      for(let k = 0; k <= N; k++){ const xx = x0 + (x1 - x0) * k / N; low.push([xx, Math.min(yb + 0.1, surf(xx) - 0.2)]); }
+      if(Math.min(...low.map(p => p[1])) < yb - 0.35){
+        const yl = Math.min(...low.map(p => p[1])), rg = c.createLinearGradient(X(x0), 0, X(x1), 0);
+        rg.addColorStop(0, "#1c1f25"); rg.addColorStop(0.3, "#4a4f59"); rg.addColorStop(0.55, "#2a2d34"); rg.addColorStop(1, "#15171b");
+        c.fillStyle = rg; poly([[x0, yb + 0.1], [x1, yb + 0.1]].concat(low.slice().reverse())); c.fill(); c.strokeStyle = OUT; c.lineWidth = Math.max(0.4, 0.22 * s); c.stroke();
+        // cast ribs on the riser and the bolts that hold it to the engine
+        c.strokeStyle = "rgba(255,255,255,.16)"; c.lineWidth = Math.max(0.4, 0.2 * s);
+        for(let k = 1; k < 5; k++){ const xx = x0 + (x1 - x0) * k / 5, yy = Math.min(yb + 0.1, surf(xx) - 0.2); if(yb - yy > 0.6) line(xx, yb - 0.2, xx, yy + 0.25); }
+        if(yb - yl > 1.5){ c.fillStyle = "#c9ced8"; for(let k = 0; k < 4; k++){ const xx = x0 + 0.6 + (x1 - x0 - 1.2) * k / 3; circ(c, X(xx), Y(yb - 0.55), Math.max(0.35, 0.2 * s)); c.fill(); } }
+      }
+    }
     // manifold plate and the case with its fins
     c.fillStyle = alu(yb, yb + plate); rrectC(c, X(bx - cw / 2 - 0.4), Y(yb + plate), (cw + 0.8) * s, plate * s, 0.15 * s); c.fill(); edge();
     c.fillStyle = alu(yb + plate, yb + plate + ch); rrectC(c, X(bx - cw / 2), Y(yb + plate + ch), cw * s, ch * s, 0.5 * s); c.fill(); edge();
@@ -7930,6 +7966,11 @@ function renderCasa(){
   h += '<div class="ph"><span>Todas as reformas</span></div><div class="hlist">' + HOUSE.map((x, i) => '<div class="' + (i <= L ? "own" : "") + '"><i>' + (i <= L ? "✓" : i) + '</i><span>' + x.n + '</span><span class="p">' + (i === 0 ? "início" : i <= L ? "feito" : money(x.cost)) + '</span></div>').join("") + '</div>';
   return h;
 }
+// factory power from the spec line; tuned power grows with the top speed gain cubed, as drag does
+const specNoHp = sp => String(sp || "").replace(/\s*·\s*[\d.]+\s*cv/, "").replace(/^[\d.]+\s*cv\s*·\s*/, "");
+function hpStock(id){ const m = /([\d.]+)\s*cv/.exec(carById(id).spec || ""); return m ? +m[1].replace(/\./g, "") : 0; }
+function hpNow(id){ const h0 = hpStock(id), c = carById(id); if(!h0 || !S.owned.includes(id)) return h0; return Math.round(h0 * Math.pow(carPerf(id).vk / c.vk, 3)); }
+const hpTxt = id => { const a = hpStock(id), b = hpNow(id); return !a ? "" : b > a ? a.toLocaleString("pt-BR") + " → " + b.toLocaleString("pt-BR") : a.toLocaleString("pt-BR"); };
 function tuneSpent(id){
   const car = carById(id), k = (S.cust || {})[id] || {}; let v = 0;
   PARTS.forEach(p => { for(let i = 1; i <= (k[p.id + "Max"] || 0); i++) v += (PART_BRL[p.id] || [0, 3000, 6000, 10000, 15000, 20000])[i] * carK(car); });
@@ -7962,7 +8003,9 @@ function renderGaragem(){
     else act = '<button class="btn" data-car="' + c.id + '"' + (S.money >= c.price ? "" : " disabled") + '>' + money(c.price) + '</button>';
     const sellB = own && !sel && S.owned.length > 1 ? '<div class="sellRow"><button class="btn ghost sell" data-sell="' + c.id + '">' + (sellAsk && sellAsk.id === c.id ? "Confirmar venda · " : "Vender · ") + money(sellValue(c.id)) + '</button></div>' : '';
     h += '<div class="car' + (sel ? " sel" : "") + '" data-id="' + c.id + '"><canvas class="mini" data-id="' + c.id + '" aria-hidden="true"></canvas><div class="name">' + c.name + ' <span class="look">Ver ›</span></div>' +
-      '<div class="stats"><span>Máx <b>' + Math.round(pf.vk) + '</b> km/h</span><span>0–100 <b>' + dec1(pf.t100) + '</b> s</span><span>' + c.spec + '</span></div>' +
+      '<div class="stats"><span>Máx <b>' + Math.round(pf.vk) + '</b> km/h</span><span>0–100 <b>' + dec1(pf.t100) + '</b> s</span>' +
+      (hpStock(c.id) ? '<span>' + (hpNow(c.id) > hpStock(c.id) ? 'Potência original <b>' + hpStock(c.id).toLocaleString("pt-BR") + '</b> cv · atual <b style="color:var(--sodium)">' + hpNow(c.id).toLocaleString("pt-BR") + '</b> cv' : 'Potência <b>' + hpStock(c.id).toLocaleString("pt-BR") + '</b> cv') + '</span>' : '') +
+      '<span>' + specNoHp(c.spec) + '</span></div>' +
       '<div class="act"><span class="tag">' + c.tag + (own ? ' · potencial ' + Math.round(potential(c.id) * 100) + '%' : '') + '</span>' + act + '</div>' + sellB + '</div>';
   });
   return h;
@@ -8328,10 +8371,11 @@ function openCarView(id){ cvId = id; cvView = "side"; el("carView").hidden = fal
 function closeCarView(){ el("carView").hidden = true; cvId = null; }
 function fillCarView(){
   const c = carById(cvId), pf = carPerf(c.id), own = S.owned.includes(c.id), sel = S.car === c.id;
-  el("cvName").textContent = c.name; el("cvTag").textContent = c.tag; el("cvSpec").textContent = c.spec;
+  el("cvName").textContent = c.name; el("cvTag").textContent = c.tag; el("cvSpec").textContent = specNoHp(c.spec);
   const vks = CARS.map(x => carPerf(x.id).vk), ts = CARS.map(x => carPerf(x.id).t100), vMax = Math.max(...vks), tMin = Math.min(...ts), tMax = Math.max(...ts);
   const bar = (lbl, k, val) => '<span>' + lbl + '</span><i><b style="width:' + Math.round(Math.max(0.04, Math.min(1, k)) * 100) + '%"></b></i><strong>' + val + '</strong>';
-  el("cvStats").innerHTML = bar("Velocidade", pf.vk / vMax, Math.round(pf.vk) + " km/h") + bar("Arrancada", 0.08 + 0.92 * (tMax - pf.t100) / Math.max(0.1, tMax - tMin), "0–100 em " + dec1(pf.t100) + " s");
+  const hpMax = Math.max(...CARS.map(x => hpNow(x.id))), h0 = hpStock(c.id), h1 = hpNow(c.id);
+  el("cvStats").innerHTML = (h0 ? bar("Potência", h1 / hpMax, h1 > h0 ? h0.toLocaleString("pt-BR") + " cv original · " + h1.toLocaleString("pt-BR") + " cv atual" : h0.toLocaleString("pt-BR") + " cv") : "") + bar("Velocidade", pf.vk / vMax, Math.round(pf.vk) + " km/h") + bar("Arrancada", 0.08 + 0.92 * (tMax - pf.t100) / Math.max(0.1, tMax - tMin), "0–100 em " + dec1(pf.t100) + " s");
   el("cvPrice").textContent = own ? "Na sua garagem" : c.price ? "R$ " + c.price.toLocaleString("pt-BR") : "Grátis";
   const b = el("cvBuy"), lack = c.price - S.money;
   if(sel){ b.textContent = "Na pista"; b.disabled = true; }
@@ -8637,7 +8681,7 @@ const COS_PRICE = {paint:[6000], finish:[7000], vinyl:[1500], vinylColor:[300], 
 const carK = car => Math.min(4, Math.max(0.7, Math.pow(Math.max(car.price || 0, 15000) / 50000, 0.35)));
 // performance parts by tier, in reais, before the car factor
 const PART_BRL = {kit:[0, 3500, 12000, 22000], aero:[0, 600, 1200, 2200, 4500, 8000], rodas:[0, 4000, 14000], susp:[0, 1800, 4500, 8000, 14000],
-  escape:[0, 1800, 2800, 6500], blower:[0, 18000, 30000, 55000]};
+  escape:[0, 1800, 2800, 6500], blower:[0, 18000, 30000, 55000], filtro:[0, 450, 1400, 2800], comb:[0, 300, 1800]};
 const PIL_PRICE = {hair:60, hairC:150, glasses:350, tattoo:900, outfit:600, suit:250, stripe:120, shoes:450, acc:300, pants:250, gloves:400, helmet:1500};
 const PIL_MUL = {"helmet|gp":2, "helmet|neon":1.8, "helmet|rally":1.3, "helmet|moto":1.2, "outfit|macacaof1":2.2, "outfit|macacaodrift":1.8, "outfit|corrida":1.4, "outfit|bomber":1.3, "outfit|camisa10":0.6,
   "shoes|coturno":1.4, "shoes|cowboy":1.6, "shoes|chelsea":1.3, "shoes|skate":0.9, "shoes|neonverde":1.1, "shoes|neonrosa":1.1, "gloves|kevlar":1.6, "gloves|neon":1.1, "gloves|mecanico":0.6,"outfit|couro":1.6, "outfit|kart":1.4, "outfit|macacao2":1.3, "helmet|carbono":2.4, "helmet|f1":1.8, "helmet|drag":1.5, "helmet|retro":1.2, "gloves|drift":1.3, "gloves|couro":1.2, "shoes|corrida":1.5, "shoes|basquete":1.3, "shoes|chinelo":0.4};
@@ -9479,7 +9523,7 @@ function audioUpdate(){
   T(AU.lp.frequency, (P.lpK || 1) * Math.min(P.straight > 0.5 ? 4200 : P.straight !== undefined && P.straight < 0.05 ? 2400 : 3200, (P.bright * (0.5 + 0.7 * thr) + E.rpm * (P.straight > 0.5 ? 0.4 : P.straight !== undefined && P.straight < 0.05 ? 0.12 : 0.2)) * (vt ? 1.35 : 1) + (nOn ? 400 : 0)), 0.04);
   if(AU.eq){ T(AU.eq.gain, P.bass !== undefined ? P.bass : 6.5, 0.2); T(AU.eq.frequency, P.bass >= 10 ? 85 : 110, 0.2); }
   const boost = Math.min(1, E.rpm / P.red);
-  T(AU.intk.gain, 0.05 * thr * boost * (P.vol || 1), 0.05); T(AU.ibp.frequency, 380 + 900 * boost, 0.05);
+  T(AU.intk.gain, 0.05 * [1, 2, 3.2, 4.4][pv && pv.part === "filtro" ? pv.tier : (custOf(S.car).filtro || 0)] * thr * boost * (P.vol || 1), 0.05); T(AU.ibp.frequency, 380 + 900 * boost, 0.05);
   T(AU.wind.gain, R.phase === "race" || R.phase === "result" ? Math.min(0.09, 0.075 * u * u) * (S.cam === "cockpit" ? 1.3 : 1) : 0, 0.3);
   const nowS = performance.now() / 1000, sdt = Math.min(0.1, Math.max(0, nowS - (E.spoolT || nowS))); E.spoolT = nowS;
   E.spool += ((P.turbo && thr > 0.5 ? boost : 0) - E.spool) * Math.min(1, sdt * (thr > 0.5 ? 1.6 : 7));
@@ -9603,7 +9647,7 @@ function garageAudio(dt){
   T(AU.lp.frequency, (P.lpK || 1) * (P.bright * (0.5 + 0.7 * thr) + E.rpm * 0.3), 0.04);
   T(AU.eg.gain, revving ? 0.58 * (P.vol || 1) : 0, revving ? 0.05 : 0.25);
   const boost = Math.min(1, E.rpm / P.red);
-  T(AU.intk.gain, 0.05 * thr * boost * (P.vol || 1), 0.05); T(AU.ibp.frequency, 380 + 900 * boost, 0.05);
+  T(AU.intk.gain, 0.05 * [1, 2, 3.2, 4.4][pv && pv.part === "filtro" ? pv.tier : (custOf(S.car).filtro || 0)] * thr * boost * (P.vol || 1), 0.05); T(AU.ibp.frequency, 380 + 900 * boost, 0.05);
   T(AU.tg.gain, P.turbo ? 0.032 * (P.turboV || 1) * thr * boost * boost : P.sc ? 0.026 * (P.scK || 1) * (0.3 + 0.7 * thr) * boost : 0);
   T(AU.ot.frequency, P.sc ? 900 + 2600 * boost : 1600 + 4200 * boost);
   if(E.popCount !== grev.lastPop){ grev.lastPop = E.popCount; grev.flashUntil = performance.now() / 1000 + 0.14; }
