@@ -281,6 +281,24 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .sheet .lack:empty{display:none}
 .opt.pv{border-color:var(--nitro);box-shadow:inset 0 0 0 1px var(--nitro)}
 .opt.pv i{color:var(--nitro)}
+.modal.cv{z-index:39}
+.sheet.cvs{max-width:520px;text-align:left;gap:10px;max-height:calc(100dvh - 32px);overflow:auto}
+.cv-top{display:flex;align-items:center;gap:8px}
+.cv-top > div{flex:1;text-align:center;min-width:0}
+.cv-top small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.cv-nav{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);font-size:26px;line-height:1;flex:none;cursor:pointer}
+#cvCanvas{width:100%;height:190px;display:block;border-radius:12px}
+.cv-view{align-self:center}
+.cv-stats{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;font-size:13px;color:var(--muted)}
+.cv-stats i{display:block;height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden}
+.cv-stats i b{display:block;height:100%;border-radius:4px;background:var(--sodium)}
+.cv-stats strong{color:var(--fg);font-family:var(--display);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+#cvSpec{font-size:13px}
+.cv-price{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:10px}
+.cv-price span{color:var(--muted);font-size:13px}
+.cv-price b{font-family:var(--display);font-weight:700;font-size:26px;color:var(--sodium);font-variant-numeric:tabular-nums}
+.car[data-id]{cursor:pointer}
+.car .look{font-size:12px;color:var(--sodium);font-weight:600;white-space:nowrap}
 .sheet .big{font-family:var(--display);font-weight:700;font-size:34px;color:var(--sodium);font-variant-numeric:tabular-nums}
 
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
@@ -320,7 +338,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v131</span>
+  <span id="tgVer">v132</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -374,6 +392,18 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
     <div class="row2"><span class="big" id="spAmt" style="font-size:20px">$0</span><button class="btn ghost" id="spNo">Agora não</button></div>
   </div>
 </div>
+<div class="modal cv" id="carView" hidden>
+  <div class="sheet cvs" role="dialog" aria-modal="true" aria-labelledby="cvName">
+    <div class="cv-top"><button class="cv-nav" id="cvPrev" type="button" aria-label="Carro anterior">‹</button><div><h2 id="cvName"></h2><small id="cvTag"></small></div><button class="cv-nav" id="cvNext" type="button" aria-label="Próximo carro">›</button></div>
+    <canvas id="cvCanvas" aria-hidden="true"></canvas>
+    <div class="seg cv-view" role="group" aria-label="Vista"><button type="button" data-v="side" aria-pressed="true">Lateral</button><button type="button" data-v="rear" aria-pressed="false">Traseira</button></div>
+    <div class="cv-stats" id="cvStats"></div>
+    <p id="cvSpec"></p>
+    <div class="cv-price"><span>Preço</span><b id="cvPrice"></b></div>
+    <p id="cvLack" class="lack"></p>
+    <div class="row2"><button class="btn ghost" id="cvClose" type="button">Fechar</button><button class="btn" id="cvBuy" type="button">Comprar</button></div>
+  </div>
+</div>
 <div class="modal" id="modal" hidden>
   <div class="sheet">
     <h2>Bem-vindo de volta</h2>
@@ -390,32 +420,32 @@ const SAVE_KEY = "turbo-garage-v2";
 
 const CARS = [
   {id:"bolinha", name:"Bolinha 1.0", tag:"Hatch 3 portas dos anos 90", spec:"1.0 16V · 70 cv · 5 marchas", model:"bola", vk:160, t100:13.5, inch:15, price:0, color:"#a9adb4", rim:"#dfe2e7", cal:"#3a3d45", spokes:10, wmodel:"v10", rimK:1.24},
-  {id:"mille", name:"Mille Escada", tag:"Hatch quadradinho popular", spec:"1.0 8V · 58 cv · 5 marchas", model:"mille", vk:150, t100:15.4, inch:13, price:900, color:"#5b5e64", rim:"#e6e8ec", cal:"#3a3d45", spokes:6, wmodel:"unocal", rimK:1.2},
-  {id:"fuscao", name:"Fuscão", tag:"Clássico nacional a ar", spec:"1.6 boxer a ar · 65 cv · 4 marchas", model:"bug", vk:145, t100:16.5, inch:15, price:1500, color:"#6c8ca3", rim:"#6c8ca3", cal:"#3a3d45", spokes:5, wmodel:"vwsteel", tire:"faixalarga", rimK:1.0},
-  {id:"chevetinho", name:"Chevetinho", tag:"Sedã 2 portas de tração traseira", spec:"1.6 8V · 82 cv · 4 marchas", model:"chevette", vk:165, t100:13.0, inch:13, price:2500, color:"#eceef1", rim:"#9ca2aa", cal:"#3a3d45", spokes:4, wmodel:"chev", rimK:1.25},
-  {id:"carcara",     name:"Carcará 1.6 Pick-up", tag:"Picape compacta",        spec:"1.6 16V · 120 cv · 5 marchas",         model:"picape",       vk:182, t100:10.4, inch:15, price:4200,       color:"#c8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"hilao", name:"Hilão 4x4", tag:"Picape média cabine dupla", spec:"3.0 turbodiesel · 171 cv · 4x4", model:"hilux", vk:175, t100:11.0, inch:17, price:5000, color:"#c5c9ce", rim:"#d4d8dd", cal:"#3a3d45", spokes:10, wmodel:"rays10", rimK:1.0},
-  {id:"xerao", name:"Xerão XR3", tag:"Hatch esportivo dos anos 80", spec:"1.8 8V · 99 cv · 5 marchas", model:"xr3", vk:185, t100:10.0, inch:14, price:6000, color:"#5e1420", rim:"#e9ebee", cal:"#3a3d45", spokes:5, wmodel:"pepper", rimK:1.15},
-  {id:"caravana", name:"Caravana 4.1", tag:"Perua clássica de 6 cilindros", spec:"4.1 6 cil. · 171 cv · 4 marchas", model:"caravan", vk:195, t100:9.2, inch:17, price:8500, color:"#d4bd8f", rim:"#d9dde3", cal:"#d93a3a", spokes:10, wmodel:"rays10", rimK:1.08},
-  {id:"opalao", name:"Opalão Diplomata", tag:"Sedã 4 portas de 6 cilindros", spec:"4.1 6 cil. · 141 cv · 5 marchas", model:"opala", vk:200, t100:8.6, inch:15, price:12000, color:"#1f3d2c", rim:"#ecebe2", cal:"#3a3d45", spokes:10, wmodel:"dipl", rimK:1.15},
-  {id:"landau", name:"Landô", tag:"Sedã de luxo com teto de vinil", spec:"5.0 V8 · 199 cv · 3 marchas automático", model:"landau", vk:205, t100:8.0, inch:15, price:16000, color:"#8a9a96", rim:"#e9ecf0", cal:"#3a3d45", spokes:10, wmodel:"landau", tire:"faixafina", rimK:1.09},
-  {id:"gaviao",      name:"Gavião GTI 1.8T",  tag:"Hatch alemão turbo",        spec:"1.8 20V turbo · 180 cv · 5 marchas",    model:"golf",         vk:225, t100:7.3,  inch:17, price:24000,      color:"#1b1d22", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
-  {id:"silvinha", name:"Silvinha S15", tag:"Cupê japonês de tração traseira", spec:"2.0 turbo · 250 cv · 6 marchas", model:"s15", vk:240, t100:6.2, inch:17, price:34000, color:"#e8d01f", rim:"#2a2e37", cal:"#d93a3a", spokes:5},
-  {id:"mia",         name:"MIA BLACK",        tag:"Sedã Si FA5 preto, turbo e rebaixado", spec:"2.0 16V i-VTEC turbo · 6 marchas · corta a 8.000 rpm", model:"fa5", vk:248, t100:5.8, inch:18, price:52000, color:"#0c0e12", rim:"#c3c8cf", cal:"#3a3d45", spokes:6, wmodel:"jdm6", baseDrop:0.8, banner:"@MIA_BLACKFA5"},
-  {id:"bavaro", name:"Bávaro E46", tag:"Cupê alemão de 6 em linha", spec:"3.2 6 cil. · 343 cv · corta a 8.000 rpm", model:"e46", vk:255, t100:5.2, inch:18, price:70000, color:"#2a3f8f", rim:"#c9d0da", cal:"#2f63d6", spokes:5},
-  {id:"potro", name:"Potro Cobra", tag:"Pony car V8 conversível", spec:"4.6 V8 32V · 390 cv · 5 marchas", model:"pony", vk:225, t100:6.0, inch:18, price:90000, color:"#f2cd38", rim:"#dfe3e8", cal:"#3a3d45", spokes:5, wmodel:"deep5", rimK:1.32},
-  {id:"carregador", name:"Carregador 70", tag:"Muscle car de bloco grande", spec:"7.2 V8 · 375 cv · 4 marchas", model:"muscle", vk:230, t100:5.9, inch:15, price:130000, color:"#1b1d22", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"bisao",       name:"Bisão 4x4",        tag:"Picape off-road",           spec:"6.2 V8 compressor · 700 cv · 4x4",      model:"pickup",       vk:190, t100:4.6,  inch:18, price:160000,     color:"#d63a2f", rim:"#2a2e37", cal:"#d93a3a", spokes:6},
-  {id:"evo", name:"Evo Nove", tag:"Sedã de rali turbo AWD", spec:"2.0 turbo · 286 cv · AWD", model:"evo9", vk:255, t100:4.9, inch:17, price:400000, color:"#c8121b", rim:"#2a2e37", cal:"#d93a3a", spokes:6},
-  {id:"boxer", name:"Boxer Azul", tag:"Sedã de rali boxer turbo", spec:"2.5 boxer turbo · 300 cv · AWD", model:"rally", vk:258, t100:4.8, inch:17, price:900000, color:"#1f3fa8", rim:"#d4af37", cal:"#d93a3a", spokes:6},
-  {id:"rotativo", name:"Rotativo FD", tag:"Cupê de motor rotativo", spec:"1.3 rotativo biturbo · 280 cv", model:"fd", vk:265, t100:4.7, inch:17, price:1800000, color:"#c8121b", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
-  {id:"suprema", name:"Suprema", tag:"Cupê japonês lendário", spec:"3.0 6 cil. biturbo · 330 cv", model:"coupe", vk:285, t100:4.4, inch:18, price:4000000, color:"#ff7a1a", rim:"#9aa1ad", cal:"#e0a400", spokes:5},
-  {id:"godzilla", name:"Godzilla R34", tag:"Cupê AWD biturbo", spec:"2.6 6 cil. biturbo · 330 cv · AWD", model:"r34", vk:290, t100:4.2, inch:18, price:9000000, color:"#1f4fc0", rim:"#9aa1ad", cal:"#e0a400", spokes:6},
-  {id:"camarada", name:"Camarada SS", tag:"Muscle moderno", spec:"6.2 V8 · 432 cv · 6 marchas", model:"musclemod", vk:300, t100:4.0, inch:20, price:15000000, color:"#f2c418", rim:"#a7adb5", cal:"#3a3d45", spokes:5, wmodel:"five", rimK:1.1},
-  {id:"noveonze", name:"Nove-Onze GT3", tag:"Esportivo de motor traseiro", spec:"4.0 boxer 6 cil. · 510 cv · giro 9.000", model:"nove", vk:318, t100:3.4, inch:20, price:30000000, color:"#7ac74f", rim:"#1e2128", cal:"#f2d45c", spokes:10},
-  {id:"quarentona", name:"Quarentona", tag:"Lenda italiana biturbo", spec:"2.9 V8 biturbo · 478 cv", model:"f40", vk:324, t100:3.3, inch:17, price:90000000, color:"#d8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"touro", name:"Touro V12", tag:"Cunha de motor V12 central", spec:"6.5 V12 · 770 cv · AWD", model:"wedge", vk:350, t100:2.8, inch:21, price:240000000, color:"#f2b31d", rim:"#2a2e37", cal:"#ffd35a", spokes:6},
-  {id:"tufao", name:"Tufão W16", tag:"Hipercarro de 16 cilindros", spec:"8.0 W16 quadriturbo · 1.500 cv · AWD", model:"quadturbo", vk:420, t100:2.4, inch:20, price:1500000000, color:"#2f63d6", rim:"#c9d2de", cal:"#c9d2de", spokes:10}
+  {id:"mille", name:"Mille Escada", tag:"Hatch quadradinho popular", spec:"1.0 8V · 58 cv · 5 marchas", model:"mille", vk:150, t100:15.4, inch:13, price:15000, color:"#5b5e64", rim:"#e6e8ec", cal:"#3a3d45", spokes:6, wmodel:"unocal", rimK:1.2},
+  {id:"fuscao", name:"Fuscão", tag:"Clássico nacional a ar", spec:"1.6 boxer a ar · 65 cv · 4 marchas", model:"bug", vk:145, t100:16.5, inch:15, price:28000, color:"#6c8ca3", rim:"#6c8ca3", cal:"#3a3d45", spokes:5, wmodel:"vwsteel", tire:"faixalarga", rimK:1.0},
+  {id:"chevetinho", name:"Chevetinho", tag:"Sedã 2 portas de tração traseira", spec:"1.6 8V · 82 cv · 4 marchas", model:"chevette", vk:165, t100:13.0, inch:13, price:22000, color:"#eceef1", rim:"#9ca2aa", cal:"#3a3d45", spokes:4, wmodel:"chev", rimK:1.25},
+  {id:"carcara",     name:"Carcará 1.6 Pick-up", tag:"Picape compacta",        spec:"1.6 16V · 120 cv · 5 marchas",         model:"picape",       vk:182, t100:10.4, inch:15, price:45000,       color:"#c8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
+  {id:"hilao", name:"Hilão 4x4", tag:"Picape média cabine dupla", spec:"3.0 turbodiesel · 171 cv · 4x4", model:"hilux", vk:175, t100:11.0, inch:17, price:130000, color:"#c5c9ce", rim:"#d4d8dd", cal:"#3a3d45", spokes:10, wmodel:"rays10", rimK:1.0},
+  {id:"xerao", name:"Xerão XR3", tag:"Hatch esportivo dos anos 80", spec:"1.8 8V · 99 cv · 5 marchas", model:"xr3", vk:185, t100:10.0, inch:14, price:40000, color:"#5e1420", rim:"#e9ebee", cal:"#3a3d45", spokes:5, wmodel:"pepper", rimK:1.15},
+  {id:"caravana", name:"Caravana 4.1", tag:"Perua clássica de 6 cilindros", spec:"4.1 6 cil. · 171 cv · 4 marchas", model:"caravan", vk:195, t100:9.2, inch:17, price:70000, color:"#d4bd8f", rim:"#d9dde3", cal:"#d93a3a", spokes:10, wmodel:"rays10", rimK:1.08},
+  {id:"opalao", name:"Opalão Diplomata", tag:"Sedã 4 portas de 6 cilindros", spec:"4.1 6 cil. · 141 cv · 5 marchas", model:"opala", vk:200, t100:8.6, inch:15, price:85000, color:"#1f3d2c", rim:"#ecebe2", cal:"#3a3d45", spokes:10, wmodel:"dipl", rimK:1.15},
+  {id:"landau", name:"Landô", tag:"Sedã de luxo com teto de vinil", spec:"5.0 V8 · 199 cv · 3 marchas automático", model:"landau", vk:205, t100:8.0, inch:15, price:95000, color:"#8a9a96", rim:"#e9ecf0", cal:"#3a3d45", spokes:10, wmodel:"landau", tire:"faixafina", rimK:1.09},
+  {id:"gaviao",      name:"Gavião GTI 1.8T",  tag:"Hatch alemão turbo",        spec:"1.8 20V turbo · 180 cv · 5 marchas",    model:"golf",         vk:225, t100:7.3,  inch:17, price:60000,      color:"#1b1d22", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
+  {id:"silvinha", name:"Silvinha S15", tag:"Cupê japonês de tração traseira", spec:"2.0 turbo · 250 cv · 6 marchas", model:"s15", vk:240, t100:6.2, inch:17, price:280000, color:"#e8d01f", rim:"#2a2e37", cal:"#d93a3a", spokes:5},
+  {id:"mia",         name:"MIA BLACK",        tag:"Sedã Si FA5 preto, turbo e rebaixado", spec:"2.0 16V i-VTEC turbo · 6 marchas · corta a 8.000 rpm", model:"fa5", vk:248, t100:5.8, inch:18, price:120000, color:"#0c0e12", rim:"#c3c8cf", cal:"#3a3d45", spokes:6, wmodel:"jdm6", baseDrop:0.8, banner:"@MIA_BLACKFA5"},
+  {id:"bavaro", name:"Bávaro E46", tag:"Cupê alemão de 6 em linha", spec:"3.2 6 cil. · 343 cv · corta a 8.000 rpm", model:"e46", vk:255, t100:5.2, inch:18, price:300000, color:"#2a3f8f", rim:"#c9d0da", cal:"#2f63d6", spokes:5},
+  {id:"potro", name:"Potro Cobra", tag:"Pony car V8 conversível", spec:"4.6 V8 32V · 390 cv · 5 marchas", model:"pony", vk:225, t100:6.0, inch:18, price:280000, color:"#f2cd38", rim:"#dfe3e8", cal:"#3a3d45", spokes:5, wmodel:"deep5", rimK:1.32},
+  {id:"carregador", name:"Carregador 70", tag:"Muscle car de bloco grande", spec:"7.2 V8 · 375 cv · 4 marchas", model:"muscle", vk:230, t100:5.9, inch:15, price:800000, color:"#1b1d22", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
+  {id:"bisao",       name:"Bisão 4x4",        tag:"Picape off-road",           spec:"6.2 V8 compressor · 700 cv · 4x4",      model:"pickup",       vk:190, t100:4.6,  inch:18, price:1000000,     color:"#d63a2f", rim:"#2a2e37", cal:"#d93a3a", spokes:6},
+  {id:"evo", name:"Evo Nove", tag:"Sedã de rali turbo AWD", spec:"2.0 turbo · 286 cv · AWD", model:"evo9", vk:255, t100:4.9, inch:17, price:280000, color:"#c8121b", rim:"#2a2e37", cal:"#d93a3a", spokes:6},
+  {id:"boxer", name:"Boxer Azul", tag:"Sedã de rali boxer turbo", spec:"2.5 boxer turbo · 300 cv · AWD", model:"rally", vk:258, t100:4.8, inch:17, price:250000, color:"#1f3fa8", rim:"#d4af37", cal:"#d93a3a", spokes:6},
+  {id:"rotativo", name:"Rotativo FD", tag:"Cupê de motor rotativo", spec:"1.3 rotativo biturbo · 280 cv", model:"fd", vk:265, t100:4.7, inch:17, price:400000, color:"#c8121b", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
+  {id:"suprema", name:"Suprema", tag:"Cupê japonês lendário", spec:"3.0 6 cil. biturbo · 330 cv", model:"coupe", vk:285, t100:4.4, inch:18, price:800000, color:"#ff7a1a", rim:"#9aa1ad", cal:"#e0a400", spokes:5},
+  {id:"godzilla", name:"Godzilla R34", tag:"Cupê AWD biturbo", spec:"2.6 6 cil. biturbo · 330 cv · AWD", model:"r34", vk:290, t100:4.2, inch:18, price:2500000, color:"#1f4fc0", rim:"#9aa1ad", cal:"#e0a400", spokes:6},
+  {id:"camarada", name:"Camarada SS", tag:"Muscle moderno", spec:"6.2 V8 · 432 cv · 6 marchas", model:"musclemod", vk:300, t100:4.0, inch:20, price:500000, color:"#f2c418", rim:"#a7adb5", cal:"#3a3d45", spokes:5, wmodel:"five", rimK:1.1},
+  {id:"noveonze", name:"Nove-Onze GT3", tag:"Esportivo de motor traseiro", spec:"4.0 boxer 6 cil. · 510 cv · giro 9.000", model:"nove", vk:318, t100:3.4, inch:20, price:1700000, color:"#7ac74f", rim:"#1e2128", cal:"#f2d45c", spokes:10},
+  {id:"quarentona", name:"Quarentona", tag:"Lenda italiana biturbo", spec:"2.9 V8 biturbo · 478 cv", model:"f40", vk:324, t100:3.3, inch:17, price:18000000, color:"#d8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
+  {id:"touro", name:"Touro V12", tag:"Cunha de motor V12 central", spec:"6.5 V12 · 770 cv · AWD", model:"wedge", vk:350, t100:2.8, inch:21, price:6000000, color:"#f2b31d", rim:"#2a2e37", cal:"#ffd35a", spokes:6},
+  {id:"tufao", name:"Tufão W16", tag:"Hipercarro de 16 cilindros", spec:"8.0 W16 quadriturbo · 1.500 cv · AWD", model:"quadturbo", vk:420, t100:2.4, inch:20, price:30000000, color:"#2f63d6", rim:"#c9d2de", cal:"#c9d2de", spokes:10}
 ];
 const UPG = [
   {id:"motor",      name:"Motor",      base:70,  r:1.4, max:10, per:true},
@@ -425,6 +455,7 @@ const UPG = [
   {id:"turbo",      name:"Turbo",      base:95,  r:1.42, max:10, per:true},
   {id:"patrocinio", name:"Patrocínio", base:100, r:1.22, max:Infinity, per:false}
 ];
+UPG.forEach(u => u.base *= 16);
 const ICONS = {
   motor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M3 10h3l2-2h6l2 2h2v2h2v-2h1v6h-1v-2h-2v2h-3l-2 2H9l-2-2H3z"/><path d="M10 5h4M12 5v3"/></svg>',
   cambio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6v12M12 6v12M18 6v6M6 12h12"/><circle cx="6" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="18" cy="5" r="1.6" fill="currentColor"/></svg>',
@@ -438,13 +469,13 @@ const BOSSES = ["O Rei da Marginal","Madame Torque","General Giro","A Lenda do T
 const RIVAL_COLORS = ["#ff6b57","#63d692","#c792ff","#e9ecf3","#4fa3ff","#ff8fc7","#f2d45c"];
 
 const MISSION_SEQ = [
-  {type:"wins",     n:3,    reward:80,  text:"Vença 3 baterias"},
-  {type:"upgrades", n:5,    reward:160,  text:"Compre 5 melhorias na oficina"},
-  {type:"level",    n:5,    reward:300,  text:"Chegue ao evento nº 5"},
-  {type:"nitro",    n:15,   reward:420,  text:"Acione o nitro 15 vezes"},
-  {type:"cars",     n:2,    reward:450,  text:"Compre um segundo carro na garagem"},
-  {type:"earn",     n:8000, reward:1200, text:"Fature $8K em prêmios"},
-  {type:"level",    n:11,   reward:3500, text:"Vença o chefe da Liga Popular (evento nº 10)"}
+  {type:"wins",     n:3,    reward:1300,  text:"Vença 3 baterias"},
+  {type:"upgrades", n:5,    reward:2500,  text:"Compre 5 melhorias na oficina"},
+  {type:"level",    n:5,    reward:4800,  text:"Chegue ao evento nº 5"},
+  {type:"nitro",    n:15,   reward:6700,  text:"Acione o nitro 15 vezes"},
+  {type:"cars",     n:2,    reward:7200,  text:"Compre um segundo carro na garagem"},
+  {type:"earn",     n:130000, reward:19000, text:"Fature $130K em prêmios"},
+  {type:"level",    n:11,   reward:56000, text:"Vença o chefe da Liga Popular (evento nº 10)"}
 ];
 
 /* ---------- state ---------- */
@@ -619,7 +650,7 @@ function partSum(id, key){
 function partCost(p, i){
   if(i === 0) return 0;
   const car = carById(S.car);
-  return Math.round(Math.max(320 * i * i, car.price * 0.13 * Math.pow(i, 1.4)) * p.k * (1 - Math.min(0.5, spBonus("parts"))));
+  return Math.round(Math.max(5000 * i * i, car.price * 0.13 * Math.pow(i, 1.4)) * p.k * (1 - Math.min(0.5, spBonus("parts"))));
 }
 const fmtPct = v => (Math.round(v * 1000) / 10).toLocaleString("pt-BR") + "%";
 function partEff(t){
@@ -1416,7 +1447,7 @@ function openSponsors(cost){
 function rewardFor(l, patro){
   if(patro === undefined) patro = S.upg.patrocinio;
   const et = eventType(l), fameK = 1 + Math.min(0.25, (S.fame || 0) / 80000);
-  return 36 * Math.pow(1.21, l - 1) * Math.pow(1.065, patro) * tokMoney() * fameK * (isBoss(l) ? 4 : et === "nemesis" ? 5 : et === "aposta" ? 2.5 : 1);
+  return 750 * Math.pow(1.1066, l - 1) * Math.pow(1.065, patro) * tokMoney() * fameK * (isBoss(l) ? 4 : et === "nemesis" ? 5 : et === "aposta" ? 2.5 : 1);
 }
 function rivalName(l){
   const t = eventType(l);
@@ -1537,7 +1568,7 @@ function pickTrack(){
   return {theme:th, name:THEME_NAMES[th], L:d[0], distName:d[1]};
 }
 function setTrackText(){
-  document.getElementById("trackLen").textContent = R.track.name + " · " + R.track.distName + (R.rain ? " · pista molhada (+25%)" : "") + " · prêmio do evento " + money(Math.max(100, rewardFor(R.level) * 1.2 * (R.rain ? 1.25 : 1) * (1 + spBonus("event"))));
+  document.getElementById("trackLen").textContent = R.track.name + " · " + R.track.distName + (R.rain ? " · pista molhada (+25%)" : "") + " · prêmio do evento " + money(Math.max(1200, rewardFor(R.level) * 1.2 * (R.rain ? 1.25 : 1) * (1 + spBonus("event"))));
 }
 function newRace(track){
   const ps = playerStats(), rs = rubberBand(rivalStats(S.level), ps), tr = track || pickTrack();
@@ -1621,7 +1652,7 @@ function finish(){
   const win = R.r.fin === null || R.p.fin <= R.r.fin;
   if(R.r.fin === null) R.r.fin = R.time + (R.L - R.r.x) / Math.max(1, R.r.v);
   const base = rewardFor(R.level);
-  const amount = Math.max(win ? 60 : 25, base * R.distK * (win ? 0.14 * (1 + spBonus("win")) : 0.04) * (R.rain ? 1.2 : 1));
+  const amount = Math.max(win ? 900 : 350, base * R.distK * (win ? 0.14 * (1 + spBonus("win")) : 0.04) * (R.rain ? 1.2 : 1));
   pay(amount, R.time + 9.5);
   const mult = leagueOf(R.level) + 1;
   if(win){
@@ -1635,11 +1666,11 @@ function finish(){
   R.result = {win, amount, me:S.series.me, op:S.series.op, done, margin:Math.abs(R.p.fin - R.r.fin)};
   if(done){
     const champ = S.series.me >= 2;
-    const prize = Math.max(champ ? 250 : 0, base * (champ ? 0.85 : 0.1) * (R.rain ? 1.2 : 1) * (1 + spBonus("event")));
+    const prize = Math.max(champ ? 1200 : 0, base * (champ ? 0.85 : 0.1) * (R.rain ? 1.2 : 1) * (1 + spBonus("event")));
     pay(prize, 40);
     // events won in a row: every third one in a row pays a bonus that grows with the run (R$150, R$300, R$450...)
     S.evStreak = champ ? (S.evStreak || 0) + 1 : 0;
-    const evBonus = champ && S.evStreak % 3 === 0 ? 150 * (S.evStreak / 3) : 0;
+    const evBonus = champ && S.evStreak % 3 === 0 ? Math.round(Math.max(2500, base * 4) * (S.evStreak / 3)) : 0;
     if(evBonus){ pay(evBonus, 40); setTimeout(() => toast(S.evStreak + " corridas seguidas! Bônus +" + money(evBonus)), 1400); }
     const et = eventType(R.level);
     let betRes = 0;
@@ -7517,7 +7548,7 @@ function renderGaragem(){
     if(sel) act = '<span class="pill">Na pista</span>';
     else if(own) act = '<button class="btn ghost" data-use="' + c.id + '">Correr com este</button>';
     else act = '<button class="btn" data-car="' + c.id + '"' + (S.money >= c.price ? "" : " disabled") + '>' + money(c.price) + '</button>';
-    h += '<div class="car' + (sel ? " sel" : "") + '"><canvas class="mini" data-id="' + c.id + '" aria-hidden="true"></canvas><div class="name">' + c.name + '</div>' +
+    h += '<div class="car' + (sel ? " sel" : "") + '" data-id="' + c.id + '"><canvas class="mini" data-id="' + c.id + '" aria-hidden="true"></canvas><div class="name">' + c.name + ' <span class="look">Ver ›</span></div>' +
       '<div class="stats"><span>Máx <b>' + Math.round(pf.vk) + '</b> km/h</span><span>0–100 <b>' + dec1(pf.t100) + '</b> s</span><span>' + c.spec + '</span></div>' +
       '<div class="act"><span class="tag">' + c.tag + (own ? ' · potencial ' + Math.round(potential(c.id) * 100) + '%' : '') + '</span>' + act + '</div></div>';
   });
@@ -7765,6 +7796,8 @@ gpanel.addEventListener("input", e => {
   if(e.target.id === "pilotName"){ S.pilot.name = e.target.value.trim().slice(0, 14) || "Você"; save(); }
 });
 const onPanelClick = e => {
+  const card = e.target.closest(".car[data-id]");
+  if(card && !e.target.closest("button")){ openCarView(card.dataset.id); return; }
   const t = e.target.closest("button"); if(!t || t.disabled) return;
   if(t.dataset.mode !== undefined){ S.buyMode = +t.dataset.mode; }
   else if(t.dataset.buy){
@@ -7864,6 +7897,61 @@ const onPanelClick = e => {
 };
 panel.addEventListener("click", onPanelClick);
 gpanel.addEventListener("click", onPanelClick);
+// ---- showroom ----
+let cvId = null, cvView = "side";
+function openCarView(id){ cvId = id; cvView = "side"; el("carView").hidden = false; fillCarView(); }
+function closeCarView(){ el("carView").hidden = true; cvId = null; }
+function fillCarView(){
+  const c = carById(cvId), pf = carPerf(c.id), own = S.owned.includes(c.id), sel = S.car === c.id;
+  el("cvName").textContent = c.name; el("cvTag").textContent = c.tag; el("cvSpec").textContent = c.spec;
+  const vks = CARS.map(x => carPerf(x.id).vk), ts = CARS.map(x => carPerf(x.id).t100), vMax = Math.max(...vks), tMin = Math.min(...ts), tMax = Math.max(...ts);
+  const bar = (lbl, k, val) => '<span>' + lbl + '</span><i><b style="width:' + Math.round(Math.max(0.04, Math.min(1, k)) * 100) + '%"></b></i><strong>' + val + '</strong>';
+  el("cvStats").innerHTML = bar("Velocidade", pf.vk / vMax, Math.round(pf.vk) + " km/h") + bar("Arrancada", 0.08 + 0.92 * (tMax - pf.t100) / Math.max(0.1, tMax - tMin), "0–100 em " + dec1(pf.t100) + " s");
+  el("cvPrice").textContent = own ? "Na sua garagem" : c.price ? "R$ " + c.price.toLocaleString("pt-BR") : "Grátis";
+  const b = el("cvBuy"), lack = c.price - S.money;
+  if(sel){ b.textContent = "Na pista"; b.disabled = true; }
+  else if(own){ b.textContent = "Correr com este"; b.disabled = false; }
+  else { b.textContent = "Comprar"; b.disabled = lack > 0; }
+  el("cvLack").textContent = !own && lack > 0 ? "Faltam R$ " + Math.ceil(lack).toLocaleString("pt-BR") : "";
+  el("carView").querySelectorAll(".cv-view button").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === cvView));
+  requestAnimationFrame(paintCarView);
+}
+function paintCarView(){
+  if(!cvId) return;
+  const car = carById(cvId), cv = el("cvCanvas"), r = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
+  const w = cv.clientWidth || 320, h = cv.clientHeight || 220; cv.width = Math.round(w * r); cv.height = Math.round(h * r);
+  const c = cv.getContext("2d"); c.setTransform(r, 0, 0, r, 0, 0);
+  const gy = h * 0.8;
+  // studio: dark backdrop, a lit floor and a soft spotlight from above
+  let g = c.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, "#1b2131"); g.addColorStop(1, "#0c0f17"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
+  g = c.createLinearGradient(0, gy, 0, h); g.addColorStop(0, "#2b303d"); g.addColorStop(1, "#11141b"); c.fillStyle = g; c.fillRect(0, gy, w, h - gy);
+  g = c.createRadialGradient(w / 2, gy, 0, w / 2, gy, w * 0.55); g.addColorStop(0, "rgba(255,236,200,.22)"); g.addColorStop(1, "rgba(255,236,200,0)");
+  c.save(); c.translate(0, gy); c.scale(1, 0.22); c.fillStyle = g; c.beginPath(); c.arc(w / 2, 0, w * 0.55, 0, TAU); c.fill(); c.restore();
+  g = c.createRadialGradient(w / 2, -h * 0.2, 0, w / 2, -h * 0.2, h * 1.1); g.addColorStop(0, "rgba(255,240,215,.14)"); g.addColorStop(1, "rgba(255,240,215,0)"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
+  const M = MODELS[car.model], look = carLook(car.id);
+  if(cvView === "side"){
+    const sc = Math.min((w - 24) / (M.len + 3), (gy - 18) / (M.roof + 2)), x0 = (w - M.len * sc) / 2;
+    // a faint mirror image on the polished floor
+    c.save(); c.translate(0, 2 * gy); c.scale(1, -1); c.globalAlpha = 0.16; drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0.3, lights:false})); c.restore();
+    g = c.createLinearGradient(0, gy, 0, h); g.addColorStop(0, "rgba(17,20,27,0)"); g.addColorStop(1, "rgba(17,20,27,.9)"); c.fillStyle = g; c.fillRect(0, gy, w, h - gy);
+    drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0.3, lights:false}));
+  } else {
+    const k = Math.min(w * 0.5 / 2.0, (gy - 16) / 1.9);
+    drawRear(c, w / 2, gy, k, car.model, look.color, Object.assign({}, look));
+  }
+}
+el("cvClose").addEventListener("click", closeCarView);
+el("carView").addEventListener("click", e => { if(e.target.id === "carView") closeCarView(); });
+el("cvPrev").addEventListener("click", () => { const i = CARS.findIndex(x => x.id === cvId); cvId = CARS[(i + CARS.length - 1) % CARS.length].id; fillCarView(); });
+el("cvNext").addEventListener("click", () => { const i = CARS.findIndex(x => x.id === cvId); cvId = CARS[(i + 1) % CARS.length].id; fillCarView(); });
+el("carView").querySelector(".cv-view").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; cvView = b.dataset.v; fillCarView(); });
+el("cvBuy").addEventListener("click", () => {
+  const c = carById(cvId); if(!c || S.car === c.id) return;
+  if(S.owned.includes(c.id)){ pv = null; S.car = c.id; applyPlayerStats(); }
+  else { if(S.money < c.price) return; pv = null; S.money -= c.price; S.owned.push(c.id); S.car = c.id; applyPlayerStats(); coinSfx(); toast(c.name + " é seu! Já está na pista."); }
+  save(); closeCarView(); renderPanel(true);
+});
+window.addEventListener("resize", () => { if(cvId) paintCarView(); });
 function doPrestige(){
   const gain = tokensIfReset();
   S.tokens += gain; S.prestiges++;
@@ -7891,6 +7979,7 @@ const COS_PRICE = {paint:[250, 0.03], finish:[200, 0.02], vinyl:[150, 0.015], vi
   ckKnob:[120, 0.006], ckKnobC:[60, 0.003], exModel:[300, 0.015], sound:[900, 0.05], turboSnd:[400, 0.02], wmodel:[450, 0.03], aro:[180, 0.012],
   rim:[150, 0.01], tire:[200, 0.012], tireC:[60, 0.004], cal:[100, 0.006], wing:[700, 0.035], wingF:[150, 0.008], tala:[300, 0.015]};
 const PIL_PRICE = {hair:150, hairC:60, glasses:120, tattoo:250, outfit:200, suit:120, stripe:60, shoes:100, acc:150, pants:100, gloves:120, helmet:400};
+Object.values(COS_PRICE).forEach(v => v[0] *= 16); Object.keys(PIL_PRICE).forEach(k => PIL_PRICE[k] *= 16);
 const PIL_MUL = {"outfit|couro":1.6, "outfit|kart":1.4, "outfit|macacao2":1.3, "helmet|carbono":2.4, "helmet|f1":1.8, "helmet|drag":1.5, "helmet|retro":1.2, "gloves|drift":1.3, "gloves|couro":1.2, "shoes|corrida":1.5, "shoes|basquete":1.3, "shoes|chinelo":0.4};
 const COS_FREE = {finish:"brilho", vinyl:"none", light:"#fff1c9", flame:"#ff9a1f", flameSize:"m", sound:"orig", wmodel:"orig", tire:"orig", tireC:"#f4f5f8", exModel:"orig"};
 const PIL_FREE = defaultPilot();
