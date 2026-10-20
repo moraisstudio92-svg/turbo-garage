@@ -244,7 +244,20 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .g-car b{color:var(--fg)}
 .rev{display:flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--sodium);color:var(--sodium);font-family:var(--display);font-weight:600;font-size:13px;background:rgba(255,181,71,.08);white-space:nowrap}
 .rev svg{width:16px;height:16px}
-.gtabs{grid-template-columns:repeat(4,1fr)}
+.gtabs{grid-template-columns:repeat(5,1fr)}
+.gtabs .tab{padding-inline:4px}
+.house-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.house-h b{font-family:var(--display);font-size:18px}
+.house-h small{color:var(--sodium);font-family:var(--display);font-weight:600;font-size:12px;white-space:nowrap}
+.hstats{display:grid;grid-template-columns:1fr auto;gap:6px 10px;font-size:14px;color:var(--muted)}
+.hstats b{color:var(--fg);font-family:var(--display);font-weight:600;text-align:right}
+.hstats .ok{color:var(--good,#5bd68a)}
+.hlist{display:grid;gap:6px}
+.hlist div{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;font-size:13px;color:var(--muted);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.hlist div.own{color:var(--fg)}
+.hlist div.own i{color:var(--sodium)}
+.hlist i{font-style:normal;font-weight:700;text-align:center}
+.hlist span.p{font-family:var(--display);font-weight:600;color:var(--fg)}
 .modal{z-index:38}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--sodium);color:var(--fg);padding:10px 14px;border-radius:10px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:20;transition:opacity .25s, transform .25s}
 .toast.hide{opacity:0;transform:translate(-50%,10px);pointer-events:none}
@@ -338,7 +351,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v132</span>
+  <span id="tgVer">v133</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -361,6 +374,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
     <button class="tab" role="tab" data-gtab="estilo" aria-selected="false">Estilo</button>
     <button class="tab" role="tab" data-gtab="carros" aria-selected="false">Carros</button>
     <button class="tab" role="tab" data-gtab="piloto" aria-selected="false">Piloto</button>
+    <button class="tab" role="tab" data-gtab="casa" aria-selected="false">Casa</button>
   </nav>
   <main class="panel" id="gpanel" role="tabpanel"></main>
 </div>
@@ -1444,9 +1458,22 @@ function openSponsors(cost){
   el("spAmt").textContent = money(cost);
   el("spModal").hidden = false;
 }
+// a better house makes the pilot better known: fame earned in races is multiplied, and fame pays more on every prize
+const HOUSE = [
+  {n:"Casinha de bloco", d:"Bloco sem reboco, chão de cimento e uma lâmpada pendurada.", cost:0, fame:0},
+  {n:"Reboco e pintura", d:"Parede rebocada e pintada, luz fluorescente e prateleira com latas.", cost:8000, fame:400},
+  {n:"Piso e iluminação", d:"Porcelanato, luz de LED, armário de ferramentas e arandela na fachada.", cost:25000, fame:1000},
+  {n:"Oficina equipada", d:"Piso epóxi espelhado, painel de ferramentas, pneus e letreiro neon.", cost:80000, fame:2500},
+  {n:"Garagem dos sonhos", d:"Sobrado, piso quadriculado, fita de LED, troféus e bandeira.", cost:250000, fame:5000},
+  {n:"Casa moderna", d:"Fachada de concreto, madeira e vidro, portão de vidro e jardim.", cost:900000, fame:9000},
+  {n:"Mansão do piloto", d:"Mansão iluminada, palmeiras e garagem de exposição.", cost:4000000, fame:15000}];
+const houseLvl = () => Math.max(0, Math.min(HOUSE.length - 1, S.garage || 0));
+const fameGainK = () => 1 + 0.3 * houseLvl();
+const fameCap = () => 0.25 + 0.1 * houseLvl();
+function fameBonus(){ return Math.min(fameCap(), (S.fame || 0) / 40000); }
 function rewardFor(l, patro){
   if(patro === undefined) patro = S.upg.patrocinio;
-  const et = eventType(l), fameK = 1 + Math.min(0.25, (S.fame || 0) / 80000);
+  const et = eventType(l), fameK = 1 + fameBonus();
   return 750 * Math.pow(1.1066, l - 1) * Math.pow(1.065, patro) * tokMoney() * fameK * (isBoss(l) ? 4 : et === "nemesis" ? 5 : et === "aposta" ? 2.5 : 1);
 }
 function rivalName(l){
@@ -1656,7 +1683,7 @@ function finish(){
   pay(amount, R.time + 9.5);
   const mult = leagueOf(R.level) + 1;
   if(win){
-    S.stats.wins++; S.series.me++; S.fame = (S.fame || 0) + 4 * mult * (1 + spBonus("fame"));
+    S.stats.wins++; S.series.me++; S.fame = (S.fame || 0) + 4 * mult * (1 + spBonus("fame")) * fameGainK();
     S.streak = (S.streak || 0) + 1; S.bestStreak = Math.max(S.bestStreak || 0, S.streak);
     if(!R.p.used) S.stats.noNitro = (S.stats.noNitro || 0) + 1;
     if(S.streak >= 2){ const sb = Math.round(base * 0.025 * Math.min(8, S.streak) * (1 + spBonus("streak"))); pay(sb, 9); setTimeout(() => toast("Sequência x" + S.streak + "! +" + money(sb)), 900); }
@@ -1676,7 +1703,7 @@ function finish(){
     let betRes = 0;
     if(S.series.bet){ betRes = champ ? S.series.bet : -Math.min(S.money, S.series.bet); S.money += betRes; if(champ) S.stats.earned += betRes; }
     R.event = {champ, prize, level:R.level, type:et, bet:betRes, comeback:champ && S.series.first === "op", bonus:evBonus, run:S.evStreak};
-    if(champ) S.fame = (S.fame || 0) + ({boss:120, nemesis:200, aposta:60}[et] || 20) * mult * (1 + spBonus("fame"));
+    if(champ) S.fame = (S.fame || 0) + ({boss:120, nemesis:200, aposta:60}[et] || 20) * mult * (1 + spBonus("fame")) * fameGainK();
     if(champ){
       S.stats.titles++;
       if(isBoss(R.level)) toast("Chefe derrotado: " + rivalName(R.level) + "!");
@@ -4662,7 +4689,8 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   if(P.hair === "capacete"){ if(P.helmet === "none"){ P.helmet = "integral"; P.helmetWear = "cabeca"; } P.hair = "curto"; }
   const hk = {baixo:0.93, medio:1, alto:1.07}[P.height] || 1, wk = {magro:0.88, medio:1, forte:1.17}[P.weight] || 1, fem = P.gender === "f";
   const u = h / 104 * hk, sk = P.skin, top = P.suit, st = P.stripe, hc = P.hairC, acc = P.acc || [], of = P.outfit;
-  const Y = k => footY - k * u, X = k => x + k * u * wk;
+  const sit = pose === "sit", dropK = sit ? 20 : 0;
+  const Y = k => footY - (sit && k >= 40 ? k - dropK : k) * u, X = k => x + k * u * wk;
   const OL = "rgba(8,9,12,.55)", olw = Math.max(0.5, 0.35 * u);
   const suitLike = of === "macacao" || of === "macacao2" || of === "kart";
   const helmetOn = P.helmet !== "none" && P.helmetWear === "cabeca";
@@ -4710,9 +4738,17 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   smoothPath([[X(-hipH + 0.2), Y(53)], [X(hipH - 0.2), Y(53)], [X(hipH - 0.4), Y(46)], [X(legGap + 0.6), Y(41.5)], [X(0), Y(42.8)], [X(-legGap - 0.6), Y(41.5)], [X(-hipH + 0.4), Y(46)]]);
   c.fillStyle = shadeFill(legCol, X(-hipH), X(hipH)); c.fill();
   [-1, 1].forEach(sd => {
-    const hipJ = [X(sd * (legGap + legW * 0.95)), Y(49)], knee = [X(sd * (legGap + legW * 0.75)), Y(27)], ank = [X(sd * (legGap + legW * 0.62)), Y(6)];
+    const hipJ = [X(sd * (legGap + legW * (sit ? 0.9 : 0.95))), Y(sit ? 50 : 49)], knee = sit ? [X(sd * (legGap + legW * 1.6)), Y(47.5)] : [X(sd * (legGap + legW * 0.75)), Y(27)], ank = [X(sd * (legGap + legW * (sit ? 1.45 : 0.62))), Y(6)];
+    if(sit){
+      // seen from the front a seated thigh points at us: shins first, then the short wide lap with its lit top, ending in the round of the knee
+      limb([knee[0], knee[1] + 1 * u], ank, legW * u * wk * 0.92, legW * u * wk * 0.62, legCol);
+      limb(hipJ, knee, legW * u * wk * 1.18, legW * u * wk * 1.12, legCol);
+      c.fillStyle = "rgba(255,255,255,.16)"; c.beginPath(); c.ellipse((hipJ[0] + knee[0]) / 2, knee[1] - legW * 0.75 * u, Math.abs(knee[0] - hipJ[0]) / 2 + legW * 0.6 * u * wk, legW * 0.32 * u, 0, 0, TAU); c.fill();
+      c.strokeStyle = "rgba(0,0,0,.3)"; c.lineWidth = Math.max(0.4, 0.4 * u); c.beginPath(); c.arc(knee[0], knee[1] + 0.5 * u, legW * 0.95 * u * wk, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke();
+    } else {
     limb(hipJ, knee, legW * u * wk * 1.02, legW * u * wk * 0.8, legCol);
     limb(knee, ank, legW * u * wk * 0.8, legW * u * wk * 0.58, legCol);
+    }
     // seams, creases, pockets
     c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = Math.max(0.4, 0.3 * u);
     c.beginPath(); c.moveTo(knee[0] - sd * legW * 0.5 * u, knee[1] - 1.2 * u); c.quadraticCurveTo(knee[0], knee[1] + 0.6 * u, knee[0] + sd * legW * 0.4 * u, knee[1] - 1 * u); c.stroke();
@@ -4726,7 +4762,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     bota:["#5a3a22", "#2a1a10", "#7a5232"], corrida:[top, "#16181d", st], basquete:["#f2f4f8", "#f2f4f8", st], runner:["#3d8bff", "#f2f4f8", "#ffd23f"], chinelo:["#ffd23f", "#2e7d32", "#2e7d32"]}[P.shoes] || ["#1a1c21", "#f2f4f8", "#3a3f4a"];
   const shoeTop = P.shoes === "bota" ? 12 : P.shoes === "cano" || P.shoes === "basquete" ? 10 : P.shoes === "corrida" ? 9 : P.shoes === "chinelo" ? 1.6 : 6.2;
   [-1, 1].forEach(sd => {
-    const cx = X(sd * (legGap + legW * 0.62)) + sd * 0.6 * u, w = legW * 1.25 * u * wk;
+    const cx = X(sd * (legGap + legW * (sit ? 1.45 : 0.62))) + sd * 0.6 * u, w = legW * (sit ? 1.35 : 1.25) * u * wk;
     if(P.shoes === "chinelo"){
       c.fillStyle = sk; smoothPath([[cx - w * 0.75, Y(5.5)], [cx + w * 0.75, Y(5.5)], [cx + w * 0.95, Y(1.2)], [cx - w * 0.95, Y(1.2)]]); c.fill();
       c.fillStyle = SHOE[0]; rrectC(c, cx - w, Y(1.3), w * 2, 1.3 * u, 0.6 * u); c.fill();
@@ -4912,6 +4948,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   if(pose === "trophy") hands = [[X(-hipH - 3), Y(45)], [X(9), Y(104)]];
   else if(pose === "wave") hands = [[X(-hipH - 3), Y(45)], [X(16 + Math.sin(t * 8) * 1.6), Y(96)]];
   else if(pose === "clap"){ const k = Math.abs(Math.sin(t * 7)); hands = [[X(-1.6 - k * 3.2), Y(66)], [X(1.6 + k * 3.2), Y(66)]]; }
+  else if(sit) hands = [[X(-(legGap + legW * 1.5)), Y(50.5)], [X(legGap + legW * 1.5 + Math.max(0, Math.sin(t * 0.7)) * 0.6), Y(50.5)]];
   else hands = [[X(-hipH - 3.2), Y(44)], [X(hipH + 3.2), Y(44)]];
   if(helmetArm && pose !== "clap") hands[0] = [X(-hipH - 2.6), Y(56)];
   const longS = suitLike || of === "jaqueta" || of === "couro" || of === "moletom", shortS = of === "camiseta" || of === "polo" || of === "colete";
@@ -7540,6 +7577,23 @@ function renderOficina(){
   });
   return h;
 }
+function renderCasa(){
+  const L = houseLvl(), H = HOUSE[L], nx = HOUSE[L + 1], fame = S.fame || 0, pct = v => "+" + Math.round(v * 100) + "%";
+  let h = '<div class="card"><div class="house-h"><b>' + H.n + '</b><small>Nível ' + L + ' de ' + (HOUSE.length - 1) + '</small></div><p>' + H.d + '</p>' +
+    '<div class="hstats"><span>Fama do piloto</span><b>' + Math.round(fame).toLocaleString("pt-BR") + ' · ' + fameTitle(fame) + '</b>' +
+    '<span>Bônus de fama em todos os prêmios</span><b class="ok">' + pct(fameBonus()) + '</b>' +
+    '<span>Limite do bônus com esta casa</span><b>' + pct(fameCap()) + '</b>' +
+    '<span>Fama ganha em cada vitória</span><b>×' + fameGainK().toLocaleString("pt-BR", {maximumFractionDigits:1}) + '</b></div></div>';
+  if(nx){
+    const ok = S.money >= nx.cost;
+    h += '<div class="card"><div class="house-h"><b>' + nx.n + '</b><small>próxima melhoria</small></div><p>' + nx.d + '</p>' +
+      '<p>A vizinhança comenta: <b style="color:var(--fg)">+' + nx.fame.toLocaleString("pt-BR") + ' de fama</b> na hora, limite do bônus sobe para <b style="color:var(--fg)">' + pct(fameCap() + 0.1) + '</b> e cada vitória passa a dar <b style="color:var(--fg)">×' + (fameGainK() + 0.3).toLocaleString("pt-BR", {maximumFractionDigits:1}) + '</b> de fama.</p>' +
+      '<button class="btn" data-house="1"' + (ok ? '' : ' disabled') + '>Reformar · ' + money(nx.cost) + '</button>' +
+      (ok ? '' : '<p style="color:var(--muted);font-size:13px">Faltam ' + money(nx.cost - S.money) + '</p>') + '</div>';
+  } else h += '<div class="card"><p><b style="color:var(--fg)">Casa no máximo.</b> Agora é só colecionar troféus.</p></div>';
+  h += '<div class="ph"><span>Todas as reformas</span></div><div class="hlist">' + HOUSE.map((x, i) => '<div class="' + (i <= L ? "own" : "") + '"><i>' + (i <= L ? "✓" : i) + '</i><span>' + x.n + '</span><span class="p">' + (i === 0 ? "início" : i <= L ? "feito" : money(x.cost)) + '</span></div>').join("") + '</div>';
+  return h;
+}
 function renderGaragem(){
   let h = '<div class="ph"><span>Cada carro tem um limite. Quando chegar nele, é hora do próximo.</span></div>';
   CARS.forEach(c => {
@@ -7755,7 +7809,7 @@ function renderCarreira(){
     }
     h += '</div><p>Próximo: <b style="color:var(--fg)">' + rivalName(S.level) + '</b> · ' + kind[eventType(S.level)] + '. Cada evento é melhor de 3.</p>';
   } else h += '<p>Você venceu o Dante no Túnel. Agora cada evento é contra os melhores do país.</p>';
-  h += '<div class="fame"><span>Fama <b>' + Math.round(fame).toLocaleString("pt-BR") + '</b> · ' + fameTitle(fame) + '</span>' +
+  h += '<div class="fame"><span>Fama <b>' + Math.round(fame).toLocaleString("pt-BR") + '</b> · ' + fameTitle(fame) + ' · bônus <b>+' + Math.round(fameBonus() * 100) + '%</b> nos prêmios</span>' +
     (nt ? '<div class="track"><i style="width:' + Math.round((fame - pt[0]) / (nt[0] - pt[0]) * 100) + '%"></i></div><small>Próximo título: ' + nt[1] + ' com ' + nt[0].toLocaleString("pt-BR") + ' de fama</small>' : '') + '</div>' +
     '<div class="kv"><span>Títulos</span><b>' + S.stats.titles + '</b><span>Baterias</span><b>' + S.stats.wins + ' V · ' + S.stats.losses + ' D</b>' +
     '<span>Placar do evento atual</span><b>' + S.series.me + ' × ' + S.series.op + '</b></div>' +
@@ -7771,7 +7825,7 @@ function renderPanel(force){
   const html = renderCarreira();
   if(force || html !== lastHTML){ panel.innerHTML = html; lastHTML = html; }
   if(garageOpen){
-    const gh = gtab === "oficina" ? renderOficina() : gtab === "estilo" ? renderEstilo() : gtab === "carros" ? renderGaragem() : renderPiloto();
+    const gh = gtab === "oficina" ? renderOficina() : gtab === "estilo" ? renderEstilo() : gtab === "carros" ? renderGaragem() : gtab === "casa" ? renderCasa() : renderPiloto();
     if(force || gh !== lastGHTML){ gpanel.innerHTML = gh; lastGHTML = gh; paintMinis(gpanel); }
     el("gCash").textContent = money(S.money);
     el("gCar").innerHTML = "<b>" + carById(S.car).name + "</b> · potencial <b>" + Math.round(potential(S.car) * 100) + "%</b>";
@@ -7888,6 +7942,12 @@ const onPanelClick = e => {
   else if(t.dataset.prestige){
     if(Date.now() < prestigeArmed){ doPrestige(); prestigeArmed = 0; }
     else { prestigeArmed = Date.now() + 4000; setTimeout(() => renderPanel(), 4100); }
+  }
+  else if(t.dataset.house){
+    const L = houseLvl(), nx = HOUSE[L + 1];
+    if(!nx || S.money < nx.cost) return;
+    S.money -= nx.cost; S.garage = L + 1; S.fame = (S.fame || 0) + nx.fame; coinSfx();
+    toast(nx.n + "! +" + nx.fame.toLocaleString("pt-BR") + " de fama");
   }
   else if(t.dataset.wipe){
     if(Date.now() < wipeArmed){ S = defaultState(); S.fresh = false; fillMissions(); newRace(); save(); toast("Progresso apagado. Boa corrida!"); wipeArmed = 0; }
@@ -8162,7 +8222,7 @@ const SOUNDS = [["orig","Original"],["grave","Grave V8"],["bigblock","V8 big blo
 const sndCache = {};
 function getSnd(){
   const k = pvApply(S.car, custOf(S.car)), tone = k.sound || "orig", tb = tuneOf(S.car).turbo || 0, ts = k.turboSnd || "",
-    xm = k.exModel || "orig", key = S.car + ":" + (k.escape || 0) + ":" + tone + ":" + tb + ":" + ts + ":" + xm + ":" + (k.blower || 0), base = SND[S.car] || SND.bolinha;
+    xm = k.exModel || "orig", key = S.car + ":" + (k.escape || 0) + ":" + tone + ":" + tb + ":" + ts + ":" + xm + ":" + (k.blower || 0) + ":" + (tuneOf(S.car).motor || 0), base = SND[S.car] || SND.bolinha;
   if(!sndCache[key]){
     const t = k.escape || 0;
     if(base.ev && tone === "orig") sndCache[key] = base;
@@ -8172,20 +8232,58 @@ function getSnd(){
       if(k.blower){ pf.sc = 1; pf.scK = 1 + 0.6 * k.blower; pf.drive = (pf.drive || 2) * (1 + 0.05 * k.blower); }
       // exhaust: Original = factory muffler, quiet and soft; Esportivo = sport muffler, still discreet but deep and thick;
       // Direto = straight pipe, no muffler at all, loud, raw and crackling. Each engine keeps its own character on top.
-      if(t === 0) Object.assign(pf, {popChance:pf.popChance * 0.35, crackle:pf.crackle * 0.3, drive:pf.drive * 0.85, bright:pf.bright * 0.68, grit:pf.grit * 0.6,
-        rasp:(pf.rasp === undefined ? 0.06 : pf.rasp) * 0.4, straight:0.03, mufK:0.55, bass:3, vol:0.72});
-      else if(t === 1) Object.assign(pf, {popChance:Math.min(0.9, pf.popChance + 0.1), crackle:pf.crackle * 0.8, drive:pf.drive * 1.05, bright:pf.bright * 0.8, grit:pf.grit * 0.85,
-        pipe:pf.pipe * 1.18, fb:Math.min(0.72, pf.fb + 0.05), rasp:(pf.rasp === undefined ? 0.06 : pf.rasp) * 0.6, straight:0.06, mufK:0.7, bass:12, vol:1.05});
-      else if(t >= 3) Object.assign(pf, {popChance:0.99, crackle:pf.crackle + 0.9, drive:pf.drive * 1.9, bright:pf.bright * 1.35, grit:pf.grit * 1.45 + 0.2,
-        pipe:pf.pipe * 1.28, fb:Math.min(0.76, pf.fb + 0.08), rasp:(pf.rasp === undefined ? 0.06 : pf.rasp) + 0.24, straight:0.97, mufK:1.8, bass:13, vol:2.7, pa:1});
-      else Object.assign(pf, {popChance:Math.min(0.97, pf.popChance + 0.45), crackle:pf.crackle + 0.45, drive:pf.drive * 1.45, bright:pf.bright * 1.45, grit:pf.grit * 1.3 + 0.12,
-        fb:Math.min(0.74, pf.fb + 0.06), rasp:(pf.rasp === undefined ? 0.06 : pf.rasp) + 0.18, straight:0.85, mufK:1.5, bass:7, vol:1.95});
-      // the tip and where the pipe exits: the bigger and shorter the outlet, the louder, rawer and poppier
-      const XS = {orig:[1, 0, 0, 1], oval:[1.06, 0.05, 0.03, 1.02], quadrado:[1.08, 0.06, 0.04, 1.03], redondo:[1.1, 0.07, 0.05, 1.04], titanio:[1.16, 0.1, 0.08, 1.07], duplo:[1.22, 0.12, 0.08, 1.05],
-        canhao:[1.32, 0.16, 0.12, 1.03], slash:[1.14, 0.09, 0.07, 1.06], quadruplo:[1.28, 0.14, 0.1, 1.05], rally:[1.36, 0.2, 0.16, 1.08], turnedown:[1.3, 0.18, 0.14, 1.08], lateraldupla:[1.44, 0.22, 0.18, 1.1], lateral:[1.38, 0.2, 0.16, 1.1], sidepipe:[1.48, 0.24, 0.2, 1.12], capo:[1.6, 0.3, 0.26, 1.16], dump:[1.55, 0.26, 0.2, 1.1], zoomies:[1.7, 0.34, 0.3, 1.18]}[xm] || [1, 0, 0, 1];
-      pf.vol = (pf.vol || 1) * XS[0]; pf.popChance = Math.min(0.98, pf.popChance + XS[1]); pf.crackle = pf.crackle + XS[2]; pf.drive = pf.drive * (1 + (XS[0] - 1) * 0.35); pf.grit = pf.grit * XS[3];
-      if(xm === "canhao") pf.pipe = pf.pipe * 1.12;          // a big can: deeper boom
-      if(xm === "capo" || xm === "zoomies") pf.straight = Math.max(pf.straight || 0, 0.7);   // open headers, almost no pipe at all
+      // the muffler stage sets the whole character, and the gaps are huge on purpose:
+      // Original = factory muffler, a quiet, dull hum with the top end choked off;
+      // Esportivo = sport can, deep and thick but still civil;
+      // Direto = no muffler at all, very loud, raw, raspy, popping on every lift;
+      // Full Inox 4" = as loud as it gets: a hard metallic roar, crackle all the time, PÁ PÁ PÁ on the limiter
+      const rasp0 = pf.rasp === undefined ? 0.06 : pf.rasp;
+      if(t === 0) Object.assign(pf, {popChance:pf.popChance * 0.15, crackle:pf.crackle * 0.1, drive:pf.drive * 0.75, bright:pf.bright * 0.55, grit:pf.grit * 0.5,
+        rasp:rasp0 * 0.25, straight:0.015, mufK:0.42, bass:2, vol:0.46, lpK:0.55});
+      else if(t === 1) Object.assign(pf, {popChance:Math.min(0.9, pf.popChance + 0.12), crackle:pf.crackle * 0.85, drive:pf.drive * 1.1, bright:pf.bright * 0.82, grit:pf.grit * 0.9,
+        pipe:pf.pipe * 1.2, fb:Math.min(0.72, pf.fb + 0.05), rasp:rasp0 * 0.7, straight:0.08, mufK:0.75, bass:12, vol:1.0, lpK:0.85});
+      else if(t >= 3) Object.assign(pf, {popChance:0.99, crackle:pf.crackle + 1.15, drive:pf.drive * 2.3, bright:pf.bright * 1.45, grit:pf.grit * 1.6 + 0.28,
+        pipe:pf.pipe * 1.3, fb:Math.min(0.77, pf.fb + 0.09), rasp:rasp0 + 0.32, straight:0.99, mufK:2.0, bass:14, vol:3.1, lpK:1.65, pa:1});
+      else Object.assign(pf, {popChance:Math.min(0.97, pf.popChance + 0.5), crackle:pf.crackle + 0.6, drive:pf.drive * 1.65, bright:pf.bright * 1.5, grit:pf.grit * 1.35 + 0.15,
+        fb:Math.min(0.74, pf.fb + 0.06), rasp:rasp0 + 0.22, straight:0.9, mufK:1.6, bass:8, vol:2.05, lpK:1.35});
+      // each tip has its own voice, not just a little more volume
+      const TIP = {
+        orig:{},
+        oval:{vol:0.88, lpK:0.8, bass:2, raspM:0.5},                                   // mellow, rounded
+        quadrado:{vol:1.06, raspF:820, raspQ:4.6, raspA:0.24},                         // boxy honk
+        redondo:{vol:1.12, pipe:1.08, bass:3, drive:1.1},                              // clean and deep
+        slash:{vol:1.18, raspA:0.26, raspF:2100, lpK:1.2, grit:1.2},                   // raspy and sharp
+        titanio:{vol:1.22, raspA:0.42, raspF:2700, raspQ:6, lpK:1.45, grit:1.15},      // metallic scream
+        duplo:{vol:1.32, bass:4, drive:1.2, pipe:1.05},                                // two pipes: thicker
+        quadruplo:{vol:1.48, bass:6, drive:1.35, pipe:1.1},                            // four pipes: a wall of sound
+        canhao:{vol:1.52, pipe:1.32, bass:8, lpK:0.9, drive:1.3, crackle:0.3},         // huge can: a deep boom
+        rally:{vol:1.38, pop:0.99, crackle:1.3, raspA:0.2, drive:1.25},                // anti-lag: crackles nonstop
+        turnedown:{vol:1.42, drive:1.45, grit:1.25, bass:3},                           // barks off the road
+        lateral:{vol:1.58, straight:0.96, raspA:0.3, lpK:1.35, drive:1.4},             // short side exit: raw
+        lateraldupla:{vol:1.68, straight:0.97, raspA:0.3, lpK:1.35, drive:1.5, bass:4},
+        sidepipe:{vol:1.74, straight:0.98, raspA:0.36, lpK:1.45, drive:1.55, crackle:0.5},
+        capo:{vol:1.9, straight:1, mufK:2.3, raspA:0.46, lpK:1.7, drive:1.8, pop:0.99, crackle:1},   // open headers
+        dump:{vol:1.78, straight:1, raspA:0.3, lpK:1.5, drive:1.7, bass:5},
+        zoomies:{vol:2.0, straight:1, mufK:2.4, raspA:0.5, lpK:1.8, drive:1.9, pop:0.99, crackle:1.2}
+      }[xm] || {};
+      if(TIP.vol) pf.vol *= TIP.vol;
+      if(TIP.lpK) pf.lpK *= TIP.lpK;
+      if(TIP.bass) pf.bass = Math.min(16, pf.bass + TIP.bass);
+      if(TIP.drive) pf.drive *= TIP.drive;
+      if(TIP.grit) pf.grit *= TIP.grit;
+      if(TIP.pipe) pf.pipe *= TIP.pipe;
+      if(TIP.raspM) pf.rasp *= TIP.raspM;
+      if(TIP.raspA) pf.rasp += TIP.raspA;
+      if(TIP.raspF) pf.raspF = TIP.raspF;
+      if(TIP.raspQ) pf.raspQ = TIP.raspQ;
+      if(TIP.straight) pf.straight = Math.max(pf.straight, TIP.straight);
+      if(TIP.mufK) pf.mufK = Math.max(pf.mufK, TIP.mufK);
+      if(TIP.pop) pf.popChance = Math.max(pf.popChance, TIP.pop);
+      if(TIP.crackle) pf.crackle += TIP.crackle;
+      // every engine stage makes it angrier: more volume, more bite, more pops
+      const mot = tuneOf(S.car).motor || 0;
+      pf.vol *= 1 + 0.035 * mot; pf.drive *= 1 + 0.045 * mot; pf.popChance = Math.min(0.99, pf.popChance + 0.025 * mot); pf.crackle += 0.04 * mot; pf.rasp += 0.012 * mot;
+      pf.vol = Math.min(5, pf.vol);
       // nothing should sound thin: very bright engines keep their character but lose the whine
       if(pf.bright > 1800) pf.bright = 1800 + (pf.bright - 1800) * 0.35;
       if(pf.raspF && pf.raspF > 1700) pf.raspF = 1700 + (pf.raspF - 1700) * 0.3;
@@ -8380,7 +8478,7 @@ function playPop(t, big, lim, pa){
   s.buffer = list[Math.floor(Math.random() * list.length)];
   s.playbackRate.value = 0.86 + Math.random() * 0.28;
   const g = ac.createGain(), vol = (E.prof && E.prof.vol) || 1;
-  g.gain.value = (big ? 0.62 : 0.34) * (lim ? 1.3 : 1) * (0.75 + 0.25 * vol) * (0.8 + Math.random() * 0.4);
+  g.gain.value = (big ? 0.62 : 0.34) * (lim ? 1.3 : 1) * (0.55 + 0.3 * Math.min(4.5, vol)) * (0.8 + Math.random() * 0.4);
   if(lim) s.playbackRate.value *= 0.88 + Math.random() * 0.1;   // limiter bangs a little deeper and fatter
   s.connect(g); g.connect(AU.popBus); s.start(t);
 }
@@ -8404,7 +8502,8 @@ function audioInit(){
   const AC = window.AudioContext || window.webkitAudioContext;
   if(!AC) return false;
   const ac = new AC(); AU.ac = ac;
-  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 5; comp.knee.value = 8; comp.connect(ac.destination);
+  const lim = ac.createDynamicsCompressor(); lim.threshold.value = -1.5; lim.ratio.value = 20; lim.knee.value = 0; lim.attack.value = 0.001; lim.release.value = 0.08; lim.connect(ac.destination);
+  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -11; comp.ratio.value = 3; comp.knee.value = 8; comp.connect(lim);
   const makeup = ac.createGain(); makeup.gain.value = 1.35; makeup.connect(comp);
   const master = ac.createGain(); master.gain.value = 0.72; master.connect(makeup);
   const buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = buf.getChannelData(0);
@@ -8427,7 +8526,7 @@ function audioInit(){
   const fxSend = ac.createGain(); fxSend.gain.value = 0.25; fxBus.connect(fxSend);
   AU.fx = fxBus; AU.fxSend = fxSend;
   const sendP = ac.createGain(); sendP.gain.value = 0.5; popBus.connect(sendP); sendP.connect(conv);
-  const pops = {big:[0, 1, 2, 3, 4].map(() => renderPop(ac, true)), small:[0, 1, 2, 3, 4, 5].map(() => renderPop(ac, false)), pa:[0, 1, 2, 3].map(() => renderPa(ac))};
+  const pops = {big:[0, 1, 2, 3, 4].map(() => renderPop(ac, true)), small:[0, 1, 2, 3, 4, 5].map(() => renderPop(ac, false)), pa:[0, 1, 2, 3].map(() => renderPa(ac)), flut:[0, 1, 2, 3].map(() => renderFlutter(ac))};
   // intake breathing and wind/road noise
   const ns3 = ac.createBufferSource(); ns3.buffer = buf; ns3.loop = true;
   const ibp = ac.createBiquadFilter(); ibp.type = "bandpass"; ibp.frequency.value = 650; ibp.Q.value = 0.8;
@@ -8487,29 +8586,39 @@ function nitroFx(d){
   noiseBurst({type:"bandpass", f0:5200, f1:2500, Q:1.2, gain:0.35, dur:0.35});
   noiseBurst({type:"highpass", f0:1600, f1:2800, gain:0.18, dur:Math.max(0.5, d), att:0.1, hold:Math.max(0.1, d - 0.5)});
 }
-// flutter, kept soft and natural: the pressure in the pipes lets go in a gentle, fading "chu-chu-chu" of air,
-// no hard clicks, then a light sigh at the end
+// flutter = compressor surge: with nowhere to go, the boost slams back through the compressor wheel in quick bursts.
+// A sharp, pitched, chattering "tu-tu-tu-tu-tu" that starts fast and loud and slows as the pressure falls, with a thump
+// of air in each one. Nothing like the blow-off, which is one long airy "pssshhh".
+function renderFlutter(ac){
+  const sr = ac.sampleRate, len = Math.floor(sr * 1.05), b = ac.createBuffer(1, len, sr), d = b.getChannelData(0), Rn = Math.random;
+  const f0 = 1350 + Rn() * 450, n = 9 + Math.floor(Rn() * 5);
+  let t = 0.004, gap = 0.028 + Rn() * 0.008;
+  for(let k = 0; k < n && t < 0.9; k++){
+    const a = Math.exp(-k * 0.15) * (0.85 + Rn() * 0.3), f = f0 * (1 - k * 0.022), i0 = Math.floor(t * sr), m = Math.floor(0.034 * sr);
+    const w = 2 * Math.PI * f / sr, rr = 0.986, c1 = 2 * rr * Math.cos(w), c2 = -rr * rr;
+    let y1 = 0, y2 = 0, lp = 0;
+    for(let i = 0; i < m && i0 + i < len; i++){
+      const tt = i / sr, env = (tt < 0.0012 ? tt / 0.0012 : 1) * Math.exp(-tt / 0.0095), nz = Rn() * 2 - 1;
+      const y = nz * env + c1 * y1 + c2 * y2; y2 = y1; y1 = y; lp += (nz - lp) * 0.07;
+      d[i0 + i] += a * (y * 0.055 + Math.sin(6.2832 * f * 1.48 * tt) * env * 0.32 + lp * Math.exp(-tt / 0.004) * 1.3 + Math.sin(6.2832 * (190 + k * 4) * tt) * Math.exp(-tt / 0.006) * 0.55);
+    }
+    t += gap; gap *= 1.085 + Rn() * 0.035;
+  }
+  let lp2 = 0;
+  for(let i = 0; i < len; i++){ const tt = i / sr; lp2 += ((Rn() * 2 - 1) - lp2) * 0.55; d[i] += lp2 * 0.05 * Math.exp(-tt / 0.22) * Math.min(1, tt / 0.01); }
+  let pk = 0; for(let i = 0; i < len; i++) pk = Math.max(pk, Math.abs(d[i]));
+  for(let i = 0; i < len; i++){ d[i] = Math.tanh(1.8 * d[i] / pk) / Math.tanh(1.8); if(i > len - 600) d[i] *= (len - i) / 600; }
+  return b;
+}
 function flutterFx(sp){
   const ac = AU.ac, t = ac.currentTime, bus = AU.fx || AU.master;
-  sp = Math.max(0.6, Math.min(1.3, sp || 1));
-  const dur = 0.75;
-  const s = ac.createBufferSource(); s.buffer = AU.noise;
-  const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 0.9;
-  bp.frequency.setValueAtTime(1900, t); bp.frequency.exponentialRampToValueAtTime(1100, t + dur);
-  const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 4200; lp.Q.value = 0.5;
-  // smooth flutter: a sine wobble on the level, slowing down, never closing fully
-  const am = ac.createGain(); am.gain.value = 0.72;
-  const lfo = ac.createOscillator(), depth = ac.createGain(); lfo.type = "sine";
-  lfo.frequency.setValueAtTime(17, t); lfo.frequency.exponentialRampToValueAtTime(8, t + dur);
-  depth.gain.setValueAtTime(0.18, t); depth.gain.linearRampToValueAtTime(0.08, t + dur);
-  lfo.connect(depth); depth.connect(am.gain);
-  const env = ac.createGain();
-  env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(0.28 * sp, t + 0.05);
-  env.gain.setValueAtTime(0.28 * sp, t + 0.1); env.gain.exponentialRampToValueAtTime(0.1 * sp, t + 0.45); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(bp); bp.connect(lp); lp.connect(am); am.connect(env); env.connect(bus);
-  s.start(t, Math.random() * 0.8); s.stop(t + dur + 0.05); lfo.start(t); lfo.stop(t + dur + 0.05);
-  // the light sigh as it empties
-  noiseBurst({type:"bandpass", f0:3200, f1:2000, Q:0.7, gain:0.07 * sp, dur:0.35, att:0.06, delay:0.3, bus});
+  sp = Math.max(0.6, Math.min(1.35, sp || 1));
+  const list = AU.pops && AU.pops.flut; if(!list) return;
+  const s = ac.createBufferSource(), g = ac.createGain();
+  s.buffer = list[Math.floor(Math.random() * list.length)];
+  s.playbackRate.value = (0.9 + Math.random() * 0.16) * (1.12 - 0.12 * sp);   // a bigger turbo chatters a little lower
+  g.gain.value = 0.62 * sp;
+  s.connect(g); g.connect(bus); s.start(t);
 }
 // blow-off: a light, airy "pssh" as the throttle closes
 function bovFx(sp){
@@ -8660,7 +8769,7 @@ function audioUpdate(){
   if(R.phase !== "count" && R.phase !== "race"){
     E.thr = 0.05; E.target = (P.idle || 850) * 1.04; E.limit = P.red || 9000; E.popGate = 0; E.popQ = 0;
     if(P.ev){ T(AU.eg.gain, 0, 0.12); T(AU.evg.gain, 0.012, 0.4); T(AU.oe.frequency, 160, 0.4); }
-    else { T(AU.eg.gain, 0.5 * (P.vol || 1), 0.4); T(AU.lp.frequency, (P.bright || 1200) * 0.55 + (P.idle || 850) * 0.2, 0.3); T(AU.evg.gain, 0, 0.12); }
+    else { T(AU.eg.gain, 0.5 * (P.vol || 1), 0.4); T(AU.lp.frequency, (P.lpK || 1) * ((P.bright || 1200) * 0.55 + (P.idle || 850) * 0.2), 0.3); T(AU.evg.gain, 0, 0.12); }
     [AU.tg, AU.intk, AU.wind, AU.rainG].forEach(n => n && T(n.gain, 0, 0.12));
     if(AU.tAir) T(AU.tAir.g.gain, 0, 0.12);
     if(AU.nit){ T(AU.nit.g.gain, 0, 0.12); T(AU.nit.low.gain, 0, 0.12); T(AU.nit.lfo.gain, 0, 0.12); }
@@ -8728,7 +8837,7 @@ function audioUpdate(){
   if(AU.rainG) T(AU.rainG.gain, R.rain ? (S.cam === "cockpit" ? 0.09 : 0.06) : 0, 0.5);
   if(quiet){ T(AU.tg.gain, 0); T(AU.intk.gain, 0); }
   const vt = P.vtec && E.rpm > P.vtec && thr > 0.5;
-  T(AU.lp.frequency, Math.min(P.straight > 0.5 ? 4200 : P.straight !== undefined && P.straight < 0.05 ? 2400 : 3200, (P.bright * (0.5 + 0.7 * thr) + E.rpm * (P.straight > 0.5 ? 0.4 : P.straight !== undefined && P.straight < 0.05 ? 0.12 : 0.2)) * (vt ? 1.35 : 1) + (nOn ? 400 : 0)), 0.04);
+  T(AU.lp.frequency, (P.lpK || 1) * Math.min(P.straight > 0.5 ? 4200 : P.straight !== undefined && P.straight < 0.05 ? 2400 : 3200, (P.bright * (0.5 + 0.7 * thr) + E.rpm * (P.straight > 0.5 ? 0.4 : P.straight !== undefined && P.straight < 0.05 ? 0.12 : 0.2)) * (vt ? 1.35 : 1) + (nOn ? 400 : 0)), 0.04);
   if(AU.eq){ T(AU.eq.gain, P.bass !== undefined ? P.bass : 6.5, 0.2); T(AU.eq.frequency, P.bass >= 10 ? 85 : 110, 0.2); }
   const boost = Math.min(1, E.rpm / P.red);
   T(AU.intk.gain, 0.05 * thr * boost * (P.vol || 1), 0.05); T(AU.ibp.frequency, 380 + 900 * boost, 0.05);
@@ -8813,7 +8922,7 @@ function garageAudio(dt){
   const revving = grev.t >= 0;
   if(!revving){ thr = 0; gate = 0; E.popQ = 0; }
   E.target = target; E.thr = thr; E.limit = limit; E.popGate = gate;
-  T(AU.lp.frequency, P.bright * (0.5 + 0.7 * thr) + E.rpm * 0.3, 0.04);
+  T(AU.lp.frequency, (P.lpK || 1) * (P.bright * (0.5 + 0.7 * thr) + E.rpm * 0.3), 0.04);
   T(AU.eg.gain, revving ? 0.58 * (P.vol || 1) : 0, revving ? 0.05 : 0.25);
   const boost = Math.min(1, E.rpm / P.red);
   T(AU.intk.gain, 0.05 * thr * boost * (P.vol || 1), 0.05); T(AU.ibp.frequency, 380 + 900 * boost, 0.05);
@@ -8828,67 +8937,257 @@ function drawGarage(){
   const r = Math.min(3, window.devicePixelRatio || 1), w = gCv.clientWidth || 360, h = gCv.clientHeight || 220;
   if(gCv.width !== Math.round(w * r) || gCv.height !== Math.round(h * r)){ gCv.width = Math.round(w * r); gCv.height = Math.round(h * r); }
   const c = gctx; c.setTransform(r, 0, 0, r, 0, 0);
-  const now = performance.now() / 1000, floorY = h * 0.66;
-  // back wall with ribbed panels
-  const wg = c.createLinearGradient(0, 0, 0, floorY); wg.addColorStop(0, "#0c0f17"); wg.addColorStop(1, "#1a1f2d");
-  c.fillStyle = wg; c.fillRect(0, 0, w, floorY);
-  c.strokeStyle = "rgba(255,255,255,.035)"; c.lineWidth = 1;
-  for(let x = 6; x < w; x += 14){ c.beginPath(); c.moveTo(x, 0); c.lineTo(x, floorY); c.stroke(); }
-  // ceiling tubes
-  for(let k = 0; k < 3; k++){
-    const lx = w * (0.2 + k * 0.3), g = c.createRadialGradient(lx, 8, 2, lx, 8, h * 0.5);
-    g.addColorStop(0, "rgba(235,242,255,.22)"); g.addColorStop(1, "rgba(235,242,255,0)");
-    c.fillStyle = g; c.fillRect(lx - h * 0.5, 0, h, h * 0.6);
-    c.fillStyle = "#eef4ff"; rrectC(c, lx - 26, 5, 52, 3.5, 1.5); c.fill();
+  const now = performance.now() / 1000, GL = houseLvl(), groundY = Math.round(h * 0.84);
+  const LK = [
+    {wall:"#9a9387", wall2:"#77716a", blocks:1, roof:"telha", door:"#7a5236", jamb:"#8d877d", inW:"#77736b", floor:"cimento", lamp:"bulb", inLight:"255,214,150", win:"grade", fdoor:"#6e4a30"},
+    {wall:"#e2d6be", wall2:"#c4b698", roof:"telha", door:"#eceae4", jamb:"#f2eee6", inW:"#d8d1c3", floor:"cimento", lamp:"tube", inLight:"236,244,255", win:"simples", fdoor:"#8a5a34", shelf:1},
+    {wall:"#e8dfcc", wall2:"#cbbea2", roof:"telha", door:"#f3f3f1", jamb:"#ffffff", inW:"#e4e0d8", floor:"piso", lamp:"led", inLight:"244,248,255", win:"simples", fdoor:"#7b4f2e", shelf:1, chest:1, sconce:1, bush:1},
+    {wall:"#d3d8dd", wall2:"#b2b9c1", roof:"laje", door:"#2a2e36", jamb:"#3a3f49", inW:"#2b303b", floor:"epoxi", lamp:"led", inLight:"236,244,255", win:"aluminio", fdoor:"#2a2e36", shelf:1, chest:1, sconce:1, bush:1, neon:1, peg:1, tyres:1},
+    {wall:"#efe8dc", wall2:"#d3c8b5", roof:"telha", two:1, door:"#15171b", jamb:"#1e2127", inW:"#1f232c", floor:"xadrez", lamp:"strip", inLight:"236,244,255", win:"aluminio", fdoor:"#15171b", shelf:1, chest:1, sconce:1, bush:1, neon:1, peg:1, tyres:1, trophies:1, led:1},
+    {wall:"#3c4047", wall2:"#2b2e34", roof:"moderno", two:1, wood:1, door:"glass", jamb:"#16181c", inW:"#1c1f26", floor:"epoxi", lamp:"strip", inLight:"255,240,214", win:"vidro", fdoor:"#5a3a22", chest:1, sconce:1, garden:1, neon:1, peg:1, tyres:1, trophies:1, led:1},
+    {wall:"#f2efe9", wall2:"#d8d2c6", roof:"moderno", two:1, wood:1, door:"glass", jamb:"#16181c", inW:"#15181e", floor:"porcelanato", lamp:"strip", inLight:"255,240,214", win:"vidro", fdoor:"#5a3a22", chest:1, sconce:1, garden:1, palm:1, neon:1, peg:1, tyres:1, trophies:1, led:1}
+  ][GL];
+  const lg = (x0, y0, x1, y1, st) => { const q = c.createLinearGradient(x0, y0, x1, y1); st.forEach(([p, col]) => q.addColorStop(p, col)); return q; };
+  const rg = (x, y, r0, r1, st) => { const q = c.createRadialGradient(x, y, r0, x, y, r1); st.forEach(([p, col]) => q.addColorStop(p, col)); return q; };
+  const box = (x, y, bw, bh, f) => { c.fillStyle = f; c.fillRect(x, y, bw, bh); };
+  const inL = a => "rgba(" + LK.inLight + "," + a + ")";
+  // ---- dusk sky, a few stars, the moon, the neighbourhood in silhouette ----
+  c.fillStyle = lg(0, 0, 0, groundY, [[0, "#111a30"], [0.5, "#2d3557"], [0.84, "#93636f"], [1, "#dc9b68"]]); c.fillRect(0, 0, w, groundY);
+  for(let i = 0; i < 28; i++){ c.globalAlpha = (0.2 + 0.55 * hash(i * 9.1)) * (0.6 + 0.4 * Math.sin(now * (1 + hash(i)) * 2 + i)); box(hash(i * 3.1) * w, hash(i * 5.7) * groundY * 0.42, 1.2, 1.2, "#ffffff"); }
+  c.globalAlpha = 1;
+  c.fillStyle = rg(w * 0.88, h * 0.1, 0, h * 0.12, [[0, "rgba(255,250,230,.35)"], [1, "rgba(255,250,230,0)"]]); c.fillRect(w * 0.7, 0, w * 0.3, h * 0.3);
+  c.fillStyle = "#f4f0e2"; circ(c, w * 0.88, h * 0.1, h * 0.035); c.fill();
+  c.fillStyle = "#1b2134"; c.beginPath(); c.moveTo(0, groundY);
+  for(let x = 0; x <= w + 6; x += 6) c.lineTo(x, groundY - h * (0.2 + 0.04 * Math.sin(x * 0.045) + 0.05 * hash(Math.floor(x / 18))));
+  c.lineTo(w, groundY); c.fill();
+  // ---- the house ----
+  const fx0 = w * 0.02, fx1 = w * 0.98, wallTop = LK.two ? h * 0.13 : h * 0.27;
+  const ox0 = fx0 + w * 0.035, ox1 = w * 0.735, oy0 = groundY - h * 0.5, oy1 = groundY, OW = ox1 - ox0, OH = oy1 - oy0;
+  // roof
+  if(LK.roof === "telha"){
+    const ap = wallTop - h * (LK.two ? 0.09 : 0.14), mx = (fx0 + fx1) / 2;
+    c.fillStyle = lg(0, ap, 0, wallTop, [[0, "#a2492b"], [1, "#6e2c19"]]);
+    c.beginPath(); c.moveTo(fx0 - 9, wallTop + 2); c.lineTo(mx, ap); c.lineTo(fx1 + 9, wallTop + 2); c.closePath(); c.fill();
+    c.save(); c.clip(); c.strokeStyle = "rgba(40,12,6,.35)"; c.lineWidth = 1;
+    for(let k = 1; k < 7; k++){ const yy = ap + (wallTop - ap) * k / 7; c.beginPath(); c.moveTo(0, yy); c.lineTo(w, yy); c.stroke(); }
+    c.strokeStyle = "rgba(255,190,150,.12)"; for(let x = fx0; x < fx1; x += 6){ c.beginPath(); c.moveTo(x, ap); c.lineTo(x, wallTop); c.stroke(); }
+    c.restore();
+    c.strokeStyle = "#5a2414"; c.lineWidth = 2; c.beginPath(); c.moveTo(fx0 - 9, wallTop + 2); c.lineTo(mx, ap); c.lineTo(fx1 + 9, wallTop + 2); c.stroke();
+  } else if(LK.roof === "laje"){
+    box(fx0 - 3, wallTop - h * 0.055, fx1 - fx0 + 6, h * 0.055, lg(0, wallTop - h * 0.055, 0, wallTop, [[0, LK.wall], [1, LK.wall2]]));
+    box(fx0 - 4, wallTop - h * 0.06, fx1 - fx0 + 8, 2.5, "#8b929b");
+  } else {
+    box(fx0 - 12, wallTop - h * 0.04, fx1 - fx0 + 24, h * 0.04, lg(0, wallTop - h * 0.04, 0, wallTop, [[0, "#2c3037"], [1, "#16181c"]]));
+    c.fillStyle = lg(0, wallTop, 0, wallTop + 7, [[0, "rgba(255,214,150,.55)"], [1, "rgba(255,214,150,0)"]]); c.fillRect(fx0 - 10, wallTop, fx1 - fx0 + 20, 7);
+    box(fx0 - 10, wallTop - 1.5, fx1 - fx0 + 20, 1.5, "#ffd9a0");
   }
-  // neon sign
-  const fl = 0.86 + 0.14 * Math.sin(now * 9) * (Math.sin(now * 1.3) > 0.85 ? 1 : 0);
-  c.save(); c.globalAlpha = fl; c.textAlign = "center"; c.textBaseline = "middle";
-  c.font = "italic 700 " + Math.round(h * 0.1) + "px " + DISP;
-  c.shadowColor = "#ffb547"; c.shadowBlur = 16; c.fillStyle = "#ffd690"; c.fillText("TURBO GARAGE", w / 2, h * 0.17);
-  c.shadowBlur = 0; c.restore();
-  // pegboard with tools
-  const pbx = w * 0.04, pby = h * 0.27, pbw = w * 0.2, pbh = h * 0.28;
-  c.fillStyle = "#1e2331"; rrectC(c, pbx, pby, pbw, pbh, 4); c.fill();
-  c.fillStyle = "rgba(0,0,0,.35)";
-  for(let yy = pby + 5; yy < pby + pbh; yy += 7) for(let xx = pbx + 5; xx < pbx + pbw; xx += 7) c.fillRect(xx, yy, 1.5, 1.5);
-  c.strokeStyle = "#b9bfca"; c.lineWidth = 2.2;
-  for(let k = 0; k < 4; k++){
-    const tx = pbx + pbw * (0.18 + k * 0.21), ty = pby + pbh * 0.18, len = pbh * (0.45 + (k % 2) * 0.2);
-    c.beginPath(); c.moveTo(tx, ty); c.lineTo(tx, ty + len); c.stroke();
-    c.beginPath(); c.arc(tx, ty, 3, 0, TAU); c.stroke();
+  // walls
+  c.fillStyle = lg(0, wallTop, 0, groundY, [[0, LK.wall2], [0.12, LK.wall], [1, LK.wall]]); c.fillRect(fx0, wallTop, fx1 - fx0, groundY - wallTop);
+  if(LK.blocks){
+    // bare concrete blocks, never plastered: a grid of joints, some blocks darker, a damp stain at the foot
+    c.strokeStyle = "rgba(40,36,30,.35)"; c.lineWidth = 0.8; const bw = w * 0.055, bh = h * 0.034;
+    for(let row = 0, y = wallTop; y < groundY; row++, y += bh){
+      c.beginPath(); c.moveTo(fx0, y); c.lineTo(fx1, y); c.stroke();
+      for(let x = fx0 + (row % 2 ? bw / 2 : 0); x < fx1; x += bw){ c.beginPath(); c.moveTo(x, y); c.lineTo(x, Math.min(groundY, y + bh)); c.stroke();
+        if(hash(row * 31 + x) > 0.7){ c.fillStyle = "rgba(0,0,0,.07)"; c.fillRect(x + 0.5, y + 0.5, bw - 1, bh - 1); } }
+    }
+    c.fillStyle = lg(0, groundY - h * 0.08, 0, groundY, [[0, "rgba(40,50,35,0)"], [1, "rgba(40,50,35,.35)"]]); c.fillRect(fx0, groundY - h * 0.08, fx1 - fx0, h * 0.08);
+  } else if(!LK.wood){
+    c.fillStyle = "rgba(0,0,0,.035)"; for(let i = 0; i < 120; i++) c.fillRect(fx0 + hash(i * 1.7) * (fx1 - fx0), wallTop + hash(i * 2.3) * (groundY - wallTop), 1.5, 1.5);
+    box(fx0, groundY - h * 0.035, fx1 - fx0, h * 0.035, "rgba(0,0,0,.12)");
   }
-  c.fillStyle = "#e5484d"; rrectC(c, pbx + pbw * 0.1, pby + pbh * 0.72, pbw * 0.8, pbh * 0.16, 2); c.fill();
-  // tyre rack
-  const rx = w * 0.78, ry = h * 0.26;
-  c.fillStyle = "#2a3040"; c.fillRect(rx, ry + h * 0.14, w * 0.18, 3); c.fillRect(rx, ry + h * 0.3, w * 0.18, 3);
-  for(let k = 0; k < 3; k++) for(let j = 0; j < 2; j++){
-    const tx = rx + w * 0.03 + k * w * 0.055, ty = ry + h * 0.08 + j * h * 0.16, tr = h * 0.055;
-    c.fillStyle = "#101114"; circ(c, tx, ty, tr); c.fill();
-    c.fillStyle = "#5b616d"; circ(c, tx, ty, tr * 0.5); c.fill();
+  if(LK.wood){
+    // warm wood slats on the living block
+    const wx0 = ox1 + w * 0.02, wx1 = fx1;
+    box(wx0, wallTop, wx1 - wx0, groundY - wallTop, lg(wx0, 0, wx1, 0, [[0, "#9a6a40"], [1, "#6d4526"]]));
+    c.strokeStyle = "rgba(40,22,10,.45)"; c.lineWidth = 1; for(let x = wx0 + 3; x < wx1; x += 4){ c.beginPath(); c.moveTo(x, wallTop); c.lineTo(x, groundY); c.stroke(); }
   }
-  // floor with reflections
-  const fg = c.createLinearGradient(0, floorY, 0, h); fg.addColorStop(0, "#2a3142"); fg.addColorStop(1, "#0e1118");
-  c.fillStyle = fg; c.fillRect(0, floorY, w, h - floorY);
-  c.strokeStyle = "rgba(255,255,255,.05)";
-  for(let k = 1; k < 4; k++){ const yy = floorY + (h - floorY) * k * k / 12; c.beginPath(); c.moveTo(0, yy); c.lineTo(w, yy); c.stroke(); }
-  c.fillStyle = "#b5121b"; rrectC(c, w * 0.02, floorY - h * 0.12, w * 0.1, h * 0.17, 3); c.fill();
-  c.fillStyle = "rgba(0,0,0,.35)"; for(let k = 0; k < 3; k++) c.fillRect(w * 0.025, floorY - h * 0.1 + k * h * 0.05, w * 0.09, 1.5);
-  // the car on its turntable
+  if(LK.two){
+    // the upper floor: a slab line and lit windows
+    box(fx0, oy0 - h * 0.07, fx1 - fx0, 3, "rgba(0,0,0,.18)");
+    const n = 3, ww = (fx1 - fx0) * 0.18, wy0 = wallTop + h * 0.045, wh = oy0 - h * 0.08 - wy0 - h * 0.025;
+    for(let k = 0; k < n; k++){
+      const wx = fx0 + (fx1 - fx0) * (0.12 + k * 0.3);
+      box(wx - 2, wy0 - 2, ww + 4, wh + 4, LK.win === "vidro" ? "#15171b" : "#e9ecef");
+      c.fillStyle = lg(0, wy0, 0, wy0 + wh, [[0, "rgba(255,214,150,.95)"], [1, "rgba(220,150,80,.9)"]]); c.fillRect(wx, wy0, ww, wh);
+      c.fillStyle = "rgba(90,40,30,.35)"; c.fillRect(wx, wy0, ww * 0.22, wh); c.fillRect(wx + ww * 0.78, wy0, ww * 0.22, wh);
+      if(LK.win !== "vidro"){ box(wx + ww / 2 - 0.75, wy0, 1.5, wh, "#e9ecef"); }
+    }
+    if(GL >= 6){ box(fx0 + (fx1 - fx0) * 0.08, oy0 - h * 0.085, (fx1 - fx0) * 0.84, 1.6, "rgba(220,230,240,.8)"); for(let x = fx0 + (fx1 - fx0) * 0.08; x < fx1 - (fx1 - fx0) * 0.08; x += 5) box(x, oy0 - h * 0.085, 0.8, h * 0.035, "rgba(220,230,240,.6)"); }
+  }
+  // ---- the open garage ----
+  c.save(); c.beginPath(); c.rect(ox0, oy0, OW, OH); c.clip();
+  const lx = ox0 + OW * 0.42;
+  c.fillStyle = lg(0, oy0, 0, oy1, [[0, shade(LK.inW, -0.25)], [0.6, LK.inW], [1, shade(LK.inW, -0.1)]]); c.fillRect(ox0, oy0, OW, OH);
+  // light pooling on the back wall
+  const fl = LK.lamp === "bulb" ? 0.9 + 0.1 * Math.sin(now * 13) * (Math.sin(now * 0.9) > 0.8 ? 1 : 0) : 1;
+  c.fillStyle = rg(lx, oy0 + OH * 0.05, 0, OH * 1.1, [[0, inL(0.45 * fl)], [1, inL(0)]]); c.fillRect(ox0, oy0, OW, OH);
+  // what hangs on the back wall
+  if(LK.peg){
+    const px = ox0 + OW * 0.05, py = oy0 + OH * 0.22, pw = OW * 0.26, ph2 = OH * 0.3;
+    box(px, py, pw, ph2, "#3a3f4a"); c.fillStyle = "rgba(0,0,0,.35)"; for(let yy = py + 3; yy < py + ph2; yy += 4) for(let xx = px + 3; xx < px + pw; xx += 4) c.fillRect(xx, yy, 1, 1);
+    c.strokeStyle = "#c9ced8"; c.lineWidth = 1.6; c.lineCap = "round";
+    for(let k = 0; k < 5; k++){ const tx = px + pw * (0.12 + k * 0.19), ty = py + ph2 * 0.18, len = ph2 * (0.4 + (k % 2) * 0.25);
+      c.beginPath(); c.moveTo(tx, ty); c.lineTo(tx, ty + len); c.stroke(); c.beginPath(); c.arc(tx, ty, 2, 0, TAU); c.stroke(); }
+    c.lineCap = "butt";
+  }
+  if(LK.neon){
+    const nf = 0.85 + 0.15 * Math.sin(now * 9) * (Math.sin(now * 1.3) > 0.85 ? 1 : 0);
+    c.save(); c.globalAlpha = nf; c.textAlign = "center"; c.textBaseline = "middle"; c.font = "italic 700 " + Math.round(OH * 0.085) + "px " + DISP;
+    c.shadowColor = "#ff4fa0"; c.shadowBlur = 12; c.fillStyle = "#ffc2e0"; c.fillText("TURBO GARAGE", ox0 + OW * 0.5, oy0 + OH * 0.24); c.shadowBlur = 0; c.restore();
+  }
+  if(LK.trophies){
+    const sx = ox0 + OW * 0.75, sy = oy0 + OH * 0.2;
+    box(sx, sy + OH * 0.09, OW * 0.22, 2, "#6b5a3e");
+    for(let k = 0; k < 4; k++){ const tx = sx + OW * (0.03 + k * 0.055), th = OH * (0.07 + (k % 2) * 0.025);
+      c.fillStyle = lg(tx - 3, 0, tx + 3, 0, [[0, "#fff1a8"], [0.5, "#e0a91b"], [1, "#8f6408"]]);
+      c.beginPath(); c.moveTo(tx - 3, sy + OH * 0.09 - th); c.lineTo(tx + 3, sy + OH * 0.09 - th); c.lineTo(tx + 1, sy + OH * 0.09 - th * 0.45); c.lineTo(tx + 1.4, sy + OH * 0.09); c.lineTo(tx - 1.4, sy + OH * 0.09); c.lineTo(tx - 1, sy + OH * 0.09 - th * 0.45); c.closePath(); c.fill(); }
+    // chequered flag
+    const fxp = ox0 + OW * 0.43, fyp = oy0 + OH * 0.33, fs = OH * 0.032;
+    for(let i = 0; i < 6; i++) for(let j = 0; j < 3; j++){ box(fxp + i * fs, fyp + j * fs + Math.sin(now * 2 + i * 0.6) * 0.8, fs, fs, (i + j) % 2 ? "#f2f4f8" : "#111317"); }
+  }
+  if(LK.shelf){
+    const sx = ox0 + OW * 0.75, sy = oy0 + OH * (LK.trophies ? 0.44 : 0.34), sw = OW * 0.21;
+    box(sx, sy, sw, 2, "#6b5a3e");
+    ["#e5484d", "#3d8bff", "#ffd23f", "#e9ecf1"].forEach((col, k) => { const cx = sx + sw * (0.08 + k * 0.23), ch = OH * 0.07; box(cx, sy - ch, sw * 0.14, ch, lg(cx, 0, cx + sw * 0.14, 0, [[0, shade(col, 0.2)], [1, shade(col, -0.35)]])); box(cx, sy - ch, sw * 0.14, 1.5, "#c9ced8"); });
+  }
+  if(GL === 0){
+    // the old days: cardboard boxes and a bald tyre leaning on the wall
+    box(ox0 + OW * 0.78, oy1 - OH * 0.32, OW * 0.1, OH * 0.12, "#a07a4a"); box(ox0 + OW * 0.81, oy1 - OH * 0.42, OW * 0.08, OH * 0.1, "#8f6a3d");
+    c.strokeStyle = "rgba(60,40,20,.6)"; c.lineWidth = 1; c.beginPath(); c.moveTo(ox0 + OW * 0.78, oy1 - OH * 0.27); c.lineTo(ox0 + OW * 0.88, oy1 - OH * 0.27); c.stroke();
+  }
+  // floor
+  const fh = OH * 0.2, fy0 = oy1 - fh;
+  if(LK.floor === "cimento"){
+    box(ox0, fy0, OW, fh, lg(0, fy0, 0, oy1, [[0, "#5e5b56"], [1, "#46433f"]]));
+    for(let i = 0; i < 6; i++){ c.fillStyle = "rgba(20,18,16,.18)"; c.beginPath(); c.ellipse(ox0 + OW * hash(i * 4.4), fy0 + fh * (0.3 + 0.6 * hash(i * 2.2)), OW * 0.05 * (0.5 + hash(i)), fh * 0.12, 0, 0, TAU); c.fill(); }
+  } else if(LK.floor === "xadrez"){
+    box(ox0, fy0, OW, fh, "#e9ecf1");
+    const rows = 4, vx = ox0 + OW / 2, vy = fy0 - fh * 2.2;
+    for(let r = 0; r < rows; r++){
+      const t0 = Math.pow(r / rows, 1.4), t1 = Math.pow((r + 1) / rows, 1.4), ya = fy0 + fh * t0, yb = fy0 + fh * t1;
+      for(let k = -14; k < 14; k++){
+        if((k + r) % 2 === 0) continue;
+        const xb0 = vx + k * OW * 0.07, xb1 = vx + (k + 1) * OW * 0.07, f0 = (ya - vy) / (oy1 - vy), f1 = (yb - vy) / (oy1 - vy);
+        c.fillStyle = "#16181d"; c.beginPath(); c.moveTo(vx + (xb0 - vx) * f0, ya); c.lineTo(vx + (xb1 - vx) * f0, ya); c.lineTo(vx + (xb1 - vx) * f1, yb); c.lineTo(vx + (xb0 - vx) * f1, yb); c.closePath(); c.fill();
+      }
+    }
+  } else {
+    const glossy = LK.floor !== "piso", base = LK.floor === "epoxi" ? ["#3a404c", "#22262e"] : LK.floor === "porcelanato" ? ["#c9c6c0", "#a19d96"] : ["#cfc8bb", "#a99f8e"];
+    box(ox0, fy0, OW, fh, lg(0, fy0, 0, oy1, [[0, base[0]], [1, base[1]]]));
+    if(!glossy || LK.floor === "porcelanato"){
+      c.strokeStyle = "rgba(0,0,0,.14)"; c.lineWidth = 0.8; const vx = ox0 + OW / 2, vy = fy0 - fh * 2.2;
+      for(let r = 1; r < 4; r++){ const yy = fy0 + fh * Math.pow(r / 4, 1.4); c.beginPath(); c.moveTo(ox0, yy); c.lineTo(ox1, yy); c.stroke(); }
+      for(let k = -10; k <= 10; k++){ const xb = vx + k * OW * (LK.floor === "porcelanato" ? 0.14 : 0.09), f0 = (fy0 - vy) / (oy1 - vy); c.beginPath(); c.moveTo(vx + (xb - vx) * f0, fy0); c.lineTo(xb, oy1); c.stroke(); }
+    }
+  }
+  // red rolling tool chest in the back corner, and a stack of spare tyres
+  if(LK.chest){
+    const tx = ox0 + OW * 0.905, tw = OW * 0.085, th = OH * 0.36, ty = fy0 + fh * 0.15 - th;
+    box(tx, ty, tw, th, lg(tx, 0, tx + tw, 0, [[0, "#e23a3f"], [0.6, "#b5121b"], [1, "#7a0c12"]]));
+    c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = 0.8; for(let k = 1; k < 6; k++){ const yy = ty + th * k / 6; c.beginPath(); c.moveTo(tx, yy); c.lineTo(tx + tw, yy); c.stroke(); }
+    c.fillStyle = "#d9dde4"; for(let k = 0; k < 6; k++) c.fillRect(tx + tw * 0.3, ty + th * (k + 0.45) / 6, tw * 0.4, 1);
+    box(tx - 1, ty - 2, tw + 2, 2.5, "#2a2d33");
+  }
+  if(LK.tyres){
+    for(let k = 0; k < 3; k++){ const tx = ox0 + OW * 0.705, tw = OW * 0.07, tyy = fy0 + fh * 0.2 - (k + 1) * OH * 0.065;
+      box(tx, tyy, tw, OH * 0.06, lg(0, tyy, 0, tyy + OH * 0.06, [[0, "#2a2c31"], [0.5, "#121316"], [1, "#050607"]]));
+      c.strokeStyle = "rgba(255,255,255,.08)"; c.lineWidth = 0.8; for(let x = tx + 2; x < tx + tw; x += 3){ c.beginPath(); c.moveTo(x, tyy + 1); c.lineTo(x, tyy + OH * 0.06 - 1); c.stroke(); } }
+  }
+  // lamps
+  if(LK.lamp === "bulb"){
+    c.strokeStyle = "#222"; c.lineWidth = 1; c.beginPath(); c.moveTo(lx, oy0); c.lineTo(lx, oy0 + OH * 0.16); c.stroke();
+    c.fillStyle = rg(lx, oy0 + OH * 0.18, 0, OH * 0.12, [[0, inL(0.9 * fl)], [1, inL(0)]]); circ(c, lx, oy0 + OH * 0.18, OH * 0.12); c.fill();
+    c.fillStyle = "#fff3d6"; circ(c, lx, oy0 + OH * 0.18, 2.4); c.fill();
+  } else {
+    const n = LK.lamp === "tube" ? 1 : 2;
+    for(let k = 0; k < n; k++){ const tx = ox0 + OW * (n === 1 ? 0.42 : 0.27 + k * 0.4);
+      c.fillStyle = rg(tx, oy0 + OH * 0.13, 0, OH * 0.35, [[0, inL(0.35)], [1, inL(0)]]); c.fillRect(tx - OH * 0.35, oy0, OH * 0.7, OH * 0.5);
+      box(tx - OW * 0.08, oy0 + OH * 0.11, OW * 0.16, 2.5, "rgb(" + LK.inLight + ")"); }
+  }
+  // the car, and its reflection on a polished floor
   const car = carById(S.car), M = MODELS[car.model], look = carLook(S.car), pil = gtab === "piloto";
-  const sc = Math.min((w * (pil ? 0.62 : 0.8)) / (M.len + 12), (h * 0.46) / (M.roof + 6), 3.2);
-  const cx0 = (pil ? w * 0.08 : (w - M.len * sc) / 2) + 4 * sc, gy = floorY + (h - floorY) * 0.55;
-  const tcx = cx0 + M.len * sc / 2;
-  c.fillStyle = "#151925"; c.beginPath(); c.ellipse(tcx, gy + 2, M.len * sc * 0.62, 9, 0, 0, TAU); c.fill();
-  c.strokeStyle = "rgba(255,181,71," + (0.45 + 0.2 * Math.sin(now * 2)) + ")"; c.lineWidth = 1.5; c.stroke();
-  c.save(); c.globalAlpha = 0.16; c.translate(0, gy * 2); c.scale(1, -1);
-  drawCar(c, cx0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0})); c.restore();
-  const fd = c.createLinearGradient(0, gy, 0, h); fd.addColorStop(0, "rgba(14,17,24,.3)"); fd.addColorStop(1, "rgba(14,17,24,1)");
-  c.fillStyle = fd; c.fillRect(0, gy, w, h - gy);
+  const sc = Math.min(OW * 0.64 / M.len, OH * 0.56 / (M.roof + 1)), cx0 = ox0 + OW * 0.04, gy = oy1 - fh * 0.32;
   const revving = grev.t >= 0, hot = revving && grev.t > 1.4 && grev.t < 3.0;
-  drawCar(c, cx0, gy, sc, car.model, look.color, Object.assign({}, look, {lights:true, spin:0,
+  if(LK.floor === "epoxi" || LK.floor === "porcelanato" || LK.floor === "xadrez"){
+    c.save(); c.beginPath(); c.rect(ox0, gy, OW, oy1 - gy); c.clip(); c.globalAlpha = LK.floor === "xadrez" ? 0.12 : 0.24; c.translate(0, gy * 2); c.scale(1, -1);
+    drawCar(c, cx0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0})); c.restore();
+  }
+  c.fillStyle = rg(cx0 + M.len * sc / 2, gy, 0, M.len * sc * 0.6, [[0, "rgba(0,0,0,.45)"], [1, "rgba(0,0,0,0)"]]);
+  c.save(); c.translate(0, gy); c.scale(1, 0.14); circ(c, cx0 + M.len * sc / 2, 0, M.len * sc * 0.6); c.fill(); c.restore();
+  drawCar(c, cx0, gy, sc, car.model, look.color, Object.assign({}, look, {lights:false, spin:0,
     shake:revving ? Math.sin(now * (hot ? 70 : 40)) * (hot ? 0.9 : 0.4) : 0, flash:now < grev.flashUntil ? 1 - (grev.flashUntil - now) / 0.14 : 0}));
-  if(pil) drawPilot(c, w * 0.84, gy + 3, Math.min(h * 0.6, 130), S.pilot, "wave", now);
+  // the pilot on a chair beside the car (on the pilot tab he stands outside so the outfit can be seen)
+  const ph = 30.7 * sc, pu = ph / 104, chx = ox0 + OW * 0.86, chy = gy + 1;
+  if(!pil){
+    const seatY = chy - 27 * pu;
+    if(GL < 3){
+      // the white plastic chair every Brazilian garage has
+      const W0 = "#eef0f2", W1 = "#c5cad1";
+      c.fillStyle = lg(chx - 15 * pu, 0, chx + 15 * pu, 0, [[0, W1], [0.5, W0], [1, W1]]);
+      rrectC(c, chx - 18 * pu, chy - 66 * pu, 36 * pu, 36 * pu, 6 * pu); c.fill();
+      c.strokeStyle = "rgba(0,0,0,.18)"; c.lineWidth = Math.max(0.5, 0.7 * pu); for(let k = 0; k < 3; k++){ c.beginPath(); c.moveTo(chx - 13 * pu, chy - (61 - k * 6) * pu); c.lineTo(chx + 13 * pu, chy - (61 - k * 6) * pu); c.stroke(); }
+      [-1, 1].forEach(sd => { c.strokeStyle = W1; c.lineWidth = 2.8 * pu; c.beginPath(); c.moveTo(chx + sd * 16 * pu, seatY); c.lineTo(chx + sd * 19 * pu, chy); c.stroke();
+        c.fillStyle = W0; rrectC(c, chx + sd * 19.5 * pu - 3 * pu, chy - 42 * pu, 6 * pu, 3 * pu, 1.2 * pu); c.fill(); c.strokeStyle = W1; c.lineWidth = 2 * pu; c.beginPath(); c.moveTo(chx + sd * 19.5 * pu, chy - 39 * pu); c.lineTo(chx + sd * 18 * pu, seatY); c.stroke(); });
+      c.fillStyle = W0; rrectC(c, chx - 19 * pu, seatY - 2 * pu, 38 * pu, 4.5 * pu, 1.5 * pu); c.fill(); c.strokeStyle = W1; c.lineWidth = Math.max(0.5, 0.6 * pu); c.stroke();
+    } else {
+      // folding director's chair: black frame, red canvas
+      c.strokeStyle = "#2a1c12"; c.lineWidth = 2.4 * pu; c.beginPath(); c.moveTo(chx - 17 * pu, seatY); c.lineTo(chx + 17 * pu, chy); c.moveTo(chx + 17 * pu, seatY); c.lineTo(chx - 17 * pu, chy); c.stroke();
+      [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(chx + sd * 17 * pu, chy - 68 * pu); c.lineTo(chx + sd * 17 * pu, seatY); c.stroke(); box(chx + sd * 19 * pu - 3 * pu, chy - 40 * pu, 6 * pu, 2.4 * pu, "#2a1c12"); });
+      box(chx - 17 * pu, chy - 67 * pu, 34 * pu, 14 * pu, lg(0, chy - 67 * pu, 0, chy - 53 * pu, [[0, "#d22630"], [1, "#8e1219"]]));
+      box(chx - 17 * pu, chy - 62 * pu, 34 * pu, 2 * pu, "#f2f4f8");
+      box(chx - 18 * pu, seatY - 1.5 * pu, 36 * pu, 4 * pu, "#8e1219");
+    }
+    drawPilot(c, chx, chy, ph, S.pilot, "sit", now);
+  }
+  // roll-up door wound up at the top, and LED strip on the higher levels
+  const dh = OH * 0.1;
+  if(LK.door === "glass"){
+    box(ox0, oy0, OW, dh, "rgba(180,200,220,.35)"); c.strokeStyle = "#16181c"; c.lineWidth = 1.4; c.strokeRect(ox0 + 0.7, oy0 + 0.7, OW - 1.4, dh - 1.4);
+    for(let x = ox0 + OW / 6; x < ox1 - 2; x += OW / 6){ c.beginPath(); c.moveTo(x, oy0); c.lineTo(x, oy0 + dh); c.stroke(); }
+  } else {
+    box(ox0, oy0, OW, dh, lg(0, oy0, 0, oy0 + dh, [[0, shade(LK.door, 0.15)], [1, shade(LK.door, -0.25)]]));
+    c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = 0.8; for(let y = oy0 + 2.5; y < oy0 + dh; y += 2.5){ c.beginPath(); c.moveTo(ox0, y); c.lineTo(ox1, y); c.stroke(); }
+    if(GL === 0){ c.fillStyle = "rgba(120,60,20,.35)"; for(let i = 0; i < 14; i++) c.fillRect(ox0 + hash(i * 6.1) * OW, oy0 + hash(i * 2.9) * dh, 3, 1.5); }
+  }
+  if(LK.led){ c.fillStyle = lg(0, oy0 + dh, 0, oy0 + dh + 6, [[0, inL(0.6)], [1, inL(0)]]); c.fillRect(ox0, oy0 + dh, OW, 6); box(ox0, oy0 + dh, OW, 1.4, "rgb(" + LK.inLight + ")"); }
+  c.restore();
+  // jambs around the opening
+  c.strokeStyle = LK.jamb; c.lineWidth = 3; c.strokeRect(ox0 - 1.5, oy0 - 1.5, OW + 3, OH + 1.5);
+  // ---- the living block: window and front door ----
+  const rx0 = ox1 + w * 0.03, dx0 = fx1 - w * 0.095, dx1 = fx1 - w * 0.025, dy0 = groundY - h * 0.36;
+  const wx0 = rx0, wx1 = dx0 - w * 0.025, wy0 = LK.win === "vidro" ? dy0 : groundY - h * 0.4, wy1 = LK.win === "vidro" ? groundY - 2 : groundY - h * 0.17;
+  if(wx1 - wx0 > 8){
+    box(wx0 - 2, wy0 - 2, wx1 - wx0 + 4, wy1 - wy0 + 4, LK.win === "simples" ? "#f4f4f2" : LK.win === "grade" ? "#5b544b" : "#1a1c20");
+    c.fillStyle = lg(0, wy0, 0, wy1, [[0, "rgba(255,214,150,.95)"], [1, "rgba(214,140,74,.95)"]]); c.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0);
+    if(LK.win === "vidro"){ c.fillStyle = "rgba(60,30,20,.55)"; rrectC(c, wx0 + (wx1 - wx0) * 0.15, wy1 - (wy1 - wy0) * 0.28, (wx1 - wx0) * 0.6, (wy1 - wy0) * 0.2, 2); c.fill();
+      c.fillStyle = "rgba(255,240,200,.9)"; circ(c, wx0 + (wx1 - wx0) * 0.85, wy0 + (wy1 - wy0) * 0.4, 2.5); c.fill(); }
+    else { c.fillStyle = "rgba(150,60,50,.4)"; c.fillRect(wx0, wy0, (wx1 - wx0) * 0.25, wy1 - wy0); c.fillRect(wx1 - (wx1 - wx0) * 0.25, wy0, (wx1 - wx0) * 0.25, wy1 - wy0); }
+    if(LK.win === "grade"){ c.strokeStyle = "#2a2622"; c.lineWidth = 1.2; for(let x = wx0 + 4; x < wx1; x += 4){ c.beginPath(); c.moveTo(x, wy0); c.lineTo(x, wy1); c.stroke(); } }
+    else if(LK.win !== "vidro"){ box((wx0 + wx1) / 2 - 1, wy0, 2, wy1 - wy0, LK.win === "simples" ? "#f4f4f2" : "#1a1c20"); }
+    c.fillStyle = rg((wx0 + wx1) / 2, wy1, 0, h * 0.25, [[0, "rgba(255,200,130,.22)"], [1, "rgba(255,200,130,0)"]]); c.fillRect(wx0 - h * 0.25, wy1 - 2, wx1 - wx0 + h * 0.5, h * 0.25);
+  }
+  if(LK.door !== "glass" || true){
+    box(dx0 - 2, dy0 - 2, dx1 - dx0 + 4, groundY - dy0 + 2, "#2a2622");
+    box(dx0, dy0, dx1 - dx0, groundY - dy0, lg(dx0, 0, dx1, 0, [[0, shade(LK.fdoor, 0.15)], [1, shade(LK.fdoor, -0.25)]]));
+    c.strokeStyle = "rgba(0,0,0,.25)"; c.lineWidth = 0.8; c.strokeRect(dx0 + 2.5, dy0 + 3, dx1 - dx0 - 5, (groundY - dy0) * 0.4); c.strokeRect(dx0 + 2.5, dy0 + (groundY - dy0) * 0.5, dx1 - dx0 - 5, (groundY - dy0) * 0.42);
+    c.fillStyle = "#d9b45a"; circ(c, dx1 - 3.2, dy0 + (groundY - dy0) * 0.5, 1.3); c.fill();
+    box(dx0 - 4, groundY - 2, dx1 - dx0 + 8, 2.5, "#8d8880");
+    // house number
+    box(dx0 + (dx1 - dx0) * 0.2, dy0 - h * 0.06, (dx1 - dx0) * 0.6, h * 0.04, "#1c1e22"); c.fillStyle = "#e9ecf1"; c.font = "700 " + Math.round(h * 0.03) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("99", (dx0 + dx1) / 2, dy0 - h * 0.04);
+  }
+  if(LK.sconce){ const sx = dx0 - w * 0.012, sy = dy0 + h * 0.03; c.fillStyle = rg(sx, sy, 0, h * 0.12, [[0, "rgba(255,214,150,.55)"], [1, "rgba(255,214,150,0)"]]); c.fillRect(sx - h * 0.12, sy - h * 0.12, h * 0.24, h * 0.24); box(sx - 1.5, sy - 3, 3, 6, "#fff2d0"); }
+  // ---- the front: driveway, curb, grass, plants ----
+  box(0, groundY, w, h - groundY, lg(0, groundY, 0, h, [[0, "#6f6c67"], [1, "#4a4844"]]));
+  c.fillStyle = rg((ox0 + ox1) / 2, groundY, 0, OW * 0.7, [[0, inL(0.25)], [1, inL(0)]]); c.save(); c.translate(0, groundY); c.scale(1, 0.25); c.fillRect(0, 0, w, (h - groundY) * 4); c.restore();
+  c.strokeStyle = "rgba(0,0,0,.2)"; c.lineWidth = 0.8; for(let x = ox0 + OW / 4; x < ox1; x += OW / 4){ c.beginPath(); c.moveTo(x, groundY); c.lineTo(x - (x - (ox0 + ox1) / 2) * 0.25, h); c.stroke(); }
+  box(ox1 + 4, groundY + 1, w - ox1 - 4, (h - groundY) * 0.55, lg(0, groundY, 0, h, [[0, "#3e6a34"], [1, "#2b4a25"]]));
+  box(0, h - 4, w, 4, "#8f8b84");
+  if(LK.bush){ [ox1 + w * 0.03, fx1 - w * 0.04].forEach((bx, i) => { c.fillStyle = i ? "#2f5a2a" : "#386b31"; c.beginPath(); c.ellipse(bx, groundY, w * 0.028, h * 0.05, 0, Math.PI, 0); c.fill(); }); }
+  if(LK.garden){ for(let k = 0; k < 5; k++){ const bx = ox1 + w * 0.02 + k * w * 0.05; c.fillStyle = k % 2 ? "#3d7a34" : "#2e6129"; c.beginPath(); c.ellipse(bx, groundY + 2, w * 0.02, h * 0.035, 0, Math.PI, 0); c.fill(); }
+    c.fillStyle = rg(ox1 + w * 0.08, groundY, 0, h * 0.08, [[0, "rgba(255,230,170,.35)"], [1, "rgba(255,230,170,0)"]]); c.fillRect(ox1, groundY - h * 0.08, w * 0.16, h * 0.1); }
+  if(LK.palm) drawPalm(c, fx1 + w * 0.005, groundY + 2, h * 0.62, w * 0.02, now, "#5a4a36", "#2f6b34", 1);
+  if(pil) drawPilot(c, w * 0.86, h - 3, Math.min(h * 0.6, 130), S.pilot, "wave", now);
   requestAnimationFrame(drawGarage);
 }
 
@@ -9065,7 +9364,7 @@ const ENDING = [["bia","A cidade inteira tá gritando seu nome. Escuta isso!"], 
 const RIVAL_LINES = ["Ouviu esse escape? É o som da sua derrota.","Assopra, assopra… e passa!","Aperto o botão azul e tchau!","Meu carro é mais baixo que a sua chance.",
   "Meu neto me ensinou a largar, viu?","Em reta eu não perco.","Solto a embreagem e você só vê fumaça.","Pneu careca, coração cheio!",
   "Vou pegar teu vácuo e te passar na chegada.","Fica na tua faixa, novato.","Já te medi. Você é lento.","Velho é o seu carro, não eu!"];
-const FAME_TITLES = [[0,"Desconhecido"],[120,"Promessa da Marginal"],[500,"Nome conhecido"],[1500,"Respeitado"],[4000,"Temido"],[9000,"Ídolo das ruas"],[20000,"Lenda"]];
+const FAME_TITLES = [[0,"Desconhecido"],[120,"Promessa da Marginal"],[500,"Nome conhecido"],[1500,"Respeitado"],[4000,"Temido"],[9000,"Ídolo das ruas"],[20000,"Lenda"],[40000,"Astro do asfalto"],[80000,"Lenda imortal"]];
 const fameTitle = f => FAME_TITLES.filter(t => f >= t[0]).pop()[1];
 function eventType(l){
   if(l > LEAGUES.length * 10) return isBoss(l) ? "boss" : "normal";
