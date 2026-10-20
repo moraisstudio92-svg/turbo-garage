@@ -1811,7 +1811,7 @@ function fenderize(M){
 }
 // the 2026 garage: every body from its real length, wheelbase, height and tyre size
 Object.assign(MODELS, {
-  bola:{len:66.13,hatchback:true,gap:0.65,sh:12.3,pts:[[1.26,3.5],[0.0,5.32],[0.0,8.89],[0.77,10.4],[1.26,12.95],[1.52,15.23],[2.28,16.75],[4.06,18.52],[6.34,20.14],[8.89,21.56],[9.64,21.93],[14.46,22.49],[23.1,22.68],[34.76,22.17],[37.8,21.56],[45.17,15.73],[46.69,15.23],[52.54,14.37],[59.12,12.95],[63.18,12.34],[64.96,11.67],[65.82,10.4],[66.13,8.37],[65.98,5.32],[65.21,3.82],[62.69,3.29]],wins:[[[6.86,15.73],[11.17,20.81],[12.18,21.32],[22.09,21.47],[22.68,20.97],[22.58,15.07],[21.56,14.88],[7.35,15.52]],[[24.61,21.47],[36.79,21.37],[41.37,18.27],[43.89,15.58],[41.86,14.7],[24.61,14.82]]],belt:14.88,pillar:0,doors:[23.1,45.17],handles:[23.59],mirror:[41.62,14.98],wheels:[9.14,52.27],r:4.59,fx:[{t:"stubant",x:14.46},{t:"sport",x0:14.98,x1:44.91,y0:4.83,y1:6.34}],head:[[60.66,11.83],[64.96,11.62],[65.21,9.99],[60.9,10.31]],tail:[[1.02,15.89],[2.19,16.0],[2.28,10.4],[1.17,10.4]]},
+  bola:{len:66.13,hatchback:true,nofuel:true,gap:0.65,sh:12.3,pts:[[1.26,3.5],[0.0,5.32],[0.0,8.89],[0.77,10.4],[1.26,12.95],[1.52,15.23],[2.28,16.75],[4.06,18.52],[6.34,20.14],[8.89,21.56],[9.64,21.93],[14.46,22.49],[23.1,22.68],[34.76,22.17],[37.8,21.56],[45.17,15.73],[46.69,15.23],[52.54,14.37],[59.12,12.95],[63.18,12.34],[64.96,11.67],[65.82,10.4],[66.13,8.37],[65.98,5.32],[65.21,3.82],[62.69,3.29]],wins:[[[6.86,15.73],[11.17,20.81],[12.18,21.32],[22.09,21.47],[22.68,20.97],[22.58,15.07],[21.56,14.88],[7.35,15.52]],[[24.61,21.47],[36.79,21.37],[41.37,18.27],[43.89,15.58],[41.86,14.7],[24.61,14.82]]],belt:14.88,pillar:0,doors:[23.1,45.17],handles:[23.59],mirror:[41.62,14.98],wheels:[9.14,52.27],r:4.59,fx:[{t:"stubant",x:14.46},{t:"sport",x0:14.98,x1:44.91,y0:4.83,y1:6.34}],head:[[60.66,11.83],[64.96,11.62],[65.21,9.99],[60.9,10.31]],tail:[[1.4,15.89],[2.59,16.0],[2.66,10.4],[1.58,10.4]]},
   mille:{len:63.77,hatchback:true,sh:14.6,pts:[[1.05,4.2],[0.0,5.6],[0.0,9.1],[0.14,15.75],[0.53,20.65],[1.58,24.15],[3.85,25.2],[8.4,25.34],[34.12,25.29],[37.28,24.59],[47.08,17.06],[49.88,16.36],[58.28,15.66],[62.3,14.88],[63.53,12.6],[63.79,7.35],[63.0,4.2]],wins:[[[27.3,24.24],[36.23,24.24],[45.33,17.33],[27.3,17.33]],[[26.08,24.24],[26.08,17.33],[6.83,17.5],[5.78,20.65],[6.65,24.24]]],belt:17.24,pillar:0,doors:[26.69,48.65],handles:[27.65],mirror:[45.85,17.41],wheels:[9.8,51.14],r:4.92,head:[[59.33,15.58],[63.0,14.88],[63.44,12.78],[59.41,13.04]],tail:[[0.0,9.8],[0.14,16.8],[1.93,16.89],[1.93,9.8]]},
   bug:{len:71.23,chrome:true,sh:16.4,pts:[[1.93,5.78],[0.0,7.53],[0.18,11.2],[1.93,15.05],[5.78,18.55],[11.38,22.23],[18.38,25.2],[26.25,26.34],[33.25,26.25],[39.38,25.2],[44.1,22.75],[47.25,19.16],[51.63,18.29],[57.75,17.5],[63.35,16.28],[67.55,13.83],[70.18,10.5],[71.23,7.88],[70.0,5.78]],wins:[[[15.75,19.43],[19.25,22.58],[25.38,24.59],[32.03,24.94],[32.03,19.43]],[[33.34,24.99],[38.5,24.68],[42.35,22.58],[45.15,19.6],[33.34,19.6]]],belt:18.99,pillar:0,deck:17.5,doors:[32.73,47.6],handles:[34.3],mirror:[45.15,19.95],wheels:[15.4,57.4],r:5.78,fx:[{t:"beetle"}],head:[[62.3,16.89],[65.98,15.84],[66.68,13.83],[63.0,14.35]],tail:[[2.45,11.2],[3.5,15.4],[5.78,15.75],[5.08,11.2]]},
   chevette:{len:73.33,chrome:true,sh:14.6,pts:[[1.4,5.25],[0.0,6.65],[0.0,11.2],[0.44,15.05],[2.45,16.36],[14.0,16.66],[17.5,17.24],[25.9,22.75],[29.75,23.19],[41.13,23.14],[44.1,22.49],[51.8,16.94],[54.43,16.54],[68.25,15.66],[72.28,15.14],[73.15,13.3],[72.62,10.85],[73.33,7.35],[72.28,5.25]],wins:[[[19.25,17.5],[26.6,22.23],[29.75,22.61],[32.9,22.61],[32.9,17.33]],[[34.12,22.66],[42.7,22.49],[50.23,17.33],[34.12,17.33]]],belt:17.24,pillar:0,deck:16.62,doors:[33.43,52.33],handles:[35.0],mirror:[50.75,17.5],wheels:[16.8,58.71],r:5.06,fx:[{t:"stripe",y0:12.25,y1:12.95,x0:3.5,x1:70.0}],head:[[68.78,15.49],[72.45,15.02],[72.8,12.6],[68.78,12.86]],tail:[[0.0,11.2],[0.44,15.4],[3.68,15.75],[3.41,11.38]]},
@@ -2405,6 +2405,19 @@ function drawCar(c, x, baseY, s, key, color, o){
     const l = pts[pts.length - 1]; c.lineTo(X(l[0]), Y(l[1])); c.closePath();
   };
   const line = (x1, y1, x2, y2) => { c.beginPath(); c.moveTo(X(x1), Y(y1)); c.lineTo(X(x2), Y(y2)); c.stroke(); };
+  // window outline with radiused corners, like real glass: each corner rounds by up to 0.6 units, never more than a third of its edges
+  const rpoly = (pts, rad) => {
+    const n = pts.length, R0 = rad === undefined ? 0.6 : rad;
+    c.beginPath();
+    for(let i = 0; i < n; i++){
+      const p = pts[i], a = pts[(i + n - 1) % n], b = pts[(i + 1) % n];
+      const la = Math.hypot(p[0] - a[0], p[1] - a[1]), lb = Math.hypot(p[0] - b[0], p[1] - b[1]), r = Math.min(R0, la / 3, lb / 3);
+      const p1 = [p[0] + (a[0] - p[0]) * r / la, p[1] + (a[1] - p[1]) * r / la], p2 = [p[0] + (b[0] - p[0]) * r / lb, p[1] + (b[1] - p[1]) * r / lb];
+      if(i === 0) c.moveTo(X(p1[0]), Y(p1[1])); else c.lineTo(X(p1[0]), Y(p1[1]));
+      c.quadraticCurveTo(X(p[0]), Y(p[1]), X(p2[0]), Y(p2[1]));
+    }
+    c.closePath();
+  };
   const smoothOpen = pts => {
     c.beginPath(); c.moveTo(X(pts[0][0]), Y(pts[0][1]));
     for(let i = 1; i < pts.length - 1; i++){ const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2; c.quadraticCurveTo(X(pts[i][0]), Y(pts[i][1]), X(mx), Y(my)); }
@@ -2494,8 +2507,8 @@ function drawCar(c, x, baseY, s, key, color, o){
   st(hzn + 1.4, mat ? -0.01 : 0.03);
   st(hzn + 0.2, mat ? -0.02 : 0.15);
   st(hzn - 0.2, mat ? -0.08 : -0.19);
-  st(bot + 2.2, mat ? -0.2 : -0.32);
-  st(bot - 1.6, -0.55);
+  st(bot + 2.2, mat ? -0.14 : -0.22);
+  st(bot - 1.6, -0.42);
   c.fillStyle = pg; smooth(M.pts); c.fill();
 
   c.save(); smooth(M.pts); c.clip();
@@ -2792,7 +2805,7 @@ function drawCar(c, x, baseY, s, key, color, o){
     c.fillStyle = "rgba(0,0,0,.45)"; rrectC(c, X(h), Y(M.belt - 1.5), 3.2 * s, 0.9 * s, 0.4 * s); c.fill();
     c.fillStyle = M.chrome ? "#d9dde4" : shade(color, 0.12); rrectC(c, X(h), Y(M.belt - 1.6), 3.2 * s, 0.75 * s, 0.35 * s); c.fill();
   });
-  if(!M.bed && !FX.some(f => f.t === "fuelcap")){ c.strokeStyle = "rgba(0,0,0,.3)"; c.lineWidth = Math.max(0.5, 0.25 * s); c.beginPath(); c.arc(X(M.wheels[0] + M.r + 3.4), Y(Math.min(M.belt - 2.8, SH - 1.2)), 0.9 * s, 0, TAU); c.stroke(); }
+  if(!M.bed && !M.nofuel && !FX.some(f => f.t === "fuelcap")){ c.strokeStyle = "rgba(0,0,0,.3)"; c.lineWidth = Math.max(0.5, 0.25 * s); c.beginPath(); c.arc(X(M.wheels[0] + M.r + 3.4), Y(Math.min(M.belt - 2.8, SH - 1.2)), 0.9 * s, 0, TAU); c.stroke(); }
   if(!SYk.flush){ c.fillStyle = "#ffb547"; rrectC(c, X(L - 4.8), Y(bot + 5.1), 2 * s, 0.9 * s, 0.3 * s); c.fill(); }
   if(M.chrome){ c.fillStyle = "#c8222b"; rrectC(c, X(1.4), Y(bot + 5.1), 2 * s, 0.9 * s, 0.3 * s); c.fill(); }
   if(M.intake){ c.fillStyle = "#07080b"; poly(M.intake); c.fill(); c.strokeStyle = OUT; c.stroke(); }
@@ -2953,7 +2966,7 @@ function drawCar(c, x, baseY, s, key, color, o){
   WINS.forEach((wpts, wi) => {
     const xs = wpts.map(p => p[0]), x0 = Math.min(...xs), x1 = Math.max(...xs), wTop = Math.max(...wpts.map(p => p[1]));
     if(x1 - x0 > big) big = x1 - x0;
-    c.save(); poly(wpts); c.clip();
+    c.save(); rpoly(wpts); c.clip();
     // tinted glass reflecting the world: pale sky at the top, a soft horizon band, the dark street below it
     const wg = c.createLinearGradient(0, Y(wTop), 0, Y(M.belt));
     wg.addColorStop(0, "#7b8aa3"); wg.addColorStop(0.18, "#46556f"); wg.addColorStop(0.5, "#1c2638"); wg.addColorStop(0.56, "#33415a"); wg.addColorStop(0.62, "#141b28"); wg.addColorStop(1, "#080b11");
@@ -2992,7 +3005,9 @@ function drawCar(c, x, baseY, s, key, color, o){
     }
     c.restore();
     // thin black rubber seal and a bright edge where the frame catches light
-    c.strokeStyle = "#0a0c10"; c.lineWidth = Math.max(0.5, 0.32 * s); poly(wpts); c.stroke();
+    c.strokeStyle = "#07080b"; c.lineWidth = Math.max(0.6, 0.42 * s); rpoly(wpts); c.stroke();
+    // the seal catches a thin line of light along its top edge
+    c.save(); rpoly(wpts); c.clip(); c.strokeStyle = "rgba(255,255,255,.16)"; c.lineWidth = Math.max(0.4, 0.14 * s); c.translate(0, 0.32 * s); rpoly(wpts); c.stroke(); c.restore();
   });
   // glass roof, T-top seams, badges and the racing fuel cap sit over the finished panels
   FX.forEach(f => {
@@ -3054,7 +3069,7 @@ function drawCar(c, x, baseY, s, key, color, o){
     const SY = STYLE[key] || {};
     if(SY.trim === "chrome"){
       WINS.forEach(wp => { const g = c.createLinearGradient(0, Y(M.roof), 0, Y(M.belt)); g.addColorStop(0, "#ffffff"); g.addColorStop(0.5, "#9aa0ab"); g.addColorStop(1, "#e3e6ec");
-        c.strokeStyle = g; c.lineWidth = Math.max(0.6, 0.5 * s); poly(wp); c.stroke(); });
+        c.strokeStyle = g; c.lineWidth = Math.max(0.6, 0.5 * s); rpoly(wp); c.stroke(); });
     }
     c.save(); bodyNoArch(); c.clip("evenodd");
     if(SY.rub && !KD){
@@ -8369,7 +8384,7 @@ el("openGarage").addEventListener("click", openGarage);
 el("gBack").addEventListener("click", closeGarage);
 function drawGarage(){
   if(!garageOpen) return;
-  const r = Math.min(2, window.devicePixelRatio || 1), w = gCv.clientWidth || 360, h = gCv.clientHeight || 220;
+  const r = Math.min(3, window.devicePixelRatio || 1), w = gCv.clientWidth || 360, h = gCv.clientHeight || 220;
   if(gCv.width !== Math.round(w * r) || gCv.height !== Math.round(h * r)){ gCv.width = Math.round(w * r); gCv.height = Math.round(h * r); }
   const c = gctx; c.setTransform(r, 0, 0, r, 0, 0);
   const now = performance.now() / 1000, floorY = h * 0.66;
