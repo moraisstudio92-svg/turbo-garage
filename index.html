@@ -396,7 +396,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v135</span>
+  <span id="tgVer">v136</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -8865,24 +8865,26 @@ function nitroFx(d){
 // A sharp, pitched, chattering "tu-tu-tu-tu-tu" that starts fast and loud and slows as the pressure falls, with a thump
 // of air in each one. Nothing like the blow-off, which is one long airy "pssshhh".
 function renderFlutter(ac){
-  const sr = ac.sampleRate, len = Math.floor(sr * 1.05), b = ac.createBuffer(1, len, sr), d = b.getChannelData(0), Rn = Math.random;
-  const f0 = 1350 + Rn() * 450, n = 9 + Math.floor(Rn() * 5);
-  let t = 0.004, gap = 0.028 + Rn() * 0.008;
-  for(let k = 0; k < n && t < 0.9; k++){
-    const a = Math.exp(-k * 0.15) * (0.85 + Rn() * 0.3), f = f0 * (1 - k * 0.022), i0 = Math.floor(t * sr), m = Math.floor(0.034 * sr);
-    const w = 2 * Math.PI * f / sr, rr = 0.986, c1 = 2 * rr * Math.cos(w), c2 = -rr * rr;
+  // short and airy, like the real thing: six to eight quick "tu" bursts of air in about a third of a second,
+  // each one a soft thump plus a breathy puff with only a hint of pitch, fading and slowing as the boost runs out
+  const sr = ac.sampleRate, len = Math.floor(sr * 0.42), b = ac.createBuffer(1, len, sr), d = b.getChannelData(0), Rn = Math.random;
+  const f0 = 700 + Rn() * 250, n = 6 + Math.floor(Rn() * 3);
+  let t = 0.003, gap = 0.021 + Rn() * 0.005;
+  for(let k = 0; k < n && t < 0.36; k++){
+    const a = Math.exp(-k * 0.3) * (0.85 + Rn() * 0.3), f = f0 * (1 - k * 0.03), i0 = Math.floor(t * sr), m = Math.floor(0.022 * sr);
+    const w = 2 * Math.PI * f / sr, rr = 0.94, c1 = 2 * rr * Math.cos(w), c2 = -rr * rr;
     let y1 = 0, y2 = 0, lp = 0;
     for(let i = 0; i < m && i0 + i < len; i++){
-      const tt = i / sr, env = (tt < 0.0012 ? tt / 0.0012 : 1) * Math.exp(-tt / 0.0095), nz = Rn() * 2 - 1;
-      const y = nz * env + c1 * y1 + c2 * y2; y2 = y1; y1 = y; lp += (nz - lp) * 0.07;
-      d[i0 + i] += a * (y * 0.055 + Math.sin(6.2832 * f * 1.48 * tt) * env * 0.32 + lp * Math.exp(-tt / 0.004) * 1.3 + Math.sin(6.2832 * (190 + k * 4) * tt) * Math.exp(-tt / 0.006) * 0.55);
+      const tt = i / sr, env = (tt < 0.0015 ? tt / 0.0015 : 1) * Math.exp(-tt / 0.006), nz = Rn() * 2 - 1;
+      const y = nz * env + c1 * y1 + c2 * y2; y2 = y1; y1 = y; lp += (nz - lp) * 0.12;
+      d[i0 + i] += a * (y * 0.12 + lp * env * 0.9 + Math.sin(6.2832 * (150 + k * 6) * tt) * Math.exp(-tt / 0.005) * 0.35);
     }
-    t += gap; gap *= 1.085 + Rn() * 0.035;
+    t += gap; gap *= 1.06 + Rn() * 0.03;
   }
   let lp2 = 0;
-  for(let i = 0; i < len; i++){ const tt = i / sr; lp2 += ((Rn() * 2 - 1) - lp2) * 0.55; d[i] += lp2 * 0.05 * Math.exp(-tt / 0.22) * Math.min(1, tt / 0.01); }
+  for(let i = 0; i < len; i++){ const tt = i / sr; lp2 += ((Rn() * 2 - 1) - lp2) * 0.5; d[i] += lp2 * 0.035 * Math.exp(-tt / 0.08) * Math.min(1, tt / 0.005); }
   let pk = 0; for(let i = 0; i < len; i++) pk = Math.max(pk, Math.abs(d[i]));
-  for(let i = 0; i < len; i++){ d[i] = Math.tanh(1.8 * d[i] / pk) / Math.tanh(1.8); if(i > len - 600) d[i] *= (len - i) / 600; }
+  for(let i = 0; i < len; i++){ d[i] = Math.tanh(1.4 * d[i] / pk) / Math.tanh(1.4); if(i > len - 800) d[i] *= (len - i) / 800; }
   return b;
 }
 function flutterFx(sp){
@@ -8891,8 +8893,8 @@ function flutterFx(sp){
   const list = AU.pops && AU.pops.flut; if(!list) return;
   const s = ac.createBufferSource(), g = ac.createGain();
   s.buffer = list[Math.floor(Math.random() * list.length)];
-  s.playbackRate.value = (0.9 + Math.random() * 0.16) * (1.12 - 0.12 * sp);   // a bigger turbo chatters a little lower
-  g.gain.value = 0.62 * sp;
+  s.playbackRate.value = (0.94 + Math.random() * 0.12) * (1.08 - 0.08 * sp);   // a bigger turbo chatters a little lower
+  g.gain.value = 0.26 * sp;
   s.connect(g); g.connect(bus); s.start(t);
 }
 // blow-off: a light, airy "pssh" as the throttle closes
