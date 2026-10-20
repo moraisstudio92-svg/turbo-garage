@@ -91,6 +91,8 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .dash{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;padding:10px 12px;background:var(--panel);border-top:1px solid var(--line)}
 .speed{grid-row:span 2;font-family:var(--display);font-weight:700;font-size:30px;line-height:1;font-variant-numeric:tabular-nums;min-width:4.2ch;text-align:right}
 .speed small{display:block;font-size:10px;font-weight:600;letter-spacing:.12em;color:var(--muted);text-align:right;margin-top:3px}
+.speed .stg{display:inline-block;float:right;margin-top:4px;padding:2px 6px;border-radius:5px;border:1px solid rgba(255,181,71,.55);color:var(--sodium);font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.1em;line-height:1.2}
+.speed .stg.st0{border-color:var(--line);color:var(--muted)}
 .bar-row{display:grid;grid-template-columns:42px 1fr;align-items:center;gap:8px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:var(--display);font-weight:600}
 .strip{position:relative;height:8px;border-radius:4px;background:var(--panel-2)}
 .strip .dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--panel)}
@@ -403,7 +405,7 @@ body.pvOn #gpanel{padding-bottom:170px}
       </div>
     </div>
     <div class="dash">
-      <div class="speed" id="spd">0<small>KM/H</small></div>
+      <div class="speed" id="spd">0<small>KM/H</small><i class="stg" id="stg">STOCK</i></div>
       <div class="bar-row">Pista<div class="strip"><span class="flag"></span><span class="dot op" id="dotOp"></span><span class="dot me" id="dotMe"></span></div></div>
       <div class="bar-row">Nitro<div class="nbar" id="nbar"><i id="nfill"></i></div></div>
     </div>
@@ -417,7 +419,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v147</span>
+  <span id="tgVer">v148</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -1793,8 +1795,14 @@ function step(dt){
     if(!r.used && r.boost && r.x >= R.L * 0.45){ r.used = true; r.nitroT = r.ndur; }
     const rN = r.nitroT > 0; if(rN) r.nitroT = Math.max(0, r.nitroT - dt);
     r.v = Math.max(0, r.v + accel(r, rN) * dt); r.x += r.v * dt;
+    (R.hist || (R.hist = [])).push({t:R.time, px:p.x, pv:p.v, rx:r.x, rv:r.v, pn:p.nitroT > 0, rn:r.nitroT > 0});
+    if(R.hist.length > 420) R.hist.splice(0, R.hist.length - 360);
     if(r.fin === null && r.x >= R.L) r.fin = R.time - (r.x - R.L) / Math.max(1, r.v);
     if(p.fin === null && p.x >= R.L){ p.fin = R.time - (p.x - R.L) / Math.max(1, p.v); finish(); }
+    return;
+  }
+  if(R.phase === "replay"){
+    if(R.t >= REPLAY_SLOW + REPLAY_HOLD){ R.phase = "result"; R.t = 0; }
     return;
   }
   if(R.phase === "result"){
@@ -1811,6 +1819,15 @@ function step(dt){
     return;
   }
   if(R.phase === "black" && R.t > 3) newRace(R.next);
+}
+// replay timing: 1.15 s of race played at 0.27x, then the frozen photo-finish frame
+const REPLAY_SPAN = 1.15, REPLAY_RATE = 0.27, REPLAY_SLOW = REPLAY_SPAN / REPLAY_RATE, REPLAY_HOLD = 1.9;
+function replayState(){
+  const rp = R.rp, H0 = R.hist; if(!rp || !H0 || !H0.length) return null;
+  const tp = Math.min(rp.fin, rp.fin - REPLAY_SPAN + R.t * REPLAY_RATE);
+  let i = H0.findIndex(e => e.t >= tp); if(i < 0) i = H0.length - 1; if(i === 0) return Object.assign({tp}, H0[0]);
+  const a = H0[i - 1], b = H0[i], k = Math.max(0, Math.min(1, (tp - a.t) / Math.max(1e-6, b.t - a.t))), L = (u, v) => u + (v - u) * k;
+  return {tp, px:L(a.px, b.px), pv:L(a.pv, b.pv), rx:L(a.rx, b.rx), rv:L(a.rv, b.rv), pn:b.pn, rn:b.rn};
 }
 function pay(a, cycle){
   S.money += a; S.stats.earned += a;
@@ -1856,16 +1873,20 @@ function finish(){
     }
     S.series = {me:0, op:0, heat:1};
   } else S.series.heat++;
-  R.phase = "result"; R.t = 0;
+  // a close finish (under about a car length at the line) gets the replay first
+  const gapAtLine = Math.abs(R.p.fin - R.r.fin) * Math.max(R.p.v, R.r.v);
+  R.rp = gapAtLine < 4.5 && R.hist && R.hist.length > 30 && !reduceMotion ? {fin:Math.min(R.p.fin, R.r.fin), win, margin:Math.abs(R.p.fin - R.r.fin), shot:false} : null;
+  R.phase = R.rp ? "replay" : "result"; R.t = 0;
   dirty = true;
-  setTimeout(checkChal, 1800);
+  setTimeout(checkChal, R.rp ? 7000 : 1800);
 }
 
 /* tyre smoke: puffs are thrown forward with the car, then drag slows them so they trail and hang behind it */
 function smokeEmit(xw, lane, a, vcar){
-  if(smoke.length > 320) return;
-  smoke.push({x:xw - Math.random() * 2.5 + 0.3, lane, y:-Math.random() * 4, r:4 + Math.random() * 4, a, life:0, max:1.5 + Math.random() * 1.6,
-    vx:vcar * (0.2 + Math.random() * 0.35) - (2 + Math.random() * 4), vy:-(4 + Math.random() * 12), grow:18 + Math.random() * 18,
+  if(smoke.length > 200 || Math.random() < 0.45) return;
+  a *= 0.7;
+  smoke.push({x:xw - Math.random() * 2.5 + 0.3, lane, y:-Math.random() * 4, r:4 + Math.random() * 4, a, life:0, max:1.1 + Math.random() * 1.1,
+    vx:vcar * (0.2 + Math.random() * 0.35) - (2 + Math.random() * 4), vy:-(4 + Math.random() * 10), grow:13 + Math.random() * 13,
     rot:Math.random() * Math.PI * 2, vr:(Math.random() - 0.5) * 1.4, spr:Math.floor(Math.random() * 4)});
 }
 function smokeUpdate(dt){
@@ -5778,6 +5799,14 @@ function danceWave(t, seed){
   if(hash(n * 7.3 + seed) > 0.35){ const sg = hash(n * 3.1 + seed) > 0.5 ? 1 : -1; v += sg * Math.exp(-u * 5) * Math.sin(Math.min(1, u * 3.2) * Math.PI) * 0.9 - sg * Math.exp(-(u - 0.25) * 6) * (u > 0.25 ? Math.sin((u - 0.25) * 9) : 0) * 0.35; }
   return v;
 }
+// body pitch seen from the side, pivoting on the rear contact patch: the nose lifts on the launch and settles as speed
+// builds, and dips briefly at each shift; positive lifts the nose
+function carPitch(time, v, shiftT){
+  if(!R || R.phase !== "race") return 0;
+  const launch = 0.028 * Math.max(0, 1 - time / 1.1) * Math.min(1, v / 2.5);
+  const shift = shiftT !== undefined && shiftT < 0.4 ? -0.01 * Math.sin(Math.min(1, shiftT / 0.4) * Math.PI) : 0;
+  return launch + shift;
+}
 function danceEnv(time, v, shiftT){
   if(!R || R.phase !== "race") return 0;
   return (0.55 + 0.45 * Math.max(0, 1 - time / 3)) * Math.min(1, v / 6) + (shiftT !== undefined && shiftT < 0.45 ? 0.6 * (1 - shiftT / 0.45) : 0);
@@ -5787,8 +5816,8 @@ function drawSide(now){
   const pc = carById(S.car), look = carLook(S.car), MP = MODELS[pc.model] || MODELS.bola, MR = MODELS[R.r.model] || MODELS.chevette;
   if(side.race !== R){ side.race = R; side.ppm = 0; }
   // camera zooms out a little when the rival is close but not alongside, so both fit when possible
-  const gap = Math.abs(R.r.x - R.p.x), want = Math.max(17, Math.min(31, W * 0.9 / (gap + 8.5)));
-  side.ppm = side.ppm ? side.ppm + (want - side.ppm) * 0.05 : want;
+  const gap = Math.abs(R.r.x - R.p.x), RPL = R.phase === "replay", want = RPL ? Math.max(26, Math.min(44, W * 0.62 / (gap + 4.2))) : Math.max(17, Math.min(31, W * 0.9 / (gap + 8.5)));
+  side.ppm = RPL ? want : side.ppm ? side.ppm + (want - side.ppm) * 0.05 : want;
   const ppm = side.ppm, sP = ppm / U_PER_M, kF = 0.8, sF = sP * kF;
   R.ppmS = ppm;
   // the road's depth is laid out for the close shot; when the camera pulls back to fit both cars, the whole ground plane
@@ -5797,14 +5826,14 @@ function drawSide(now){
   const hz = zy(0.3), roadTop = zy(0.44), yF = zy(0.615), yN = zy(0.905), roadBot = zy(0.945);
   const nk = drv.nk || 0, launchK = R.phase === "race" && R.time < 0.9 ? 1 - R.time / 0.9 : 0;
   const noseX = W * (0.66 + 0.08 * nk);
-  const camC = R.p.x - (noseX - W / 2) / ppm;                       // world x at the screen centre
+  const camC = RPL ? Math.max(R.p.x, R.r.x) - W * 0.16 / ppm : R.p.x - (noseX - W / 2) / ppm;                       // world x at the screen centre
   const kAt = y => kF + (1.08 - kF) * (y - roadTop) / (roadBot - roadTop);   // ground-plane parallax by depth
   const gx = (wx, k) => W / 2 + (wx - camC) * ppm * k;
   const sxN = wx => gx(wx, 1), sxF = wx => gx(wx, kF);
   const vpx = R.p.v * ppm / 60, blurK = reduceMotion ? 0 : Math.min(1, R.p.v / 25);
-  const shk = (nk * 1.6 + launchK * 1.4 + (R.phase === "race" ? Math.min(1, R.p.v / 50) * 0.5 : 0)) * (reduceMotion ? 0 : 1);
+  const shk = RPL ? 0 : (nk * 1.6 + launchK * 1.4 + (R.phase === "race" ? Math.min(1, R.p.v / 50) * 0.5 : 0)) * (reduceMotion ? 0 : 1);
   ctx.save();
-  if(shk) ctx.translate((Math.random() - 0.5) * shk, (Math.random() - 0.5) * shk);
+  if(shk) ctx.translate((Math.sin(now * 31) * 0.6 + Math.sin(now * 47) * 0.4) * shk * 0.45, (Math.sin(now * 37) * 0.6 + Math.sin(now * 53) * 0.4) * shk * 0.3);
 
   // sky and far scenery
   drawBackdrop(th, camC * 8, hz, now);
@@ -6065,8 +6094,8 @@ function drawSide(now){
   const rNose = sxF(R.r.x), rTail = rNose - MR.len * sF;
   const rLook = Object.assign({}, R.r.look, {sweep:sweepOf(R.r.x, MR.len / U_PER_M), lights:true, nitro:R.r.nitroT > 0, spin:R.r.x * U_PER_M / MR.r, spinRear:R.phase === "race" && R.time < launchCutT() ? drv.rwspin : 0, blur:Math.min(1, R.r.v / 14), shake:revShake * 0.7});
   if(rNose > -10 && rTail < W + 10){
-    const rdk = reduceMotion ? 0 : danceK(rivalStage(R.level)) * danceEnv(R.time, R.r.v), rw = danceWave(now, 4.7) * rdk;
-    const rPiv = [rTail + MR.wheels[0] * sF, yF], rDance = c => { c.translate(rPiv[0], rPiv[1] + rw * 1.4 * sF); c.rotate(-rw * 0.02); c.translate(-rPiv[0], -rPiv[1]); };
+    const rPitch = reduceMotion ? 0 : carPitch(R.time, R.r.v, undefined);
+    const rPiv = [rTail + MR.wheels[0] * sF, yF], rDance = c => { c.translate(rPiv[0], rPiv[1]); c.rotate(-rPitch); c.translate(-rPiv[0], -rPiv[1]); };
     drawReflection(yF, (yN - yF) * 0.4, R.rain ? 0.5 : 0.22, c => { c.save(); rDance(c); drawCar(c, rTail, yF, sF, R.r.model, R.r.color, Object.assign({}, rLook, {lights:false, neon:null, flash:0})); c.restore(); });
     ctx.save(); rDance(ctx); drawCar(ctx, rTail, yF, sF, R.r.model, R.r.color, rLook); ctx.restore();
   }
@@ -6076,8 +6105,8 @@ function drawSide(now){
   // player in the near lane, with its reflection on the tarmac
   const pNose = sxN(R.p.x), pTail = pNose - MP.len * sP;
   const pLook = Object.assign(look, {sweep:sweepOf(R.p.x, MP.len / U_PER_M), lights:true, nitro:nOn, spin:R.p.x * U_PER_M / MP.r, spinRear:drv.launchCut ? drv.wspin : 0, blur:Math.min(1, R.p.v / 14), flash:drv.flash > 0 ? 1 - drv.flash / 0.14 : 0, shake:revShake});
-  const pdk = reduceMotion ? 0 : danceK(tuneOf(S.car).motor) * danceEnv(R.time, R.p.v, drv.shiftT), pw2 = danceWave(now, 1.3) * pdk;
-  const pPiv = [pTail + MP.wheels[0] * sP, yN], pLow = Math.max(0, Math.min(1, (MP.bot - (KIT_DEPTH[look.kit] || 0) - (look.drop || 0)) / 2)), pDance = c => { c.translate(pPiv[0], pPiv[1] + pw2 * 1.6 * sP * pLow); c.rotate(-pw2 * 0.02); c.translate(-pPiv[0], -pPiv[1]); };
+  const pPitch = reduceMotion ? 0 : carPitch(R.time, R.p.v, drv.shiftT), pw2 = pPitch * 30;
+  const pPiv = [pTail + MP.wheels[0] * sP, yN], pDance = c => { c.translate(pPiv[0], pPiv[1]); c.rotate(-pPitch); c.translate(-pPiv[0], -pPiv[1]); };
   drawReflection(yN, H - yN, R.rain ? 0.55 : 0.26, c => { c.save(); pDance(c); drawCar(c, pTail, yN, sP, pc.model, look.color, Object.assign({}, pLook, {lights:false, neon:null, flash:0, nitro:false, sweep:null})); c.restore(); });
   ctx.save(); pDance(ctx); drawCar(ctx, pTail, yN, sP, pc.model, look.color, pLook); ctx.restore();
   // a chora-boy car scrapes: sparks off the sills and the front lip, thrown back along the tarmac
@@ -7731,6 +7760,33 @@ function drawCockpit(now){
   ctx.restore();
 }
 
+function drawReplayOverlay(now){
+  const rp = R.rp, frozen = R.t >= REPLAY_SLOW, ft = R.t - REPLAY_SLOW;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  // letterbox bars, like a broadcast replay
+  const by = H - 15;
+  ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillRect(0, H - 30, W, 30);
+  ctx.fillStyle = Math.floor(now * 2) % 2 ? "#ff3b3b" : "rgba(255,59,59,.35)"; circ(ctx, 16, by, 4.5); ctx.fill();
+  ctx.fillStyle = "#eef0f6"; ctx.font = "italic 700 13px " + DISP; ctx.textAlign = "left"; ctx.fillText("REPLAY", 26, by + 0.5);
+  ctx.fillStyle = "#ffb547"; ctx.font = "600 11px " + DISP; ctx.fillText(frozen ? "FOTO DE CHEGADA" : "CÂMERA LENTA", 86, by + 0.5);
+  ctx.fillStyle = "rgba(238,240,246,.55)"; ctx.font = "500 10px " + DISP; ctx.textAlign = "right"; ctx.fillText("toque para pular", W - 10, by + 0.5);
+  if(frozen){
+    if(!rp.shot){ rp.shot = true; try{ if(sfxReady()) shutterSfx(); }catch(e){} }
+    // the camera flash, then the verdict
+    if(ft < 0.25){ ctx.fillStyle = "rgba(255,255,255," + (0.85 * (1 - ft / 0.25)) + ")"; ctx.fillRect(0, 0, W, H); }
+    const a = Math.min(1, ft / 0.3);
+    ctx.globalAlpha = a;
+    const vy = Math.max(66, H * 0.3); ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(11,13,20,.78)"; rrectC(ctx, W / 2 - 104, vy - 24, 208, 52, 12); ctx.fill();
+    ctx.strokeStyle = rp.win ? "rgba(255,181,71,.7)" : "rgba(255,107,107,.7)"; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = rp.win ? "#ffb547" : "#ff6b6b"; ctx.font = "italic 700 21px " + DISP;
+    ctx.fillText("NO BICO!", W / 2, vy - 7);
+    ctx.fillStyle = "#eef0f6"; ctx.font = "600 12px " + DISP;
+    ctx.fillText((rp.win ? "Você na frente" : "Rival na frente") + " por " + rp.margin.toLocaleString("pt-BR", {minimumFractionDigits:3, maximumFractionDigits:3}) + " s", W / 2, vy + 14);
+    ctx.globalAlpha = 1;
+  }
+}
+cv.addEventListener("pointerdown", () => { if(R && R.phase === "replay"){ R.t = Math.max(R.t, REPLAY_SLOW + REPLAY_HOLD); } });
 function drawOverlays(now){
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   const cockpit = S.cam === "cockpit", treeY = cockpit ? 96 : 16;
@@ -7881,6 +7937,13 @@ function draw(){
   ctx.imageSmoothingQuality = "high";
   const now = performance.now() / 1000;
   if(R.phase === "podium"){ drawPodium(now); return; }
+  if(R.phase === "replay"){
+    const st = replayState(), live = {px:R.p.x, pv:R.p.v, rx:R.r.x, rv:R.r.v, pn:R.p.nitroT, rn:R.r.nitroT};
+    if(st){ R.p.x = st.px; R.p.v = st.pv * 0.35; R.r.x = st.rx; R.r.v = st.rv * 0.35; R.p.nitroT = st.pn ? 1 : 0; R.r.nitroT = st.rn ? 1 : 0; }
+    try{ drawSide(now); bloom(); } finally { R.p.x = live.px; R.p.v = live.pv; R.r.x = live.rx; R.r.v = live.rv; R.p.nitroT = live.pn; R.r.nitroT = live.rn; }
+    drawReplayOverlay(now);
+    return;
+  }
   if(S.cam === "cockpit") drawCockpit(now); else { drawSide(now); bloom(); }
   drawOverlays(now);
 }
@@ -7891,10 +7954,11 @@ const cashEl = el("cash"), spdEl = el("spd"), dotMe = el("dotMe"), dotOp = el("d
 let lastCash = "";
 const rivalChip = document.querySelector(".rival");
 function hud(){
-  rivalChip.style.visibility = (R.phase === "podium" || R.phase === "black" || S.cam === "cockpit") ? "hidden" : "visible";
+  rivalChip.style.visibility = (R.phase === "podium" || R.phase === "black" || R.phase === "replay" || S.cam === "cockpit") ? "hidden" : "visible";
   const c = money(S.money);
   if(c !== lastCash){ cashEl.textContent = c; lastCash = c; }
   spdEl.firstChild.nodeValue = kmh(R.p.v);
+  { const sg = tuneOf(S.car).motor || 0, txt = sg ? "STAGE " + sg : "STOCK", se = el("stg"); if(se && se.textContent !== txt){ se.textContent = txt; se.className = "stg" + (sg ? "" : " st0"); } }
   dotMe.style.left = Math.min(100, R.p.x / R.L * 100) + "%";
   dotOp.style.left = Math.min(100, R.r.x / R.L * 100) + "%";
   let n;
@@ -9343,7 +9407,7 @@ function onShift(P){
     const MP = MODELS[carById(S.car).model], pw = R.p.x - (MP.len - MP.wheels[0]) / U_PER_M;
     for(let i = 0; i < 7; i++) smokeEmit(pw, 1, 0.2, R.p.v);
   }
-  if(chirp && sfxReady()) squeal(0.38, 1.3);
+  if(chirp && sfxReady()) squeal(0.42, 2.2);
   else if(R && R.rain && (R.p.slip || 0) > 0.05 && sfxReady()) squeal(0.5, 1.6);
   if(!sfxReady()){ if(Math.random() < P.popChance + 0.2) drv.flash = 0.12; return; }
   const seqBox = tuneOf(S.car).cambio >= 3;
@@ -9443,7 +9507,8 @@ function audioUpdate(){
     const n = treeState("count", R.t).amb;
     if(n > au.cd){ au.cd = n; beep(440, 0.14, "square", 0.07); }
   }
-  if(R.phase === "race" && !au.go){ au.go = true; beep(880, 0.35, "square", 0.1); cheer(); squeal(launchCutT() + 0.6, R.rain ? 3.2 : 2.9); squeal(launchCutT() * 0.8, 1.4); }
+  if(R.phase === "race" && !au.go){ au.go = true; beep(880, 0.35, "square", 0.1); cheer(); squeal(launchCutT() + 0.8, R.rain ? 4.6 : 4.2); squeal(launchCutT() * 0.9, 2.4);
+    noiseBurst({type:"bandpass", f0:900, f1:600, Q:1.2, gain:0.22, dur:launchCutT() + 0.9, att:0.03, hold:launchCutT() * 0.6}); }
   // past the finish line: the victory jingle and the crowd, and the engine settling to idle; rain, wind, turbo and nitro stop with the race
   if(R.phase === "result" && !au.res && R.result){
     au.res = true;
@@ -9518,7 +9583,7 @@ function audioUpdate(){
     thr = 1;
   } else { thr = (R.phase === "black" || R.phase === "podium") ? 0.1 : 0.02; target = P.idle * 1.15; }
   E.target = target; E.thr = thr; E.limit = limit; E.popGate = gate;
-  const quiet = R.phase === "black" || R.phase === "podium" || (R.phase === "result" && R.t > 1.2);
+  const quiet = R.phase === "black" || R.phase === "podium" || R.phase === "replay" || (R.phase === "result" && R.t > 1.2);
   if(quiet){ E.popGate = 0; E.popQ = 0; E.thr = 0; }
   T(AU.eg.gain, (quiet ? 0 : nOn ? 0.8 : 0.64) * (P.vol || 1), quiet ? 0.35 : 0.2);
   if(AU.rainG) T(AU.rainG.gain, R.rain ? (S.cam === "cockpit" ? 0.09 : 0.06) : 0, 0.5);
