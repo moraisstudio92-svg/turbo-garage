@@ -344,6 +344,15 @@ body.pvOn #gpanel{padding-bottom:170px}
 .dm-rew{font-size:12px;color:var(--muted)}.dm-rew b{color:var(--sodium)}
 .dm .row2{display:flex;gap:8px}.dm .row2 .btn{flex:1;min-height:38px}
 .dm.on{border-color:var(--sodium)}
+.dm-ask{display:flex;flex-wrap:wrap;gap:6px}
+.dm-ask .chip{min-height:32px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font:600 12px var(--display)}
+.dm-ask .chip small{font-size:9px;color:var(--muted);margin-left:2px}
+.dm-ask .chip.on{border-color:var(--sodium);color:var(--sodium);box-shadow:inset 0 0 0 1px var(--sodium)}
+.dm-me{justify-self:end;max-width:85%;background:rgba(255,181,71,.16);border:1px solid rgba(255,181,71,.4);border-radius:14px 4px 14px 14px;padding:7px 10px;font-size:13px}
+.dm-typing{display:flex;gap:4px;padding:8px 10px;background:var(--panel);border-radius:4px 14px 14px 14px;width:max-content}
+.dm-typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:dmt 1s infinite}
+.dm-typing i:nth-child(2){animation-delay:.2s}.dm-typing i:nth-child(3){animation-delay:.4s}
+@keyframes dmt{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 .ph-empty{color:var(--muted);font-size:13px;text-align:center;padding:16px 8px}
 .ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
 .ph-grid div{position:relative}.ph-grid canvas{width:100%;aspect-ratio:1;display:block;border-radius:4px}
@@ -400,7 +409,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v140</span>
+  <span id="tgVer">v141</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -8229,6 +8238,12 @@ const followers = () => Math.round(150 + (S.fame || 0) * 28);
 const fmtN = n => n >= 1e6 ? (n / 1e6).toLocaleString("pt-BR", {maximumFractionDigits:1}) + " mi" : n >= 1e4 ? (n / 1e3).toLocaleString("pt-BR", {maximumFractionDigits:1}) + " mil" : Math.round(n).toLocaleString("pt-BR");
 const handle = () => "@" + (S.pilot.name || "piloto").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "") + ".racing";
 function updPhoneBadge(){ const n = (S.inbox || []).length, b = el("phoneBadge"); if(!b) return; b.hidden = !n; b.textContent = n; }
+// what one race of yours is worth to a brand: grows with your league and your fame, more from the big brands,
+// a lot more from the shady ones (they need the clean face)
+const niceR = x => Math.max(50, x < 1000 ? Math.round(x / 50) * 50 : Math.round(x / 100) * 100);
+function marketRate(b){ return niceR(rewardFor(Math.max(1, S.level)) * 0.35 * [1, 1.5, 2.4][b.tier] * (1 + (S.fame || 0) / 15000) * (b.bad ? 2.5 : 1)); }
+// how far above the market a brand will go for you: the more famous, the more they put up with
+const askTolerance = () => 1.3 + Math.min(1.2, (S.fame || 0) / 15000);
 function newDM(force){
   const fame = S.fame || 0;
   S.inbox = S.inbox || [];
@@ -8244,11 +8259,18 @@ function newDM(force){
   const top = pool.filter(b => b.tier === tier), src = top.length && Math.random() < 0.65 ? top : pool, pick = src[Math.floor(Math.random() * src.length)];
   const fameGain = pick.bad ? -Math.round(Math.max(150, fame * 0.12)) : Math.round((80 + 0.05 * fame) * [1, 1.6, 2.4][pick.tier]);
   const cash = pick.bad ? Math.round(rewardFor(Math.max(1, S.level)) * [2.5, 3.5, 5][pick.tier] / 100) * 100 : pick.tier ? Math.round(rewardFor(Math.max(1, S.level)) * [0, 1.2, 3][pick.tier] / 100) * 100 : 0;
-  S.inbox.push({b:pick.id, fame:fameGain, cash, t:Date.now()});
+  const races = Math.min(3, 1 + Math.floor(Math.random() * (pick.tier + 1.8)));
+  const base = marketRate(pick);
+  S.inbox.push({b:pick.id, fame:fameGain, cash:base * races, races, base, ask:base, st:"new", t:Date.now()});
   setTimeout(() => toast("Nova mensagem de " + pick.name + "! Abra o celular"), 2600);
   updPhoneBadge();
 }
 function influencerAfterEvent(champ){
+  if(S.permuta && (S.permuta.left || 1) > 1){
+    S.permuta.left--; const b0 = brandById(S.permuta.b);
+    setTimeout(() => toast("Parceria " + b0.name + ": falta" + (S.permuta && S.permuta.left > 1 ? "m " + S.permuta.left + " corridas" : " 1 corrida") + " pra foto"), 2400);
+    newDM(false); return;
+  }
   if(S.permuta){
     const b = brandById(S.permuta.b), f = followers(), likes = Math.round(f * (b.bad ? 0.015 : champ ? 0.09 : 0.05) * (0.8 + Math.random() * 0.4));
     const fame = b.bad ? Math.max(S.permuta.fame, -Math.round((S.fame || 0) * 0.5)) : Math.round(S.permuta.fame * (champ ? 1 : 0.6)), cash = S.permuta.cash;
@@ -8285,7 +8307,7 @@ function drawAvatar(cvEl){
   drawPilot(c, w / 2, w * 2.9, w * 2.6, pvPilot(), "idle", 0);
 }
 let phTab = "dm";
-function openPhone(){ el("phone").hidden = false; renderPhone(); }
+function openPhone(){ (S.inbox || []).forEach(o => { if(o.st === "typing" && Date.now() - (o.tt || 0) > 6000) o.st = "new"; }); el("phone").hidden = false; renderPhone(); }
 function renderPhone(){
   const fame = S.fame || 0;
   el("phHandle").textContent = handle(); el("phTitle").textContent = S.pilot.name + " · " + fameTitle(fame);
@@ -8293,16 +8315,33 @@ function renderPhone(){
   el("phone").querySelectorAll(".ph-tabs button").forEach(x => x.setAttribute("aria-pressed", x.dataset.ph === phTab));
   let h = "";
   if(phTab === "dm"){
-    if(S.permuta){ const b = brandById(S.permuta.b);
-      h += '<div class="dm on"><div class="dm-h"><span class="dm-av" style="background:' + b.c + ';color:' + b.tc + '">' + b.tx.slice(0, 2) + '</span><b>' + b.name + '</b><small>permuta ativa</small></div>' +
-        '<div class="dm-msg">Tudo certo! Já está no seu ' + (b.cos ? "carro" : "piloto") + ': ' + b.what + '. Corra o próximo evento e a foto sai no final. Capricha!</div></div>'; }
+    const av = b => '<span class="dm-av" style="background:' + b.c + ';color:' + b.tc + '">' + b.tx.slice(0, 2) + '</span>';
+    const rr = n => n + (n > 1 ? " corridas" : " corrida");
+    if(S.permuta){ const b = brandById(S.permuta.b), tot = S.permuta.total || 1, left = S.permuta.left || 1;
+      h += '<div class="dm on"><div class="dm-h">' + av(b) + '<b>' + b.name + '</b><small>parceria ativa</small></div>' +
+        '<div class="dm-msg">Fechado! Já está no seu ' + (b.cos ? "carro" : "piloto") + ': ' + b.what + '. ' + (tot > 1 ? 'São ' + rr(tot) + ' — falta' + (left > 1 ? 'm ' : ' ') + rr(left) + '. ' : '') + 'A foto sai no fim da última.</div>' +
+        '<div class="dm-rew">Combinado: <b>' + money(S.permuta.cash) + '</b> pelas ' + rr(tot) + '</div></div>'; }
     (S.inbox || []).forEach((o, i) => { const b = brandById(o.b); if(!b) return;
-      h += '<div class="dm"><div class="dm-h"><span class="dm-av" style="background:' + b.c + ';color:' + b.tc + '">' + b.tx.slice(0, 2) + '</span><b>' + b.name + '</b><small>mensagem nova</small></div>' +
-        '<div class="dm-msg">' + (b.bad ? b.bait + 'Aqui é da ' + b.name + '. Vamos te mandar ' + b.what + ' pra usar na próxima corrida. ' + b.hype + ' Topa?' : 'E aí, ' + S.pilot.name + '! Aqui é da ' + b.name + '. A gente acompanha seus rachas e curtiu demais. Queremos te mandar ' + b.what + ' pra você usar na próxima corrida e postar uma foto com a gente. Topa a permuta?') + '</div>' +
-        '<canvas data-dmprev="' + i + '"></canvas>' +
-        (b.bad ? '<div class="dm-rew">Oferecem: <b>cachê de ' + money(o.cash) + '</b> + o produto. Seguidores e fama: <b>?</b></div>'
-          : '<div class="dm-rew">Você ganha: <b>o produto é seu</b> + <b>' + fmtN(o.fame * 28) + ' seguidores</b> (+' + o.fame + ' de fama)' + (o.cash ? ' + cachê de <b>' + money(o.cash) + '</b>' : '') + '</div>') +
-        '<div class="row2"><button class="btn ghost" type="button" data-dmno="' + i + '">Recusar</button><button class="btn" type="button" data-dmyes="' + i + '"' + (S.permuta ? ' disabled' : '') + '>' + (S.permuta ? 'Termine a permuta atual' : 'Aceitar permuta') + '</button></div></div>'; });
+      const races = o.races || 1, base = o.base || Math.max(50, Math.round((o.cash || 0) / races)), ask = o.ask || base;
+      const intro = b.bad ? b.bait + 'Aqui é da ' + b.name + '. Vamos te mandar ' + b.what + ' pra usar em ' + rr(races) + '. ' + b.hype
+        : 'E aí, ' + S.pilot.name + '! Aqui é da ' + b.name + '. A gente acompanha seus rachas e curtiu demais. Queremos te mandar ' + b.what + ' pra você usar em ' + rr(races) + ' e postar uma foto com a gente no final.';
+      h += '<div class="dm"><div class="dm-h">' + av(b) + '<b>' + b.name + '</b><small>' + (o.st === "counter" ? "contraproposta" : o.st === "typing" ? "digitando…" : "mensagem nova") + '</small></div>' +
+        '<div class="dm-msg">' + intro + (o.st === "new" ? ' Quanto você cobra por corrida?' : '') + '</div>';
+      if(o.st === "new" || !o.st){
+        h += '<canvas data-dmprev="' + i + '"></canvas>';
+        // your price: per race, the total for all of them
+        const opts = [0, 0.5, 1, 1.5, 2, 3].map(k => k ? niceR(base * k) : 0);
+        h += '<div class="dm-ask">' + [...new Set(opts)].map(v => '<button type="button" class="chip' + (v === ask ? ' on' : '') + '" data-dmask="' + i + '" data-v="' + v + '">' + (v ? money(v) + '<small>/corrida</small>' : 'Só a permuta') + '</button>').join("") + '</div>' +
+          '<div class="dm-rew">Você cobra <b>' + (ask ? money(ask) + ' × ' + races + ' = ' + money(ask * races) : 'nada, só o produto') + '</b>' + (b.bad ? ' · fama: <b>?</b>' : ' · +' + fmtN(Math.round(o.fame * (1 + 0.3 * (races - 1))) * 28) + ' seguidores no post') + '</div>' +
+          '<div class="row2"><button class="btn ghost" type="button" data-dmno="' + i + '">Recusar</button><button class="btn" type="button" data-dmsend="' + i + '"' + (S.permuta ? ' disabled' : '') + '>' + (S.permuta ? 'Termine a parceria atual' : 'Enviar proposta') + '</button></div>';
+      } else if(o.st === "typing"){
+        h += '<div class="dm-me">Cobro ' + (o.ask ? money(o.ask) + ' por corrida (' + money(o.ask * races) + ')' : 'só a permuta') + '.</div><div class="dm-typing"><i></i><i></i><i></i></div>';
+      } else if(o.st === "counter"){
+        h += '<div class="dm-me">Cobro ' + money(o.ask) + ' por corrida (' + money(o.ask * races) + ').</div>' +
+          '<div class="dm-msg">' + (b.bad ? 'Calma lá, campeão! ' : 'Puxado... ') + 'Pra ' + rr(races) + ' a gente consegue <b>' + money(o.counter) + ' por corrida</b>, ' + money(o.counter * races) + ' no total. Fechado?</div>' +
+          '<div class="row2"><button class="btn ghost" type="button" data-dmno="' + i + '">Recusar</button><button class="btn" type="button" data-dmcyes="' + i + '"' + (S.permuta ? ' disabled' : '') + '>' + (S.permuta ? 'Termine a parceria atual' : 'Aceitar ' + money(o.counter * races)) + '</button></div>';
+      }
+      h += '</div>'; });
     if(!h) h = '<div class="ph-empty">' + (fame < 120 ? 'Ninguém te conhece ainda. Vença eventos para ganhar fama: com ' + "120 de fama as marcas começam a te mandar mensagem." : 'Nenhuma mensagem nova. Continue vencendo: as marcas escrevem depois dos eventos.') + '</div>';
   } else {
     const ps = S.posts || [];
@@ -8324,6 +8363,33 @@ function renderPhone(){
   });
 }
 el("phoneBtn").addEventListener("click", openPhone);
+// closing the deal: the permuta starts and lasts for the races agreed
+function startDeal(i, perRace){
+  const o = S.inbox[i]; if(!o || S.permuta) return;
+  const races = o.races || 1, b = brandById(o.b);
+  S.permuta = {b:o.b, fame:Math.round(o.fame * (1 + 0.3 * (races - 1))), cash:perRace * races, left:races, total:races};
+  S.inbox.splice(i, 1); updPhoneBadge(); save(); coinSfx(); dirty = true;
+  toast("Fechado com " + b.name + "! " + races + (races > 1 ? " corridas" : " corrida") + " por " + money(perRace * races));
+}
+el("phone").addEventListener("click", e => {
+  const t = e.target.closest("button"); if(!t || t.disabled) return;
+  if(t.dataset.dmask !== undefined){ const o = S.inbox[+t.dataset.dmask]; if(o){ o.ask = +t.dataset.v; renderPhone(); } return; }
+  if(t.dataset.dmcyes !== undefined){ const o = S.inbox[+t.dataset.dmcyes]; if(o) startDeal(+t.dataset.dmcyes, o.counter); renderPhone(); return; }
+  if(t.dataset.dmsend !== undefined){
+    const i = +t.dataset.dmsend, o = S.inbox[i]; if(!o || S.permuta) return;
+    const b = brandById(o.b), base = o.base || 100, r = (o.ask || 0) / base, tol = askTolerance();
+    o.st = "typing"; o.tt = Date.now(); renderPhone();
+    setTimeout(() => {
+      if(S.inbox[i] !== o) return;
+      // at or under the market: yes. A bit over: maybe, or they haggle. Way over: they walk away
+      if(r <= 1 || (r <= tol && Math.random() < 1 - 0.65 * (r - 1) / Math.max(0.01, tol - 1))){ startDeal(i, o.ask || 0); }
+      else if(r <= tol * 1.7){ o.st = "counter"; o.counter = niceR(base * Math.min(r * 0.8, tol * (0.8 + Math.random() * 0.15))); if(o.counter <= base) o.counter = niceR(base * 1.1); save(); }
+      else { S.inbox.splice(i, 1); updPhoneBadge(); save(); toast(b.name + ": \"Aí não dá, fica pra próxima.\""); }
+      if(!el("phone").hidden) renderPhone();
+    }, 1300 + Math.random() * 900);
+    return;
+  }
+});
 el("phClose").addEventListener("click", () => { el("phone").hidden = true; });
 el("phone").addEventListener("click", e => {
   if(e.target.id === "phone"){ el("phone").hidden = true; return; }
