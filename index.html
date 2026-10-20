@@ -409,7 +409,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v142</span>
+  <span id="tgVer">v143</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -666,11 +666,15 @@ const PARTS = [
     tiers:[{n:"Sem blower"}, {n:"6-71 com chapéu", vel:0.012, arr:0.03}, {n:"8-71 com scoop alto", vel:0.02, arr:0.045}, {n:"14-71 bug catcher", vel:0.028, arr:0.06}]}
 ];
 const PAINTS = [["#c9cfda","Prata"],["#eef0ea","Branco"],["#1b1d22","Preto"],["#7a8494","Grafite"],["#e5484d","Vermelho"],["#ff7a1a","Laranja"],
-  ["#f2d45c","Amarelo"],["#63d692","Verde"],["#2f63d6","Azul"],["#5ad6ff","Azul-bebê"],["#8a5cf6","Roxo"],["#ff6fb5","Rosa"]];
-const FINISHES = [["brilho","Brilhante"],["fosco","Fosco"],["metal","Metálico"]];
+  ["#f2d45c","Amarelo"],["#63d692","Verde"],["#2f63d6","Azul"],["#5ad6ff","Azul-bebê"],["#8a5cf6","Roxo"],["#ff6fb5","Rosa"],
+  ["#7a0c12","Vinho"],["#0b2a5b","Azul-marinho"],["#1f4d2b","Verde-escuro"],["#2a9d8f","Turquesa"],["#a8dadc","Azul-gelo"],["#c9a26b","Bege"],
+  ["#6b4a2b","Marrom"],["#e9c46a","Mostarda"],["#d4af37","Dourado"],["#8a9a96","Cinza-esverdeado"],["#4a4e57","Chumbo"],["#b76e79","Rosê"],
+  ["#39ff14","Verde neon"],["#ccff00","Limão neon"],["#ffea00","Amarelo neon"],["#ff6a00","Laranja neon"],["#ff2bd6","Rosa neon"],["#00e5ff","Azul neon"],["#b026ff","Roxo neon"]];
+const FINISHES = [["brilho","Brilhante"],["fosco","Fosco"],["metal","Metálico"],["perola","Perolado"],["cromo","Cromado"],["neon","Neon fluorescente"]];
 const VINYLS = [["none","Nenhum"],["listra","Listra lateral"],["faixa","Faixa baixa"],["chamas","Chamas"],["doistons","Dois tons"],["numero","Número"]];
 const VCOLORS = [["#1b1d22","Preto"],["#eef0ea","Branco"],["#e5484d","Vermelho"],["#ff7a1a","Laranja"],["#f2d45c","Amarelo"],["#63d692","Verde"],
-  ["#2f63d6","Azul"],["#5ad6ff","Azul-bebê"],["#8a5cf6","Roxo"],["#ff6fb5","Rosa"]];
+  ["#2f63d6","Azul"],["#5ad6ff","Azul-bebê"],["#8a5cf6","Roxo"],["#ff6fb5","Rosa"],["#d4af37","Dourado"],["#c9cfda","Prata"],
+  ["#39ff14","Verde neon"],["#ffea00","Amarelo neon"],["#ff6a00","Laranja neon"],["#ff2bd6","Rosa neon"],["#00e5ff","Azul neon"],["#b026ff","Roxo neon"]];
 const STICKERS = [["tg","Turbo Garage"],["nitro","Nitro+"],["jdm","JDM"],["faixa","Faixa no vidro"],["patro","Patrocinadores"]];
 // the real LED underglow colours sold for cars
 const NEONS = [[null,"Nenhum","#2a2f3c"],["#ff3b3b","Vermelho"],["#ff6a1a","Laranja"],["#ffd21a","Amarelo"],["#b6ff2a","Verde-limão"],["#35f08a","Verde"],
@@ -695,7 +699,9 @@ const FLAME_PAL = {
   "#f4f7ff":{core:"#ffffff", hot:"#ffffff", mid:"#e2e9ff", edge:"#8f9bbd", glow:"#dfe8ff", cone:"#b8ccff"}
 };
 const FLAME_ALIAS = {"#ffae2b":"#ff9a1f", "#4fb8ff":"#2f8cff", "#5ef08a":"#3ee66b", "#b77bff":"#a855f7", "#ff5fae":"#a855f7"};
-const RIMS = [["#e9edf3","Cromada"],["#3c414a","Cromo negro"],["#e8c66a","Cromo dourado"],["#c9d0da","Prata"],["#5b616d","Grafite"],["#1e2128","Preta"],["#d4af37","Dourada"],["#b9893b","Bronze"],["#eef0f3","Branca"],["#d93a3a","Vermelha"]];
+const RIMS = [["#e9edf3","Cromada"],["#3c414a","Cromo negro"],["#e8c66a","Cromo dourado"],["#c9d0da","Prata"],["#5b616d","Grafite"],["#1e2128","Preta"],["#d4af37","Dourada"],["#b9893b","Bronze"],["#eef0f3","Branca"],["#d93a3a","Vermelha"],
+  ["#b76e79","Ouro rosê"],["#2f63d6","Azul candy"],["#7a0c12","Vinho candy"],["#2e7d32","Verde"],["#8a5cf6","Roxa"],["#ff7a1a","Laranja"],["#f2d45c","Amarela"],
+  ["#39ff14","Verde neon"],["#ffea00","Amarelo neon"],["#ff6a00","Laranja neon"],["#ff2bd6","Rosa neon"],["#00e5ff","Azul neon"],["#b026ff","Roxo neon"]];
 // chrome finishes reflect the world like a mirror: bright sky above, the dark horizon across the middle, the road below
 const RIM_CHROME = {"#e9edf3":["#ffffff","#dde2ea","#8d949f","#2e333b","#aab1bc","#eef1f5","#8c939e"], "#3c414a":["#aab2be","#555c67","#2a2e35","#0c0e11","#3d434d","#7d8591","#262a30"], "#e8c66a":["#fff6d2","#f0d48a","#a8822a","#4a3508","#c9a24a","#ffe9a8","#9a7420"]};
 const CALIPERS = [["#d93a3a","Vermelha"],["#ffd35a","Amarela"],["#2f63d6","Azul"],["#63d692","Verde"],["#ff7a1a","Laranja"],["#1e2128","Preta"]];
@@ -840,12 +846,14 @@ const P_GENDER = [["m","Homem"],["f","Mulher"]];
 const P_HEIGHT = [["baixo","Baixo"],["medio","Médio"],["alto","Alto"]];
 const P_WEIGHT = [["magro","Magro"],["medio","Médio"],["forte","Forte"]];
 const P_OUTFIT = [["macacao","Macacão"],["macacao2","Macacão duas cores"],["kart","Macacão kart"],["camiseta","Camiseta"],["polo","Polo da equipe"],["regata","Regata"],
-  ["jaqueta","Jaqueta"],["couro","Jaqueta de couro"],["moletom","Moletom"],["colete","Colete"]];
+  ["jaqueta","Jaqueta"],["couro","Jaqueta de couro"],["moletom","Moletom"],["colete","Colete"],
+  ["macacaof1","Macacão F1"],["macacaodrift","Macacão drift"],["corrida","Jaqueta de equipe"],["bomber","Jaqueta bomber"],["camisa10","Camisa de time"]];
 const P_PANTS = [["jeans","Jeans"],["preta","Calça preta"],["cargo","Cargo"],["jogger","Jogger"],["bege","Sarja bege"]];
 const P_SHOES = [["preto","Tênis preto"],["branco","Tênis branco"],["vermelho","Tênis vermelho"],["cano","Cano alto"],["basquete","Basquete"],["runner","Corrida"],
-  ["corrida","Sapatilha de piloto"],["bota","Bota"],["chinelo","Chinelo"]];
-const P_GLOVES = [["none","Sem luvas"],["corrida","Luva de piloto"],["couro","Couro"],["meio","Meio-dedo"],["drift","Drift"]];
-const P_HELMET = [["none","Sem capacete"],["integral","Integral"],["f1","Fórmula"],["aberto","Aberto"],["retro","Retrô"],["drag","Drag bolha"],["carbono","Carbono"]];
+  ["corrida","Sapatilha de piloto"],["bota","Bota"],["chinelo","Chinelo"],
+  ["coturno","Coturno"],["cowboy","Bota texana"],["chelsea","Botina chelsea"],["skate","Tênis de skate"],["neonverde","Tênis neon verde"],["neonrosa","Tênis neon rosa"]];
+const P_GLOVES = [["none","Sem luvas"],["corrida","Luva de piloto"],["couro","Couro"],["meio","Meio-dedo"],["drift","Drift"],["kevlar","Kevlar branca"],["neon","Neon"],["mecanico","Mecânico"]];
+const P_HELMET = [["none","Sem capacete"],["integral","Integral"],["f1","Fórmula"],["aberto","Aberto"],["retro","Retrô"],["drag","Drag bolha"],["carbono","Carbono"],["gp","GP pintado"],["neon","Viseira neon"],["rally","Rally com pala"],["moto","Motocross"]];
 const P_HWEAR = [["cabeca","Na cabeça"],["braco","Debaixo do braço"]];
 const P_TATTOO = [["none","Nenhuma"],["braco","Braço fechado"],["tribal","Tribal"],["pescoco","Pescoço"],["rosto","Rosto"]];
 const P_ACC = [["corrente","Corrente"],["brinco","Brinco"],["relogio","Relógio"],["fone","Fone"],["barba","Barba"]];
@@ -2799,7 +2807,8 @@ function drawCar(c, x, baseY, s, key, color, o){
   const yT = Y(M.roof + 0.6), yB = Y(bot - 1.6), TT = yy => Math.max(0, Math.min(1, (Y(yy) - yT) / (yB - yT)));
   const piano = !mat && fin !== "metal" && lum(color) < 0.07;
   const PIANO = {"0.3":"#3d4656", "0.12":"#171c25", "0.22":"#252c38", "0.36":"#58637a", "-0.08":"#050608", "0.03":"#0b0e13", "0.15":"#2c3442", "-0.19":"#020203", "-0.32":"#040506", "-0.55":"#000000"};
-  const pg = c.createLinearGradient(0, yT, 0, yB), st = (yy, k) => pg.addColorStop(TT(yy), piano && PIANO[String(k)] ? PIANO[String(k)] : shade(color, k));
+  const FINK = fin === "cromo" ? 2.4 : fin === "neon" ? 0.45 : 1, FINB = fin === "neon" ? 0.12 : 0;
+  const pg = c.createLinearGradient(0, yT, 0, yB), st = (yy, k) => pg.addColorStop(TT(yy), piano && PIANO[String(k)] && FINK === 1 ? PIANO[String(k)] : shade(color, Math.max(-0.95, Math.min(0.95, k * FINK + FINB))));
   // sky on the roof and on the flat above the shoulder, a crisp break under the crease, the horizon across the doors, the road below
   if(M.softpaint){
     // a rounded body with no hard shoulder: light from above fading smoothly to the road
@@ -2828,8 +2837,18 @@ function drawCar(c, x, baseY, s, key, color, o){
     sky.addColorStop(0, "rgba(170,190,225," + (mat ? 0.06 : 0.16) + ")"); sky.addColorStop(1, "rgba(170,190,225,0)");
     c.fillStyle = sky; c.fillRect(X(-3), Y(M.roof + 1), (L + 6) * s, (M.roof - M.belt + 3) * s);
   }
-  if(fin === "metal"){
-    for(let i = 0; i < 160; i++){
+  if(fin === "perola"){
+    // pearl: a soft sheen that drifts from pink to blue along the body
+    const pr = c.createLinearGradient(X(0), Y(M.roof), X(L), Y(bot)); pr.addColorStop(0, "rgba(255,170,220,.16)"); pr.addColorStop(0.5, "rgba(255,255,255,.1)"); pr.addColorStop(1, "rgba(150,200,255,.18)");
+    c.fillStyle = pr; c.fillRect(X(-3), yT - 2, (L + 6) * s, yB - yT + 4);
+  }
+  if(fin === "cromo"){
+    // chrome wrap: the sky and the street mirrored hard across the doors
+    c.fillStyle = "rgba(255,255,255,.28)"; c.fillRect(X(-3), Y(SH + 0.9), (L + 6) * s, Math.max(0.6, 0.5 * s));
+    c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(X(-3), Y(hzn), (L + 6) * s, Math.max(0.6, 0.8 * s));
+  }
+  if(fin === "metal" || fin === "perola"){
+    for(let i = 0; i < (fin === "perola" ? 90 : 160); i++){
       c.fillStyle = "rgba(255,255,255," + (0.08 + hash(i * 1.7) * 0.25) + ")";
       c.fillRect(X(hash(i * 3.1) * L), Y(bot + hash(i * 7.7) * span), Math.max(0.5, 0.35 * s), Math.max(0.5, 0.35 * s));
     }
@@ -4813,7 +4832,8 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   if((P.acc || []).includes("luvas") && P.gloves === "none") P.gloves = "corrida";
   if(P.hair === "capacete"){ if(P.helmet === "none"){ P.helmet = "integral"; P.helmetWear = "cabeca"; } P.hair = "curto"; }
   const hk = {baixo:0.93, medio:1, alto:1.07}[P.height] || 1, wk = {magro:0.88, medio:1, forte:1.17}[P.weight] || 1, fem = P.gender === "f";
-  const u = h / 104 * hk, sk = P.skin, top = P.suit, st = P.stripe, hc = P.hairC, acc = P.acc || [], of = P.outfit;
+  const ofx = P.outfit, of = {macacaof1:"macacao", macacaodrift:"macacao", corrida:"jaqueta", bomber:"jaqueta", camisa10:"camiseta"}[P.outfit] || P.outfit;
+  const u = h / 104 * hk, sk = P.skin, top = P.suit, st = P.stripe, hc = P.hairC, acc = P.acc || [];
   const sit = pose === "sit" || pose === "sad", dropK = sit ? 20 : 0;
   const Y = k => footY - (sit && k >= 40 ? k - dropK : k) * u, X = k => x + k * u * wk;
   const OL = "rgba(8,9,12,.55)", olw = Math.max(0.5, 0.35 * u);
@@ -4884,8 +4904,11 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   });
   // ---- shoes (front view: toe box, sole, laces) ----
   const SHOE = {branco:["#f2f4f8", "#d9dde4", "#c9ced8"], preto:["#1a1c21", "#f2f4f8", "#3a3f4a"], vermelho:["#c8262b", "#f2f4f8", "#f2f4f8"], cano:[st, "#f2f4f8", top],
-    bota:["#5a3a22", "#2a1a10", "#7a5232"], corrida:[top, "#16181d", st], basquete:["#f2f4f8", "#f2f4f8", st], runner:["#3d8bff", "#f2f4f8", "#ffd23f"], chinelo:["#ffd23f", "#2e7d32", "#2e7d32"]}[P.shoes] || ["#1a1c21", "#f2f4f8", "#3a3f4a"];
-  const shoeTop = P.shoes === "bota" ? 12 : P.shoes === "cano" || P.shoes === "basquete" ? 10 : P.shoes === "corrida" ? 9 : P.shoes === "chinelo" ? 1.6 : 6.2;
+    bota:["#5a3a22", "#2a1a10", "#7a5232"], corrida:[top, "#16181d", st], basquete:["#f2f4f8", "#f2f4f8", st], runner:["#3d8bff", "#f2f4f8", "#ffd23f"], chinelo:["#ffd23f", "#2e7d32", "#2e7d32"],
+    coturno:["#16181c", "#0b0c0e", "#2a2d33"], cowboy:["#7a4a26", "#3a2414", "#c9a24a"], chelsea:["#5a3a22", "#1a1c21", "#2a1a10"], skate:["#1b1d22", "#f2f4f8", "#e5484d"],
+    neonverde:["#39ff14", "#f2f4f8", "#111317"], neonrosa:["#ff2bd6", "#f2f4f8", "#111317"]}[P.shoes] || ["#1a1c21", "#f2f4f8", "#3a3f4a"];
+  const boot = ["bota", "coturno", "cowboy", "chelsea"].includes(P.shoes);
+  const shoeTop = P.shoes === "coturno" ? 14 : P.shoes === "cowboy" ? 13 : P.shoes === "chelsea" ? 9.5 : P.shoes === "bota" ? 12 : P.shoes === "skate" ? 7 : P.shoes === "cano" || P.shoes === "basquete" ? 10 : P.shoes === "corrida" ? 9 : P.shoes === "chinelo" ? 1.6 : 6.2;
   [-1, 1].forEach(sd => {
     const cx = X(sd * (legGap + legW * (sit ? 1.45 : 0.62))) + sd * 0.6 * u, w = legW * (sit ? 1.35 : 1.25) * u * wk;
     if(P.shoes === "chinelo"){
@@ -4897,7 +4920,9 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     const body = [[cx - w * 0.72, Y(shoeTop)], [cx + w * 0.72, Y(shoeTop)], [cx + w * 0.98, Y(2.6)], [cx + w * 1.02, Y(1.4)], [cx - w * 1.02, Y(1.4)], [cx - w * 0.98, Y(2.6)]];
     smoothPath(body); fillOL(shadeFill(SHOE[0], cx - w, cx + w));
     c.fillStyle = SHOE[1]; rrectC(c, cx - w * 1.04, Y(1.6), w * 2.08, 1.6 * u, 0.7 * u); c.fill(); c.strokeStyle = OL; c.lineWidth = olw; c.stroke();
-    if(P.shoes !== "bota"){
+    if(P.shoes === "cowboy"){ c.strokeStyle = SHOE[2]; c.lineWidth = Math.max(0.4, 0.3 * u); c.beginPath(); c.moveTo(cx - w * 0.4, Y(shoeTop - 2)); c.quadraticCurveTo(cx, Y(shoeTop - 5), cx + w * 0.4, Y(shoeTop - 2)); c.stroke(); }
+    if(P.shoes === "coturno"){ c.strokeStyle = "#5a606b"; c.lineWidth = Math.max(0.4, 0.28 * u); for(let k = 0; k < 4; k++){ const yy = Y(shoeTop - 1.4 - k * 2.2); c.beginPath(); c.moveTo(cx - w * 0.35, yy); c.lineTo(cx + w * 0.35, yy); c.stroke(); } }
+    if(!boot){
       c.strokeStyle = shade(SHOE[0], lum(SHOE[0]) > 0.5 ? -0.35 : 0.45); c.lineWidth = Math.max(0.4, 0.3 * u);
       for(let k = 0; k < 3; k++){ const yy = Y(shoeTop - 1.4 - k * 1.3); c.beginPath(); c.moveTo(cx - w * 0.3, yy); c.lineTo(cx + w * 0.3, yy); c.stroke(); }
       c.fillStyle = SHOE[2]; c.beginPath(); c.ellipse(cx + sd * w * 0.62, Y(3.6), w * 0.26, 1.1 * u, sd * 0.4, 0, TAU); c.fill();
@@ -4937,7 +4962,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     if(of === "polo"){ c.fillStyle = shade(top, -0.18); path([[X(-3.6), Y(84)], [X(0), Y(80)], [X(3.6), Y(84)], [X(5.2), Y(82.4)], [X(0), Y(78.6)], [X(-5.2), Y(82.4)]]); c.fill(); c.fillStyle = st; c.fillRect(X(-0.6), Y(79.5), 1.2 * u, 6 * u);
       c.fillStyle = st; c.font = "italic 800 " + (2.6 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("TG", X(5), Y(74)); }
     else { c.fillStyle = shade(top, -0.25); c.beginPath(); c.ellipse(X(0), Y(83.6), (of === "regata" ? 4.6 : 3.6) * u, (of === "regata" ? 3.4 : 1.8) * u, 0, 0, Math.PI); c.fill();
-      c.fillStyle = st; c.font = "italic 800 " + (6 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("TG", X(0), Y(68)); }
+      c.fillStyle = st; c.font = "italic 800 " + (6 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; if(ofx !== "camisa10") c.fillText("TG", X(0), Y(68)); }
     c.fillStyle = "rgba(0,0,0,.2)"; c.fillRect(X(-hipH), Y(49), 2 * hipH * u * wk, 1.6 * u);
   } else if(of === "jaqueta" || of === "couro"){
     c.fillStyle = of === "couro" ? "#0d0e11" : shade(top, -0.3);
@@ -5039,7 +5064,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   }
 
   // ---- the helmet ----
-  const HELM = P.helmet;
+  const HELMX = P.helmet, HELM = {gp:"integral", neon:"integral", rally:"integral", moto:"aberto"}[P.helmet] || P.helmet;
   const helmet = (hx, hy, sc, onHead) => {
     const R0 = headW * 1.45 * sc, top2 = hy - R0 * 1.12, bot2 = hy + R0 * 0.72, shellC = HELM === "carbono" ? "#1a1c21" : HELM === "retro" ? "#eef0f3" : top;
     const shell = () => {
@@ -5056,6 +5081,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     if(HELM === "carbono"){ c.fillStyle = "rgba(255,255,255,.06)"; for(let i = -12; i < 12; i++) for(let j = -12; j < 12; j++) if((i + j) % 2 === 0) c.fillRect(hx + i * R0 * 0.12, hy + j * R0 * 0.12, R0 * 0.12, R0 * 0.12); }
     // livery: stripes in the detail colour
     c.fillStyle = HELM === "retro" ? top : st; c.fillRect(hx - R0 * 0.12, top2 - 2, R0 * 0.24, R0 * 2.4);
+    if(HELMX === "gp"){ [st, "#ffffff", st].forEach((col, k) => { c.fillStyle = col; c.beginPath(); c.moveTo(hx - R0 * 1.2, hy - R0 * (0.75 - k * 0.22)); c.lineTo(hx, hy - R0 * (0.35 - k * 0.22)); c.lineTo(hx + R0 * 1.2, hy - R0 * (0.75 - k * 0.22)); c.lineTo(hx + R0 * 1.2, hy - R0 * (0.65 - k * 0.22)); c.lineTo(hx, hy - R0 * (0.25 - k * 0.22)); c.lineTo(hx - R0 * 1.2, hy - R0 * (0.65 - k * 0.22)); c.closePath(); c.fill(); }); }
     if(HELM === "f1" || HELM === "integral" || HELM === "carbono"){ c.fillStyle = HELM === "carbono" ? top : st; c.beginPath(); c.ellipse(hx, hy + R0 * 0.1, R0 * 1.2, R0 * 0.4, 0, Math.PI, TAU); c.globalAlpha = 0.5; c.fill(); c.globalAlpha = 1; }
     c.restore();
     if(HELM === "aberto" || HELM === "retro"){
@@ -5074,8 +5100,29 @@ function drawPilot(c, x, footY, h, P0, pose, t){
       if(HELM === "f1"){ c.fillStyle = shade(shellC, -0.3); rrectC(c, hx - R0 * 0.22, top2 - R0 * 0.12, R0 * 0.44, R0 * 0.22, R0 * 0.08); c.fill(); c.fillStyle = "#0b0d12"; c.fillRect(hx - R0 * 0.14, top2 - R0 * 0.06, R0 * 0.28, R0 * 0.08); }
     }
   };
-  if(helmetOn){ helmet(hcx, Y(93.4), 1, true); if(HELM === "aberto" || HELM === "retro"){ /* face drawn above, shows through */ } }
+  const helmetX = (hx, hy, sc, onHead) => {
+    helmet(hx, hy, sc, onHead);
+    const R0 = headW * 1.45 * sc;
+    if(HELMX === "neon"){ const vy = hy - R0 * 0.05, vh = R0 * 0.42; c.save(); c.globalCompositeOperation = "lighter"; const g = c.createLinearGradient(0, vy - vh / 2, 0, vy + vh / 2); g.addColorStop(0, "rgba(57,255,20,.75)"); g.addColorStop(1, "rgba(0,229,255,.55)"); c.fillStyle = g; c.beginPath(); c.ellipse(hx, vy, R0 * 0.86, vh / 2, 0, 0, TAU); c.fill(); c.restore(); }
+    if(HELMX === "rally" || HELMX === "moto"){ const py = hy - R0 * (HELMX === "moto" ? 0.62 : 0.5); c.fillStyle = shade(HELMX === "moto" ? st : top, -0.15); c.beginPath(); c.moveTo(hx - R0 * 0.95, py); c.quadraticCurveTo(hx, py - R0 * 0.28, hx + R0 * 0.95, py); c.lineTo(hx + R0 * 1.15, py + R0 * 0.16); c.quadraticCurveTo(hx, py - R0 * 0.02, hx - R0 * 1.15, py + R0 * 0.16); c.closePath(); c.fill(); c.strokeStyle = OL; c.lineWidth = olw; c.stroke(); }
+    if(HELMX === "moto"){ c.fillStyle = shade(top, -0.2); c.beginPath(); c.moveTo(hx - R0 * 0.5, hy + R0 * 0.42); c.lineTo(hx + R0 * 0.5, hy + R0 * 0.42); c.lineTo(hx + R0 * 0.3, hy + R0 * 0.85); c.lineTo(hx - R0 * 0.3, hy + R0 * 0.85); c.closePath(); c.fill(); c.strokeStyle = OL; c.stroke(); }
+  };
+  if(helmetOn){ helmetX(hcx, Y(93.4), 1, true); if(HELM === "aberto" || HELM === "retro"){ /* face drawn above, shows through */ } }
 
+  // details of the new outfits, painted on the torso
+  if(ofx !== of){
+    c.save(); smoothPath(torsoPts); c.clip();
+    if(ofx === "macacaof1"){ c.fillStyle = st; [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(X(sd * (swH - 0.5)), Y(80)); c.lineTo(X(sd * (swH + 1)), Y(80)); c.lineTo(X(sd * (hipH + 1)), Y(48)); c.lineTo(X(sd * (hipH - 3.5)), Y(48)); c.closePath(); c.fill(); });
+      c.fillStyle = "#ffffff"; c.fillRect(X(-5.5), Y(72), 11 * u * wk, 2.6 * u); c.fillStyle = top; c.font = "italic 800 " + (2.1 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("TURBO", X(0), Y(70.7)); }
+    if(ofx === "macacaodrift"){ c.fillStyle = st; c.beginPath(); c.moveTo(X(-swH), Y(84)); c.lineTo(X(-swH + 5), Y(84)); c.lineTo(X(hipH + 1), Y(52)); c.lineTo(X(hipH - 4), Y(52)); c.closePath(); c.fill();
+      c.fillStyle = shade(st, -0.3); c.fillRect(X(-hipH), Y(57), 2 * hipH * u * wk, 1.2 * u); }
+    if(ofx === "corrida"){ c.fillStyle = st; c.fillRect(X(-20), Y(69), 40 * u * wk, 2.4 * u); c.fillStyle = "#ffffff"; c.fillRect(X(-20), Y(66.4), 40 * u * wk, 1 * u); }
+    if(ofx === "bomber"){ c.fillStyle = st; c.fillRect(X(-20), Y(51.5), 40 * u * wk, 2.6 * u); c.beginPath(); c.ellipse(X(0), Y(83.4), 5 * u, 2.2 * u, 0, 0, Math.PI); c.fill();
+      c.strokeStyle = "rgba(0,0,0,.25)"; c.lineWidth = Math.max(0.4, 0.3 * u); for(let k = 0; k < 3; k++){ c.beginPath(); c.moveTo(X(-20), Y(50.8 + k * 0.9)); c.lineTo(X(20), Y(50.8 + k * 0.9)); c.stroke(); } }
+    if(ofx === "camisa10"){ c.fillStyle = st; c.font = "800 " + (7 * u).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("10", X(0), Y(67));
+      c.fillRect(X(-swH), Y(83), 2 * swH * u * wk, 1 * u); }
+    c.restore();
+  }
   // ---- arms (after the torso so they sit in front of it) ----
   const shL = [X(-swH + 0.8), Y(80.6)], shR = [X(swH - 0.8), Y(80.6)];
   let hands;
@@ -5110,7 +5157,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     }
     if(acc.includes("relogio") && i === 0){ const q = [el[0] + (hd[0] - el[0]) * 0.86, el[1] + (hd[1] - el[1]) * 0.86]; c.fillStyle = "#c9ced8"; c.beginPath(); c.ellipse(q[0], q[1], aw2 * 1.05, aw2 * 0.55, 0, 0, TAU); c.fill(); c.fillStyle = "#16181d"; circ(c, q[0], q[1], aw2 * 0.4); c.fill(); }
     // hand: palm and fingers, gloved or bare
-    const G = P.gloves, gc = G === "corrida" ? top : G === "couro" ? "#1a1b1f" : G === "drift" ? st : G === "meio" ? "#26282e" : sk;
+    const G = P.gloves, gc = G === "corrida" ? top : G === "couro" ? "#1a1b1f" : G === "drift" ? st : G === "meio" ? "#26282e" : G === "kevlar" ? "#eef0f3" : G === "neon" ? "#39ff14" : G === "mecanico" ? "#5b616d" : sk;
     const ang = Math.atan2(hd[1] - el[1], hd[0] - el[0]), hl = 4.4 * u, hw = 1.75 * u * Math.sqrt(wk);
     c.save(); c.translate(hd[0], hd[1]); c.rotate(ang - Math.PI / 2);
     const handG = c.createLinearGradient(-hw, 0, hw, 0); handG.addColorStop(0, shade(gc, -0.25)); handG.addColorStop(0.5, gc); handG.addColorStop(1, shade(gc, 0.1));
@@ -5131,7 +5178,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     c.fillRect(tx - 1 * tu, ty - 5.6 * tu, 2 * tu, 3 * tu); rrectC(c, tx - 3.5 * tu, ty - 3 * tu, 7 * tu, 2 * tu, 0.5 * tu); c.fill();
   }
   // helmet carried under the arm
-  if(helmetArm && pose !== "clap") helmet(X(-hipH - 4), Y(58), 0.82, false);
+  if(helmetArm && pose !== "clap") helmetX(X(-hipH - 4), Y(58), 0.82, false);
   c.restore();
 }
 
@@ -7460,8 +7507,9 @@ function drawCockpit(now){
     const ur = [Math.cos(a), Math.sin(a)], ut = [-Math.sin(a), Math.cos(a)], up = sg < 0 ? ut : [-ut[0], -ut[1]];
     return {ur, up, pt:(r, u) => [hx + ur[0] * r + up[0] * u, hy + ur[1] * r + up[1] * u]};
   };
-  const PLT = S.pilot, outfit = PLT.outfit || "macacao", longS = outfit === "macacao" || outfit === "jaqueta" || outfit === "moletom";
-  const armC = longS ? (outfit === "jaqueta" ? shade(PLT.suit, -0.1) : PLT.suit) : PLT.skin;
+  const PLT = pvPilot(), outfitX = PLT.outfit || "macacao", outfit = {macacaof1:"macacao", macacaodrift:"macacao", corrida:"jaqueta", bomber:"jaqueta", camisa10:"camiseta", macacao2:"macacao", kart:"macacao"}[outfitX] || outfitX;
+  const longS = outfit === "macacao" || outfit === "jaqueta" || outfit === "moletom" || outfit === "couro";
+  const armC = longS ? (outfit === "couro" ? "#17181c" : outfit === "jaqueta" ? shade(PLT.suit, -0.1) : PLT.suit) : PLT.skin;
   const wristOf = i => {
     const [hx, hy] = handPos(i), sg = i ? 1 : -1, busy = i && (reach > 0.02 || handK > 0.02);
     return [hx + sg * 5.6 * 1.12, hy + 17 * 1.12];
@@ -7490,7 +7538,7 @@ function drawCockpit(now){
       [0.35, 0.55, 0.72].forEach((f, k) => { const w = w0 + (w1 - w0) * f, p0 = along(f, w * 0.8), p1 = along(f + 0.05, -w * 0.2), p2 = along(f, -w * 0.85); ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(p1[0], p1[1], p2[0], p2[1]); ctx.stroke(); });
       if(outfit === "macacao"){ const s0 = along(0, -lit * 5), s1 = along(1, -lit * 2.6); ctx.strokeStyle = PLT.stripe; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(s0[0], s0[1]); ctx.lineTo(s1[0], s1[1]); ctx.stroke(); }
     } else {
-      if(outfit === "camiseta"){ const s0 = along(0, w0 + 2), s1 = along(0.22, w0 + 1), s2 = along(0.22, -w0 - 1), s3 = along(0, -w0 - 2); ctx.fillStyle = PLT.suit; ctx.beginPath(); ctx.moveTo(s0[0], s0[1]); ctx.lineTo(s1[0], s1[1]); ctx.lineTo(s2[0], s2[1]); ctx.lineTo(s3[0], s3[1]); ctx.fill(); }
+      if(outfit === "camiseta" || outfit === "polo"){ const s0 = along(0, w0 + 2), s1 = along(0.22, w0 + 1), s2 = along(0.22, -w0 - 1), s3 = along(0, -w0 - 2); ctx.fillStyle = PLT.suit; ctx.beginPath(); ctx.moveTo(s0[0], s0[1]); ctx.lineTo(s1[0], s1[1]); ctx.lineTo(s2[0], s2[1]); ctx.lineTo(s3[0], s3[1]); ctx.fill(); }
       const h0 = along(0.3, lit * 4), h1 = along(0.92, lit * 2.4); ctx.strokeStyle = "rgba(255,255,255,.16)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(h0[0], h0[1]); ctx.lineTo(h1[0], h1[1]); ctx.stroke();
       if(PLT.tattoo === "braco" || PLT.tattoo === "tribal"){
         ctx.strokeStyle = "rgba(25,32,45,.75)"; ctx.lineWidth = 1.1;
@@ -7507,7 +7555,8 @@ function drawCockpit(now){
   const rimCol = KC.ckWheelC;
   drawWheelArt(ctx, wr, swS, {acc, rimCol, frac, blink, gear:gearTxt, stitch:stitchC});
   // gloved hands wrapped round the grips at quarter to three
-  const GD = "#121419", GM = "#23262e", GL = "#3b404b", panel = PLT.suit || "#e5484d";
+  const GV = PLT.gloves || "none", GB = {none:PLT.skin, corrida:"#23262e", couro:"#4a2e1c", meio:"#26282e", drift:PLT.stripe || "#e5484d", kevlar:"#e6e9ee", neon:"#39ff14", mecanico:"#5b616d"}[GV] || "#23262e";
+  const GD = shade(GB, -0.45), GM = GB, GL = shade(GB, 0.22), panel = PLT.suit || "#e5484d";
   handA.forEach((a, i) => {
     const sg = i ? 1 : -1, [hx, hy] = handPos(i);
     const capP = (p0, p1, w, col, hlDir) => {
@@ -7901,7 +7950,7 @@ function applyPreset(pr){
 function renderEstilo(){
   const car = carById(S.car), k = custOf(S.car);
   let h = '<div class="ph"><span>Personalizando o <b style="color:var(--fg)">' + car.name + '</b>. Peças valem só para este carro.</span></div>';
-  h += '<div class="ph"><span>Toque em qualquer opção para ver no carro (e ouvir, se mudar o ronco) antes de comprar. Volante, painel e relógios aparecem na vista interna.</span></div>';
+  h += '<div class="ph"><span>Toque uma vez para ver no carro (e ouvir, se mudar o ronco). Toque de novo na mesma opção para comprar. Volante, painel e relógios aparecem na vista interna.</span></div>';
   h += '<div class="sec">Visual pronto</div><div class="opts">';
   PRESETS.forEach(pr => {
     const on = presetOn(pr), cost = presetCost(pr), look = pv && pv.preset === pr.id;
@@ -8493,7 +8542,8 @@ const carK = car => Math.min(4, Math.max(0.7, Math.pow(Math.max(car.price || 0, 
 const PART_BRL = {kit:[0, 3500, 12000, 22000], aero:[0, 600, 1200, 2200, 4500, 8000], rodas:[0, 4000, 14000], susp:[0, 1800, 4500, 8000, 14000],
   escape:[0, 1800, 2800, 6500], blower:[0, 18000, 30000, 55000]};
 const PIL_PRICE = {hair:60, hairC:150, glasses:350, tattoo:900, outfit:600, suit:250, stripe:120, shoes:450, acc:300, pants:250, gloves:400, helmet:1500};
-const PIL_MUL = {"outfit|couro":1.6, "outfit|kart":1.4, "outfit|macacao2":1.3, "helmet|carbono":2.4, "helmet|f1":1.8, "helmet|drag":1.5, "helmet|retro":1.2, "gloves|drift":1.3, "gloves|couro":1.2, "shoes|corrida":1.5, "shoes|basquete":1.3, "shoes|chinelo":0.4};
+const PIL_MUL = {"helmet|gp":2, "helmet|neon":1.8, "helmet|rally":1.3, "helmet|moto":1.2, "outfit|macacaof1":2.2, "outfit|macacaodrift":1.8, "outfit|corrida":1.4, "outfit|bomber":1.3, "outfit|camisa10":0.6,
+  "shoes|coturno":1.4, "shoes|cowboy":1.6, "shoes|chelsea":1.3, "shoes|skate":0.9, "shoes|neonverde":1.1, "shoes|neonrosa":1.1, "gloves|kevlar":1.6, "gloves|neon":1.1, "gloves|mecanico":0.6,"outfit|couro":1.6, "outfit|kart":1.4, "outfit|macacao2":1.3, "helmet|carbono":2.4, "helmet|f1":1.8, "helmet|drag":1.5, "helmet|retro":1.2, "gloves|drift":1.3, "gloves|couro":1.2, "shoes|corrida":1.5, "shoes|basquete":1.3, "shoes|chinelo":0.4};
 const COS_FREE = {finish:"brilho", vinyl:"none", light:"#fff1c9", flame:"#ff9a1f", flameSize:"m", sound:"orig", wmodel:"orig", tire:"orig", tireC:"#f4f5f8", exModel:"orig"};
 const PIL_FREE = defaultPilot();
 const nicePrice = x => x < 1000 ? Math.round(x / 10) * 10 : (() => { const p = Math.pow(10, Math.floor(Math.log10(x)) - 1); return Math.round(x / p) * p; })();
@@ -8504,7 +8554,7 @@ function cosPrice(key, val, carId){
   let mul = 1;
   if(key === "rim" && RIM_CHROME[val]) mul = 2.5;
   if(key === "wmodel" && {jdm6:1, dayton:1, vip:1, spinner:1, seis:1, drag:1}[val]) mul = 1.4;
-  if(key === "finish" && val !== "brilho") mul = val === "metal" ? 1.5 : 1.2;
+  if(key === "finish" && val !== "brilho") mul = {metal:1.5, fosco:1.2, perola:1.8, cromo:3, neon:1.4}[val] || 1.2;
   if(key === "aro") mul = Math.max(1, Math.abs(+val - car.inch));
   if(key === "sound") mul = 1.2;
   if(key === "wing") mul = {ug2:1.3, bat:1.4, loop:1.6, drag:1.5, chassis:1.9, tri:0.9, evo:1.1, ducktop:0.8}[val] || 1;
@@ -8536,7 +8586,17 @@ function pilotMigrate(){
   if(P.hair === "capacete"){ P.hair = "curto"; if(!P.helmet || P.helmet === "none"){ P.helmet = "integral"; P.helmetWear = "cabeca"; markOwn("pilot|helmet|integral"); } }
   ["pants", "gloves", "helmet", "helmetWear"].forEach(k => { if(P[k] === undefined) P[k] = defaultPilot()[k]; });
 }
+let lastAsk = null;
 function askBuy(what, cost, go, noCar){
+  const key = what + "|" + cost + "|" + (noCar ? "p" : S.car);
+  if(lastAsk && lastAsk.key === key && Date.now() - lastAsk.t < 30000){
+    lastAsk = null;
+    if(S.money < cost){ toast("Faltam " + money(cost - S.money) + " para comprar " + what); return; }
+    go(); buyGo = null; pv = null; save(); renderPanel(true); return;
+  }
+  lastAsk = {key, t:Date.now()};
+  toast(what + " · " + (cost ? money(cost) : "grátis") + " — toque de novo para comprar");
+  return;
   const lack = cost - S.money;
   document.body.classList.add("pvOn");
   el("buyTxt").textContent = what + (noCar ? "" : " no " + carById(S.car).name);
@@ -9356,7 +9416,7 @@ function openGarage(){
   garageOpen = true; garageEl.hidden = false; gpanel.scrollTop = 0;
   renderPanel(true); requestAnimationFrame(drawGarage);
 }
-function endPreview(){ pv = null; buyGo = null; el("buyModal").hidden = true; document.body.classList.remove("pvOn"); }
+function endPreview(){ pv = null; buyGo = null; lastAsk = null; el("buyModal").hidden = true; document.body.classList.remove("pvOn"); }
 function closeGarage(){ endPreview(); gView = "out"; garageOpen = false; garageEl.hidden = true; grev.t = -1; renderPanel(true); }
 const grev = {t:-1, flashUntil:0, lastPop:0, cranked:false, caught:false};
 const GCRANK = 0.9, GIDLE = 1.9, GOFF = 1.9 + 4.2 + 1.6;
