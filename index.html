@@ -387,7 +387,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 const SAVE_KEY = "turbo-garage-v2";
 
 const CARS = [
-  {id:"bolinha", name:"Bolinha 1.0", tag:"Hatch 3 portas dos anos 90", spec:"1.0 16V · 70 cv · 5 marchas", model:"bola", vk:160, t100:13.5, inch:15, price:0, color:"#e3261d", rim:"#d9dde3", cal:"#c8121b", spokes:5, wmodel:"gti5", rimK:1.22},
+  {id:"bolinha", name:"Bolinha 1.0", tag:"Hatch 3 portas dos anos 90", spec:"1.0 16V · 70 cv · 5 marchas", model:"bola", vk:160, t100:13.5, inch:15, price:0, color:"#a9adb4", rim:"#dfe2e7", cal:"#3a3d45", spokes:10, wmodel:"v10", rimK:1.24},
   {id:"mille", name:"Mille Escada", tag:"Hatch quadradinho popular", spec:"1.0 8V · 58 cv · 5 marchas", model:"mille", vk:150, t100:15.4, inch:13, price:900, color:"#e5484d", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
   {id:"fuscao", name:"Fuscão", tag:"Clássico nacional a ar", spec:"1.6 boxer a ar · 65 cv · 4 marchas", model:"bug", vk:145, t100:16.5, inch:15, price:1500, color:"#2f63d6", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
   {id:"chevetinho", name:"Chevetinho", tag:"Sedã 2 portas de tração traseira", spec:"1.6 8V · 82 cv · 4 marchas", model:"chevette", vk:165, t100:13.0, inch:13, price:2500, color:"#ff7a1a", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
@@ -1765,7 +1765,7 @@ const STYLE = {
   golf:        {head:"projector", tail:"block", line:"high", mirror:"body"},
   fa5:         {head:"projector", tail:"fa",   line:"none", mirror:"body", fog:"amber"},
   picape:      {head:"projector", tail:"vert", line:"high", mirror:"black"},
-  bola:        {head:"projector", tail:"vert", line:"none", mirror:"body"},
+  bola:        {head:"projector", tail:"vert", line:"none", mirror:"black"},
   mille:       {head:"rect80", tail:"vert", bumper:"black", rub:1, line:"none", antenna:1, mirror:"black"},
   bug:         {head:"round", tail:"round", trim:"chrome", line:"none", mirror:"bullet"},
   chevette:    {head:"rect80", tail:"wide", trim:"chrome", line:"none", mirror:"bullet"},
@@ -1811,7 +1811,7 @@ function fenderize(M){
 }
 // the 2026 garage: every body from its real length, wheelbase, height and tyre size
 Object.assign(MODELS, {
-  bola:{len:65.1,hatchback:true,gap:0.65,sh:12.8,pts:[[2.63,3.5],[0.09,6.34],[-0.05,10.15],[0.58,11.73],[0.86,12.55],[1.3,16.59],[2.63,19.36],[4.76,21.46],[6.58,22.89],[10.5,23.66],[23.36,24.13],[32.9,24.08],[36.63,23.66],[39.59,21.37],[43.87,18.27],[46.25,16.4],[47.44,15.93],[51.98,15.65],[56.75,14.68],[61.04,13.74],[63.33,12.69],[64.28,11.73],[64.86,9.92],[65.0,8.73],[65.1,5.64],[64.38,4.67],[63.19,3.9],[59.13,3.24]],wins:[[[43.87,15.09],[41.02,18.5],[37.21,22.93],[24.33,22.65],[24.33,15.54]],[[22.8,22.61],[11.45,22.7],[8.35,20.98],[6.77,17.26],[7.25,16.36],[22.8,15.73]]],belt:15.4,pillar:0,doors:[22.89,45.69],handles:[25.03],mirror:[43.87,15.17],wheels:[8.58,52.94],r:4.92,lines:[[[51.63,7.35],[26.25,7.26],[10.5,7.53]]],fx:[{t:"stubant",x:14.79},{t:"badge",x:15.05,y:9.92,tx:"GTI"}],head:[[64.28,11.73],[62.48,11.36],[62.48,9.82],[64.47,9.82]],tail:[[1.82,16.84],[0.86,16.5],[0.67,12.55],[1.63,12.69]]},
+  bola:{len:66.13,hatchback:true,gap:0.65,sh:12.3,pts:[[1.26,3.5],[0.0,5.32],[0.0,8.89],[0.77,10.4],[1.26,12.95],[1.52,15.23],[2.28,16.75],[4.06,18.52],[6.34,20.14],[8.89,21.56],[9.64,21.93],[14.46,22.49],[23.1,22.68],[34.76,22.17],[37.8,21.56],[45.17,15.73],[46.69,15.23],[52.54,14.37],[59.12,12.95],[63.18,12.34],[64.96,11.67],[65.82,10.4],[66.13,8.37],[65.98,5.32],[65.21,3.82],[62.69,3.29]],wins:[[[6.86,15.73],[11.17,20.81],[12.18,21.32],[22.09,21.47],[22.68,20.97],[22.58,15.07],[21.56,14.88],[7.35,15.52]],[[24.61,21.47],[36.79,21.37],[41.37,18.27],[43.89,15.58],[41.86,14.7],[24.61,14.82]]],belt:14.88,pillar:0,doors:[23.1,45.17],handles:[23.59],mirror:[41.62,14.98],wheels:[9.14,52.27],r:4.59,fx:[{t:"stubant",x:14.46},{t:"sport",x0:14.98,x1:44.91,y0:4.83,y1:6.34}],head:[[60.66,11.83],[64.96,11.62],[65.21,9.99],[60.9,10.31]],tail:[[1.02,15.89],[2.19,16.0],[2.28,10.4],[1.17,10.4]]},
   mille:{len:63.77,hatchback:true,sh:14.6,pts:[[1.05,4.2],[0.0,5.6],[0.0,9.1],[0.14,15.75],[0.53,20.65],[1.58,24.15],[3.85,25.2],[8.4,25.34],[34.12,25.29],[37.28,24.59],[47.08,17.06],[49.88,16.36],[58.28,15.66],[62.3,14.88],[63.53,12.6],[63.79,7.35],[63.0,4.2]],wins:[[[27.3,24.24],[36.23,24.24],[45.33,17.33],[27.3,17.33]],[[26.08,24.24],[26.08,17.33],[6.83,17.5],[5.78,20.65],[6.65,24.24]]],belt:17.24,pillar:0,doors:[26.69,48.65],handles:[27.65],mirror:[45.85,17.41],wheels:[9.8,51.14],r:4.92,head:[[59.33,15.58],[63.0,14.88],[63.44,12.78],[59.41,13.04]],tail:[[0.0,9.8],[0.14,16.8],[1.93,16.89],[1.93,9.8]]},
   bug:{len:71.23,chrome:true,sh:16.4,pts:[[1.93,5.78],[0.0,7.53],[0.18,11.2],[1.93,15.05],[5.78,18.55],[11.38,22.23],[18.38,25.2],[26.25,26.34],[33.25,26.25],[39.38,25.2],[44.1,22.75],[47.25,19.16],[51.63,18.29],[57.75,17.5],[63.35,16.28],[67.55,13.83],[70.18,10.5],[71.23,7.88],[70.0,5.78]],wins:[[[15.75,19.43],[19.25,22.58],[25.38,24.59],[32.03,24.94],[32.03,19.43]],[[33.34,24.99],[38.5,24.68],[42.35,22.58],[45.15,19.6],[33.34,19.6]]],belt:18.99,pillar:0,deck:17.5,doors:[32.73,47.6],handles:[34.3],mirror:[45.15,19.95],wheels:[15.4,57.4],r:5.78,fx:[{t:"beetle"}],head:[[62.3,16.89],[65.98,15.84],[66.68,13.83],[63.0,14.35]],tail:[[2.45,11.2],[3.5,15.4],[5.78,15.75],[5.08,11.2]]},
   chevette:{len:73.33,chrome:true,sh:14.6,pts:[[1.4,5.25],[0.0,6.65],[0.0,11.2],[0.44,15.05],[2.45,16.36],[14.0,16.66],[17.5,17.24],[25.9,22.75],[29.75,23.19],[41.13,23.14],[44.1,22.49],[51.8,16.94],[54.43,16.54],[68.25,15.66],[72.28,15.14],[73.15,13.3],[72.62,10.85],[73.33,7.35],[72.28,5.25]],wins:[[[19.25,17.5],[26.6,22.23],[29.75,22.61],[32.9,22.61],[32.9,17.33]],[[34.12,22.66],[42.7,22.49],[50.23,17.33],[34.12,17.33]]],belt:17.24,pillar:0,deck:16.62,doors:[33.43,52.33],handles:[35.0],mirror:[50.75,17.5],wheels:[16.8,58.71],r:5.06,fx:[{t:"stripe",y0:12.25,y1:12.95,x0:3.5,x1:70.0}],head:[[68.78,15.49],[72.45,15.02],[72.8,12.6],[68.78,12.86]],tail:[[0.0,11.2],[0.44,15.4],[3.68,15.75],[3.41,11.38]]},
@@ -1865,7 +1865,7 @@ const CARBON = "#1b1e25";
 
 // Wheel models (side view), drawn over tyre, brake disc and caliper. rear = rear axle (drag setups).
 // lip = polished outer ring width (fraction of the rim radius): deep wheels show a wide lip and a step down to the face.
-const WHEELS = [["orig","Original"],["gti5","GTI 5 raios"],["mesh","Mesh clássica"],["sixflat","6 raios forjada"],["split5","Raio duplo"],["five","5 raios côncava"],["deep3","3 peças deep dish"],
+const WHEELS = [["orig","Original"],["gti5","GTI 5 raios"],["v10","10 raios em V"],["mesh","Mesh clássica"],["sixflat","6 raios forjada"],["split5","Raio duplo"],["five","5 raios côncava"],["deep3","3 peças deep dish"],
   ["multi","Multi-raios"],["rotor","Rotor"],["turbofan","Turbofan"],["petal","Pétala"],["disco","Aero disco"],["aco","Aço furada"],["y10","10 raios em Y"],["cruz","Cruz 4 raios"],["teia","Teia"],["helice","Hélice"],["calota","Calota cromada"],["mono7","Monobloco 7 raios"],["raiada","Raiada (arame)"],["telefone","Telefone"],["drift","Drift"],["torque","Torque 5 raios"],["slotmag","Slot mag"],["dayton","Raiada 100 raios"],["spinner","Spinner"],["vip","VIP deep dish"],["torcido","Raios torcidos"],["laminas","Lâminas"],["colmeia","Colmeia"],["xcruz","Raios em X"],["seis","6 raios largos"],["jdm6","6 raios JDM côncava"],["drag","Drag runner + slick"]];
 const WHEEL_IDS = WHEELS.map(w => w[0]);
 // tyre models: tread for the dirt, slicks for the strip, and raised lettering on the sidewall in any colour
@@ -2079,6 +2079,13 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = lw(0.03);
     for(let k = 0; k < 5; k++){ const a = spin + k * TAU / 5; curve(a - 0.05, 0.4, a + 0.02, 0.65, a + 0.1, 0.88); }
     c.globalAlpha = 1; ring(0.97, 0.05, shade(rim, -0.35)); ring(0.4, 0.025, shade(rim, -0.25)); lugs = 4; capK = 0.2;
+  } else if(style === "v10"){
+    for(let k = 0; k < 5; k++){
+      const a = spin + k * TAU / 5;
+      [-1, 1].forEach(sd => { wedge(a + sd * 0.17, 0.05, 0.075, 0.3, f - 0.03, m);
+        c.strokeStyle = "rgba(0,0,0,.3)"; c.lineWidth = lw(0.02); seg(a + sd * 0.17 + 0.04, 0.34, a + sd * 0.17 + 0.06, f - 0.06); });
+    }
+    c.globalAlpha = 1; ring(f - 0.02, 0.06); ring(0.3, 0.05); lugs = 4; capK = 0.2;
   } else if(style === "aco"){
     const sg = c.createRadialGradient(cx, cy, rr * 0.2, cx, cy, rr);
     sg.addColorStop(0, shade(rim, -0.1)); sg.addColorStop(1, shade(rim, -0.45));
@@ -2688,6 +2695,19 @@ function drawCar(c, x, baseY, s, key, color, o){
       else c.fillStyle = lum(color) > 0.5 ? "rgba(17,19,23,.85)" : "rgba(244,245,248,.85)";
       c.fillRect(X(f.x0), Y(f.y1), (f.x1 - f.x0) * s, Math.max(0.5, (f.y1 - f.y0) * s));
       if(f.k === "gt" && s > 1.4){ c.fillStyle = color; c.font = "italic 800 " + ((f.y1 - f.y0) * 0.95 * s).toFixed(1) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("GT", X(f.x1 - 6), Y((f.y0 + f.y1) / 2)); }
+    } else if(f.t === "sport"){
+      // black side band along the doors, a chequered fade at its rear end and SPORT knocked out in the body colour
+      const xc = f.x0 + (f.x1 - f.x0) * 0.38, hh = f.y1 - f.y0;
+      c.fillStyle = "rgba(14,15,18,.92)"; c.fillRect(X(xc), Y(f.y1), (f.x1 - xc) * s, hh * s);
+      const sq = hh / 3;
+      for(let col = 0; (f.x0 + col * sq) < xc; col++) for(let row = 0; row < 3; row++){
+        if((col + row) % 2) continue;
+        const xx = f.x0 + col * sq, keep = (xx - f.x0) / (xc - f.x0);
+        c.globalAlpha = 0.25 + 0.67 * keep; c.fillRect(X(xx), Y(f.y1 - row * sq), sq * s, sq * s);
+      }
+      c.globalAlpha = 1;
+      if(s > 0.9){ c.font = "italic 800 " + (hh * 0.8 * s).toFixed(1) + "px " + DISP; c.textAlign = "right"; c.textBaseline = "middle";
+        c.strokeStyle = shade(color, 0.1); c.lineWidth = Math.max(0.4, 0.06 * s); c.strokeText("SPORT", X(f.x1 - hh * 0.4), Y(f.y0 + hh * 0.5)); }
     } else if(f.t === "scallop"){
       // a concave panel pressed into the doors: shaded on top, catching light along the lower lip
       const sg = c.createLinearGradient(0, Y(13.6), 0, Y(10.4)); sg.addColorStop(0, "rgba(0,0,0,.34)"); sg.addColorStop(0.6, "rgba(0,0,0,.08)"); sg.addColorStop(1, "rgba(255,255,255,.1)");
