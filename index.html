@@ -400,7 +400,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v139</span>
+  <span id="tgVer">v140</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -480,7 +480,8 @@ body.pvOn #gpanel{padding-bottom:170px}
     <div class="post-l"><span class="heart">♥</span> <b id="poLikes">0</b> curtidas</div>
     <p id="poCap"></p>
     <p id="poRew" class="post-r"></p>
-    <button class="btn" id="poOk" type="button">Show!</button>
+    <div class="row2" id="poAsk"><button class="btn ghost" id="poNo" type="button">Recusar</button><button class="btn" id="poYes" type="button">Aceitar e postar</button></div>
+    <button class="btn ghost" id="poOk" type="button" hidden>Fechar</button>
     <div class="flash" id="poFlash"></div>
   </div>
 </div>
@@ -8255,12 +8256,6 @@ function influencerAfterEvent(champ){
       : ["Não deu dessa vez, mas o visual da " + b.name + " ficou absurdo!", "Perdi o evento, mas ganhei no estilo. Valeu " + b.name + "!"];
     const badCaps = ["Fechei com a " + b.name + "! Corre lá que é sucesso garantido 🤑 #publi", "Tô com a " + b.name + ", confia! #publi", "Só coisa boa com a " + b.name + " 💸 #publi"];
     const post = {b:b.id, car:S.car, likes, fame, cash, champ, bad:!!b.bad, cap:(b.bad ? badCaps[Math.floor(Math.random() * badCaps.length)] : caps[Math.floor(Math.random() * caps.length)]) + (b.bad ? "" : " #publi #permuta"), boo:b.bad ? b.boo : null, t:Date.now()};
-    S.fame = Math.max(0, (S.fame || 0) + fame); if(cash) pay(cash, 30);
-    // permuta: the product is yours to keep
-    if(b.cos) Object.entries(b.cos).forEach(([k, v]) => markOwn(S.car + "|" + k + "|" + v));
-    if(b.pil) Object.entries(b.pil).forEach(([k, v]) => markOwn("pilot|" + k + "|" + v));
-    if(b.acc) markOwn("pilot|acc|" + b.acc);
-    (S.posts = S.posts || []).unshift(post); S.posts.length = Math.min(S.posts.length, 30);
     S.permuta = null; S.pendingPost = post;
   }
   newDM(!S.dmFirst && (S.fame || 0) >= 120); if((S.inbox || []).length) S.dmFirst = true;
@@ -8343,24 +8338,53 @@ el("phone").addEventListener("click", e => {
   }
 });
 // the post appears once the podium is over: a camera flash, the photo, the likes rolling in
+// the photo is ready: it shows what would be posted and you choose
+let poPost = null;
 function showPost(post){
-  const b = brandById(post.b); S.pendingPost = null; save();
-  el("postModal").hidden = false;
-  el("poHandle").textContent = handle(); el("poSub").textContent = "Parceria paga com " + b.name;
-  el("poCap").innerHTML = "<b>" + handle() + "</b> " + post.cap + (post.boo ? '<span class="boo">' + post.boo.map(x => "<i>" + x + "</i>").join("") + '</span>' : "");
-  el("poRew").className = "post-r" + (post.bad ? " neg" : "");
-  el("poRew").textContent = post.bad ? "Pegou mal: " + fmtN(post.fame * 28) + " seguidores · " + post.fame + " de fama · cachê " + money(post.cash) + " no bolso"
-    : "+" + fmtN(post.fame * 28) + " seguidores · +" + post.fame + " de fama" + (post.cash ? " · cachê " + money(post.cash) : "") + " · " + b.what.replace(/^(um|uma|o|a|os|as) /, "") + " agora é seu";
-  el("poSub").textContent = post.bad ? "Publicidade · " + b.name + " · comentários em chamas" : "Parceria paga com " + b.name;
-  const f = el("poFlash"); f.classList.add("on"); setTimeout(() => f.classList.remove("on"), 60);
-  shutterSfx();
+  const b = brandById(post.b); S.pendingPost = null; poPost = post; save();
+  if(!b){ poPost = null; return; }
+  el("postModal").hidden = false; el("poAsk").hidden = false; el("poOk").hidden = true;
+  el("poHandle").textContent = handle();
+  el("poSub").textContent = "Rascunho · parceria com " + b.name;
+  el("poLikes").textContent = "0";
+  el("poCap").innerHTML = "<b>" + handle() + "</b> " + post.cap;
+  el("poRew").className = "post-r";
+  el("poRew").textContent = post.bad ? "Se postar: cachê de " + money(post.cash) + " · reação do público: ?"
+    : "Se postar: +" + fmtN(post.fame * 28) + " seguidores · +" + post.fame + " de fama" + (post.cash ? " · cachê " + money(post.cash) : "") + " · e o produto fica seu";
   requestAnimationFrame(() => {
     const cv = el("poCv"), r = 2, w = cv.clientWidth || 340; cv.width = w * r; cv.height = w * r; const c = cv.getContext("2d"); c.setTransform(r, 0, 0, r, 0, 0); drawPostPhoto(c, w, w, post);
     drawAvatar(el("poAv"));
   });
+}
+// Aceitar: it goes up - flash, shutter, the likes roll in, the rewards (or the backlash) land
+function publishPost(){
+  const post = poPost; if(!post) return; poPost = null;
+  const b = brandById(post.b);
+  S.fame = Math.max(0, (S.fame || 0) + post.fame); if(post.cash) pay(post.cash, 30);
+  // permuta: the product is yours to keep
+  if(b.cos) Object.entries(b.cos).forEach(([k, v]) => markOwn(post.car + "|" + k + "|" + v));
+  if(b.pil) Object.entries(b.pil).forEach(([k, v]) => markOwn("pilot|" + k + "|" + v));
+  if(b.acc) markOwn("pilot|acc|" + b.acc);
+  (S.posts = S.posts || []).unshift(post); S.posts.length = Math.min(S.posts.length, 30);
+  save(); dirty = true;
+  el("poAsk").hidden = true; el("poOk").hidden = false;
+  el("poSub").textContent = post.bad ? "Publicidade · " + b.name + " · comentários em chamas" : "Parceria paga com " + b.name;
+  el("poCap").innerHTML = "<b>" + handle() + "</b> " + post.cap + (post.boo ? '<span class="boo">' + post.boo.map(x => "<i>" + x + "</i>").join("") + '</span>' : "");
+  el("poRew").className = "post-r" + (post.bad ? " neg" : "");
+  el("poRew").textContent = post.bad ? "Pegou mal: " + fmtN(post.fame * 28) + " seguidores · " + post.fame + " de fama · cachê " + money(post.cash) + " no bolso"
+    : "+" + fmtN(post.fame * 28) + " seguidores · +" + post.fame + " de fama" + (post.cash ? " · cachê " + money(post.cash) : "") + " · " + b.what.replace(/^(um|uma|o|a|os|as) /, "") + " agora é seu";
+  const f = el("poFlash"); f.classList.add("on"); setTimeout(() => f.classList.remove("on"), 60);
+  shutterSfx();
   const t0 = performance.now(), roll = () => { const k = Math.min(1, (performance.now() - t0) / 2200); el("poLikes").textContent = Math.round(post.likes * (1 - Math.pow(1 - k, 3))).toLocaleString("pt-BR"); if(k < 1 && !el("postModal").hidden) requestAnimationFrame(roll); };
   roll();
 }
+// Recusar: nothing goes up, no fee, no product, no change to your name
+function refusePost(){
+  const post = poPost; poPost = null; el("postModal").hidden = true;
+  if(post){ const b = brandById(post.b); toast("Parceria com " + (b ? b.name : "a marca") + " recusada. Nada foi postado."); save(); }
+}
+el("poYes").addEventListener("click", publishPost);
+el("poNo").addEventListener("click", refusePost);
 el("poOk").addEventListener("click", () => { el("postModal").hidden = true; });
 setInterval(() => {
   updPhoneBadge();
