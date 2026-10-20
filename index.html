@@ -322,6 +322,40 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .modal.pvbar .big{font-size:24px}
 body.pvOn #gpanel{padding-bottom:170px}
 .g-btns{display:flex;gap:6px}
+.phoneBtn{position:relative;display:grid;place-items:center}
+.phoneBtn svg{width:16px;height:16px}
+.phoneBtn i{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;border-radius:8px;background:#e5484d;color:#fff;font:700 10px/16px var(--display);font-style:normal;text-align:center;padding:0 3px}
+.sheet.ph-s{max-width:420px;max-height:calc(100dvh - 32px);overflow:hidden;text-align:left;gap:10px;padding:16px}
+.ph-top{display:flex;align-items:center;gap:10px}
+.ph-top canvas{width:56px;height:56px;border-radius:50%;border:2px solid var(--sodium);flex:none;background:#1a1f2c}
+.ph-id{flex:1;min-width:0}.ph-id b{display:block;font-family:var(--display);font-size:16px}.ph-id small{color:var(--muted);font-size:12px}
+.ph-x{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);font-size:20px;line-height:1;flex:none}
+.ph-stats{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:6px}
+.ph-stats div{background:var(--panel-2);border-radius:10px;padding:6px 4px}.ph-stats b{display:block;font-family:var(--display);font-size:16px}.ph-stats span{font-size:11px;color:var(--muted)}
+.ph-tabs{align-self:stretch;display:grid;grid-template-columns:1fr 1fr}
+.ph-body{overflow:auto;display:grid;gap:10px;align-content:start;min-height:120px}
+.dm{border:1px solid var(--line);border-radius:14px;padding:10px;display:grid;gap:8px;background:var(--panel-2)}
+.dm-h{display:flex;align-items:center;gap:8px}
+.dm-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 11px var(--display);flex:none}
+.dm-h b{font-family:var(--display);font-size:14px}.dm-h small{color:var(--muted);font-size:11px;margin-left:auto}
+.dm-msg{background:var(--panel);border-radius:4px 14px 14px 14px;padding:8px 10px;font-size:13px;line-height:1.4}
+.dm canvas{width:100%;height:120px;border-radius:10px;display:block}
+.dm-rew{font-size:12px;color:var(--muted)}.dm-rew b{color:var(--sodium)}
+.dm .row2{display:flex;gap:8px}.dm .row2 .btn{flex:1;min-height:38px}
+.dm.on{border-color:var(--sodium)}
+.ph-empty{color:var(--muted);font-size:13px;text-align:center;padding:16px 8px}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.ph-grid div{position:relative}.ph-grid canvas{width:100%;aspect-ratio:1;display:block;border-radius:4px}
+.ph-grid span{position:absolute;left:4px;bottom:3px;font:600 10px var(--display);color:#fff;text-shadow:0 1px 2px #000}
+.sheet.post-s{max-width:380px;text-align:left;gap:8px;padding:14px;position:relative;overflow:hidden}
+.post-h{display:flex;align-items:center;gap:8px}.post-h canvas{width:36px;height:36px;border-radius:50%;border:2px solid var(--sodium);background:#1a1f2c}
+.post-h b{display:block;font-family:var(--display);font-size:14px}.post-h small{color:var(--muted);font-size:11px}
+#poCv{width:100%;aspect-ratio:1;display:block;border-radius:8px}
+.post-l{font-size:14px}.post-l .heart{color:#ff3b5c;font-size:18px}
+#poCap{margin:0;font-size:13px;line-height:1.45;color:var(--fg)}
+.post-r{margin:0;font-size:13px;color:var(--sodium);font-weight:600}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .5s}
+.flash.on{opacity:.9;transition:none}
 .sheet .big{font-family:var(--display);font-weight:700;font-size:34px;color:var(--sodium);font-variant-numeric:tabular-nums}
 
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
@@ -341,6 +375,7 @@ body.pvOn #gpanel{padding-bottom:170px}
     <div class="hud-top">
       <div class="rival"><div class="k" id="rivalK">Rival nº 1</div><div class="n" id="rivalN">—</div></div>
       <div class="hud-btns">
+        <button class="pace phoneBtn" id="phoneBtn" aria-label="Celular: mensagens e posts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg><i id="phoneBadge" hidden></i></button>
         <button class="pace" id="snd" aria-pressed="false" aria-label="Ligar som"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg></button>
         <button class="pace" id="cam" aria-pressed="false" aria-label="Trocar câmera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h11v9H3z"/><path d="M14 11l6-3v9l-6-3"/></svg></button>
         <button class="pace" id="pace" aria-pressed="false" title="Ritmo da corrida">1x</button>
@@ -361,7 +396,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v134</span>
+  <span id="tgVer">v135</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -424,6 +459,25 @@ body.pvOn #gpanel{padding-bottom:170px}
     <div class="cv-price"><span>Preço</span><b id="cvPrice"></b></div>
     <p id="cvLack" class="lack"></p>
     <div class="row2"><button class="btn ghost" id="cvClose" type="button">Fechar</button><button class="btn" id="cvBuy" type="button">Comprar</button></div>
+  </div>
+</div>
+<div class="modal" id="phone" hidden style="z-index:39">
+  <div class="sheet ph-s" role="dialog" aria-modal="true" aria-label="Celular">
+    <div class="ph-top"><canvas id="phAv" width="56" height="56" aria-hidden="true"></canvas><div class="ph-id"><b id="phHandle"></b><small id="phTitle"></small></div><button class="ph-x" id="phClose" type="button" aria-label="Fechar">×</button></div>
+    <div class="ph-stats" id="phStats"></div>
+    <div class="seg ph-tabs" role="group" aria-label="Seções"><button type="button" data-ph="dm" aria-pressed="true">Mensagens</button><button type="button" data-ph="posts" aria-pressed="false">Posts</button></div>
+    <div id="phBody" class="ph-body"></div>
+  </div>
+</div>
+<div class="modal" id="postModal" hidden style="z-index:40">
+  <div class="sheet post-s" role="dialog" aria-modal="true" aria-label="Foto postada">
+    <div class="post-h"><canvas id="poAv" width="36" height="36" aria-hidden="true"></canvas><div><b id="poHandle"></b><small id="poSub"></small></div></div>
+    <canvas id="poCv" aria-hidden="true"></canvas>
+    <div class="post-l"><span class="heart">♥</span> <b id="poLikes">0</b> curtidas</div>
+    <p id="poCap"></p>
+    <p id="poRew" class="post-r"></p>
+    <button class="btn" id="poOk" type="button">Show!</button>
+    <div class="flash" id="poFlash"></div>
   </div>
 </div>
 <div class="modal" id="modal" hidden>
@@ -672,7 +726,7 @@ function partSum(id, key){
 function partCost(p, i){
   if(i === 0) return 0;
   const car = carById(S.car);
-  return Math.round(Math.max(5000 * i * i, car.price * 0.13 * Math.pow(i, 1.4)) * p.k * (1 - Math.min(0.5, spBonus("parts"))));
+  return nicePrice((PART_BRL[p.id] || [0, 3000, 6000, 10000, 15000, 20000])[i] * carK(car) * (1 - Math.min(0.5, spBonus("parts"))));
 }
 const fmtPct = v => (Math.round(v * 1000) / 10).toLocaleString("pt-BR") + "%";
 function partEff(t){
@@ -685,11 +739,13 @@ function partEff(t){
 function wheelInch(id, tier){ return carById(id).inch + [0, 2, 3][tier || 0]; }
 // the pilot as he would look with the item being previewed
 function pvPilot(){
+  const b = forcePromo ? brandById(forcePromo.b) : S.permuta ? brandById(S.permuta.b) : null;
+  if(b && (b.pil || b.acc)){ const P = Object.assign({}, S.pilot, b.pil || {}); if(b.acc) P.acc = (S.pilot.acc || []).concat([b.acc]); return P; }
   if(pv && pv.pil) return Object.assign({}, S.pilot, {[pv.pil]:pv.val});
   if(pv && pv.acc) return Object.assign({}, S.pilot, {acc:(S.pilot.acc || []).concat([pv.acc])});
   return S.pilot;
 }
-let gView = "out";   // garage camera: "out" = the house and the car, "in" = sitting in the cabin
+let gView = "out", ckGarage = false;   // garage camera: "out" = the house and the car, "in" = sitting in the cabin
 function pvApply(id, k){
   if(!pv || id !== S.car) return k;
   const o = Object.assign({}, k);
@@ -716,8 +772,29 @@ function suspDrop(car, susp, kit){
   }
   return start + (end - start) * [0, 0.38, 0.7, 1][susp || 0];
 }
+// ---- influencer: the brands that write to the pilot (all made up) and what each one sends for a race ----
+const BRANDS = [
+  {id:"lavajato", tier:0, name:"Lava-Jato do Zé", c:"#2f8cff", tc:"#ffffff", tx:"LAVA-JATO DO ZÉ", st:"pill", cos:{paint:"#2f63d6", vinyl:"listra", vinylColor:"#eef0ea"}, what:"uma plotagem azul com faixa branca no seu carro"},
+  {id:"rodaviva", tier:0, name:"Borracharia Roda Viva", c:"#1b1d22", tc:"#ffd23f", tx:"RODA VIVA", st:"stencil", cos:{tire:"letras", tireC:"#ffd23f"}, what:"um jogo de pneus com letras amarelas"},
+  {id:"acai", tier:0, name:"Açaí do Grau", c:"#5b2a86", tc:"#ffffff", tx:"AÇAÍ DO GRAU", st:"script", pil:{outfit:"camiseta", suit:"#5b2a86"}, what:"a camiseta roxa da loja"},
+  {id:"grau", tier:0, name:"Grau Store", c:"#e5484d", tc:"#ffffff", tx:"GRAU STORE", st:"badge", pil:{shoes:"vermelho", glasses:"sol"}, what:"um tênis vermelho e óculos escuros"},
+  {id:"pistao", tier:0, name:"Auto Peças Pistão", c:"#f2d45c", tc:"#111317", tx:"PEÇAS PISTÃO", st:"slant", cos:{neon:"#ffd21a", flame:"#ffd60a"}, what:"neon amarelo e chama amarela no escape"},
+  {id:"raio", tier:1, name:"Energético Raio", c:"#0b0d14", tc:"#b6ff2a", tx:"RAIO", st:"stencil", cos:{vinyl:"chamas", vinylColor:"#b6ff2a", flame:"#3ee66b"}, what:"chamas verde-limão na lataria e chama verde no escape"},
+  {id:"otnitro", tier:1, name:"Óculos Nitro", c:"#111317", tc:"#5ad6ff", tx:"ÓCULOS NITRO", st:"outline", pil:{glasses:"aviador"}, what:"um aviador da coleção nova"},
+  {id:"arocerto", tier:1, name:"Rodas Aro Certo", c:"#c9ced8", tc:"#111317", tx:"ARO CERTO", st:"pill", cos:{wmodel:"deep5", rim:"#e9edf3"}, what:"um jogo de rodas de borda polida"},
+  {id:"envelopa", tier:1, name:"Envelopa Brilho", c:"#ff4fa0", tc:"#ffffff", tx:"ENVELOPA BRILHO", st:"script", cos:{paint:"#ff6fb5", finish:"fosco"}, what:"um envelopamento rosa fosco"},
+  {id:"arrancada", tier:1, name:"Tênis Arrancada", c:"#ffffff", tc:"#e5484d", tx:"ARRANCADA", st:"slant", pil:{shoes:"runner"}, what:"o tênis de corrida da marca"},
+  {id:"ponteiro", tier:2, name:"Relógios Ponteiro", c:"#111317", tc:"#d4af37", tx:"PONTEIRO", st:"script", pil:{outfit:"polo", suit:"#111317"}, acc:"relogio", what:"um relógio de luxo e a polo preta da marca"},
+  {id:"asfalto", tier:2, name:"Perfume Asfalto", c:"#1b1d22", tc:"#f4f5f8", tx:"ASFALTO", st:"outline", pil:{outfit:"couro"}, acc:"corrente", what:"a jaqueta de couro e a corrente da campanha"},
+  {id:"bancoturbo", tier:2, name:"Banco Turbo", c:"#ff7a1a", tc:"#ffffff", tx:"BANCO TURBO", st:"badge", cos:{paint:"#ff7a1a", vinyl:"doistons", vinylColor:"#1b1d22"}, what:"a pintura laranja e preta do banco"},
+  {id:"ledmax", tier:2, name:"LED Max", c:"#0d1b2a", tc:"#22d8ff", tx:"LED MAX", st:"stencil", cos:{neon:"#22d8ff", light:"#dbe7ff"}, what:"neon ciano e farol de xenon"}
+];
+let forcePromo = null;   // drawing an old post: which brand's look to put on the car
+const brandById = id => BRANDS.find(b => b.id === id);
+function promoOf(id){ const p = forcePromo || (S.permuta ? {car:S.car, b:S.permuta.b} : null); return p && id === p.car ? brandById(p.b) : null; }
+function permutaApply(id, k){ const b = promoOf(id); return b && b.cos ? Object.assign({}, k, b.cos) : k; }
 function carLook(id){
-  const car = carById(id), k = pvApply(id, custOf(id));
+  const car = carById(id), k = permutaApply(id, pvApply(id, custOf(id)));
   const inch = Math.max(13, Math.min(20, +k.aro || car.inch));
   return {color:k.paint || car.color, finish:k.finish, rim:k.rim || car.rim, caliper:k.cal || car.cal,
     wheelStyle:(k.wmodel && k.wmodel !== "orig") ? k.wmodel : (car.wmodel || "orig"), spokes:car.spokes, tire:(k.tire && k.tire !== "orig") ? k.tire : (car.tire || "orig"), tireC:k.tireC || "#f4f5f8", wheelScale:1 + 0.012 * (inch - car.inch),
@@ -725,7 +802,7 @@ function carLook(id){
     spoiler:k.wing === "none" ? null : (k.wing && k.wing !== "orig") ? "nfs_" + k.wing : k.aero ? AERO_KIND[k.aero] : undefined, wingF:k.wingF || "", tala:k.tala || "",
     kit:k.kit, drop:suspDrop(car, k.susp, k.kit), tip:k.escape, blower:k.blower || 0, light:k.light, flame:k.flame, flameSize:k.flameSize || "m", neon:k.neon,
     vinyl:k.vinyl, vinylColor:k.vinylColor, stickers:k.stickers || [], num:(CARS.indexOf(car) * 17 + 7) % 99, exModel:k.exModel || "orig",
-    spons:k.sponsVis === "off" ? [] : [...new Set((S.spons || []).slice().reverse())].slice(0, 8)};
+    spons:k.sponsVis === "off" ? [] : [...new Set((S.spons || []).slice().reverse())].slice(0, 8), promo:promoOf(id)};
 }
 
 /* ---------- pilot ---------- */
@@ -1718,6 +1795,7 @@ function finish(){
     let betRes = 0;
     if(S.series.bet){ betRes = champ ? S.series.bet : -Math.min(S.money, S.series.bet); S.money += betRes; if(champ) S.stats.earned += betRes; }
     R.event = {champ, prize, level:R.level, type:et, bet:betRes, comeback:champ && S.series.first === "op", bonus:evBonus, run:S.evStreak};
+    influencerAfterEvent(champ);
     if(champ) S.fame = (S.fame || 0) + ({boss:120, nemesis:200, aposta:60}[et] || 20) * mult * (1 + spBonus("fame")) * fameGainK();
     if(champ){
       S.stats.titles++;
@@ -2779,6 +2857,10 @@ function drawCar(c, x, baseY, s, key, color, o){
       const wS = Math.min(5.6, 1.2 + sp.tx.length * 0.42);
       drawSponsorDecal(c, sp, q[0], q[1], wS, 1.9, s, X, Y);
     });
+  }
+  if(o.promo){
+    const sp = o.promo, wS = Math.min(11, 2.4 + sp.tx.length * 0.62);
+    drawSponsorDecal(c, sp, (gapL + gapR) / 2 - wS / 2, bot + 10.6, wS, 2.6, s, X, Y);
   }
   if(stk.includes("patro")){
     const x0 = gapL + 1.5, y0 = bot + 8.4;
@@ -5075,7 +5157,7 @@ function drawPodium(now){
   });
   ctx.fillStyle = "#0d0f17"; ctx.fillRect(0, H - 12, W, 12);
   const cx = W / 2, base = H - 12, bw = Math.min(84, W * 0.25);
-  const me = S.pilot, op = Object.assign({}, rivalPilot(ev.level), {name:rivalName(ev.level)});
+  const me = pvPilot(), op = Object.assign({}, rivalPilot(ev.level), {name:rivalName(ev.level)});
   const third = Object.assign(npcPilot(ev.level + 977), {name:RIVALS[(ev.level + 5) % RIVALS.length]});
   const first = ev.champ ? me : op, second = ev.champ ? op : me;
   const steps = [[cx, 46, first, "1", "#e8c04a"], [cx - bw - 4, 32, second, "2", "#c9ced8"], [cx + bw + 4, 22, third, "3", "#c48a4a"]];
@@ -5897,6 +5979,39 @@ const DASH = {
 };
 const offCar = document.createElement("canvas"), offCtx = offCar.getContext("2d");
 const RIV_SC = 7;   // texture resolution of the rival's side profile (pixels per profile unit)
+// what the driver sees through the windscreen when the car is parked in the garage: the back wall, close,
+// the floor, a lamp, and the framed picture hanging right in front of the car
+function drawGarageAhead(vx, hz, now){
+  const GL = houseLvl(), inW = ["#77736b", "#d8d1c3", "#e4e0d8", "#2b303b", "#1f232c", "#1c1f26", "#15181e"][GL];
+  const floor = ["#55524d", "#5e5b56", "#cfc8bb", "#2c3039", "#e9ecf1", "#2c3039", "#c9c6c0"][GL];
+  const fy = hz + H * 0.09;
+  let g = ctx.createLinearGradient(0, 0, 0, fy); g.addColorStop(0, shade(inW, -0.35)); g.addColorStop(0.5, inW); g.addColorStop(1, shade(inW, -0.12));
+  ctx.fillStyle = g; ctx.fillRect(-10, -10, W + 20, fy + 10);
+  g = ctx.createLinearGradient(0, fy, 0, H); g.addColorStop(0, floor); g.addColorStop(1, shade(floor, -0.4)); ctx.fillStyle = g; ctx.fillRect(-10, fy, W + 20, H - fy + 10);
+  ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(-10, fy - 2, W + 20, 3);
+  // warm light from a lamp above the picture
+  g = ctx.createRadialGradient(vx, -H * 0.02, 0, vx, -H * 0.02, H * 0.5); g.addColorStop(0, "rgba(255,226,170,.45)"); g.addColorStop(1, "rgba(255,226,170,0)");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, fy);
+  // side bits: pegboard with tools on the left, a stack of tyres on the right
+  if(GL >= 2){
+    ctx.fillStyle = "#3a3f4a"; ctx.fillRect(W * 0.2, H * 0.02, W * 0.13, H * 0.13);
+    ctx.strokeStyle = "#c9ced8"; ctx.lineWidth = 2; for(let k = 0; k < 4; k++){ const tx = W * (0.215 + k * 0.03); ctx.beginPath(); ctx.moveTo(tx, H * 0.035); ctx.lineTo(tx, H * (0.09 + (k % 2) * 0.03)); ctx.stroke(); }
+  }
+  for(let k = 0; k < 3; k++){ ctx.fillStyle = k % 2 ? "#15171b" : "#1d2025"; ctx.fillRect(W * 0.72, fy - (k + 1) * H * 0.035, W * 0.09, H * 0.033); }
+  // the picture: wooden frame, cream mat, the words
+  const fw = Math.min(W * 0.3, H * 0.62), fh = fw * 0.5, fx0 = vx - fw / 2, fy0 = H * 0.105;
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(fx0 + 3, fy0 + 4, fw, fh);
+  g = ctx.createLinearGradient(fx0, fy0, fx0 + fw, fy0 + fh); g.addColorStop(0, "#c9a24a"); g.addColorStop(0.5, "#7a5228"); g.addColorStop(1, "#b88a3e");
+  ctx.fillStyle = g; ctx.fillRect(fx0, fy0, fw, fh);
+  const bw = fw * 0.07; ctx.fillStyle = "#f4ecd8"; ctx.fillRect(fx0 + bw, fy0 + bw, fw - 2 * bw, fh - 2 * bw);
+  ctx.strokeStyle = "rgba(120,90,40,.45)"; ctx.lineWidth = 1; ctx.strokeRect(fx0 + bw + 3, fy0 + bw + 3, fw - 2 * bw - 6, fh - 2 * bw - 6);
+  ctx.fillStyle = "#2a1d10"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "700 " + Math.round(fh * 0.2) + "px Georgia, 'Times New Roman', serif"; ctx.fillText("DEUS É BOM", vx, fy0 + fh * 0.48);
+  ctx.strokeStyle = "rgba(42,29,16,.6)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(vx - fw * 0.22, fy0 + fh * 0.7); ctx.quadraticCurveTo(vx, fy0 + fh * 0.62, vx + fw * 0.22, fy0 + fh * 0.7); ctx.stroke();
+  // the small picture lamp
+  ctx.fillStyle = "#2a2d33"; ctx.fillRect(vx - fw * 0.12, fy0 - 5, fw * 0.24, 4);
+  g = ctx.createLinearGradient(0, fy0, 0, fy0 + fh); g.addColorStop(0, "rgba(255,236,190,.28)"); g.addColorStop(1, "rgba(255,236,190,0)"); ctx.fillStyle = g; ctx.fillRect(fx0, fy0, fw, fh);
+}
 function drawCockpit(now){
   const th = THEME[R.track.theme] || THEME.avenida, p = R.p, r = R.r;
   const pc = carById(S.car), look = carLook(S.car), P = getSnd(), nk = drv.nk || 0, KC = pvApply(S.car, custOf(S.car));
@@ -5929,6 +6044,7 @@ function drawCockpit(now){
   const camLX = 1.8 + drv.sway * 0.22, yawX = -drv.sway * W * (0.018 + 0.012 * (drv.danceC || 0));
   const proj = (wx, wy, z) => { z = Math.max(0.05, z); return [vx + yawX + (wx - camLX) * F / z, hz + (camH - wy) * F / z, F / z]; };
   const lightC = look.light || "#fff1c9";
+  if(ckGarage) drawGarageAhead(vx, hz, now); else {
   drawBackdrop(th, now * 3, hz, now, true);
   const gg = ctx.createLinearGradient(0, hz, 0, H);
   gg.addColorStop(0, shade(th.walk, -0.25)); gg.addColorStop(1, th.walk);
@@ -6492,11 +6608,12 @@ function drawCockpit(now){
       }
     }
   }
+  }
   // bloom the world outside before the cabin goes on top, so only lamps and lights glow
   ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); bloom(); ctx.restore();
   // ---------- the car around you: modern sport cabin (binnacle with three dials, round vents, ambient light) ----------
   const bc = look.color, MP = MODELS[pc.model], dashY = H * 0.41;
-  const nearLamp = th.lamp ? mod(-camW, lampGap) : 99, sweep = th.lamp ? Math.max(0, 1 - Math.abs(nearLamp - lampGap * 0.15) / (lampGap * 0.25)) : 0;
+  const nearLamp = th.lamp && !ckGarage ? mod(-camW, lampGap) : 99, sweep = th.lamp && !ckGarage ? Math.max(0, 1 - Math.abs(nearLamp - lampGap * 0.15) / (lampGap * 0.25)) : 0;
   const red = P.ev ? 9000 : P.red, rpm = drv.rpm, frac = Math.min(1.05, rpm / red);
   const blink = frac > 0.97 && Math.floor(now * 14) % 2;
   const TU = tuneOf(S.car), stg = Math.round((TU.motor + TU.cambio + TU.nitro) / 3);
@@ -8030,6 +8147,141 @@ el("cvBuy").addEventListener("click", () => {
   save(); closeCarView(); renderPanel(true);
 });
 window.addEventListener("resize", () => { if(cvId) paintCarView(); });
+// ---- influencer ----
+const followers = () => Math.round(150 + (S.fame || 0) * 28);
+const fmtN = n => n >= 1e6 ? (n / 1e6).toLocaleString("pt-BR", {maximumFractionDigits:1}) + " mi" : n >= 1e4 ? (n / 1e3).toLocaleString("pt-BR", {maximumFractionDigits:1}) + " mil" : Math.round(n).toLocaleString("pt-BR");
+const handle = () => "@" + (S.pilot.name || "piloto").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "") + ".racing";
+function updPhoneBadge(){ const n = (S.inbox || []).length, b = el("phoneBadge"); if(!b) return; b.hidden = !n; b.textContent = n; }
+function newDM(force){
+  const fame = S.fame || 0;
+  S.inbox = S.inbox || [];
+  if(fame < 120 || S.inbox.length >= 3) return;
+  if(!force && Math.random() > 0.35 + Math.min(0.4, fame / 20000)) return;
+  const tier = fame >= 9000 ? 2 : fame >= 1500 ? 1 : 0;
+  const pool = BRANDS.filter(b => b.tier <= tier && !S.inbox.some(o => o.b === b.id) && !(S.permuta && S.permuta.b === b.id) && !(S.posts || []).slice(0, 3).some(q => q.b === b.id));
+  if(!pool.length) return;
+  // the bigger the name, the bigger the brands that write
+  const top = pool.filter(b => b.tier === tier), src = top.length && Math.random() < 0.65 ? top : pool, pick = src[Math.floor(Math.random() * src.length)];
+  const fameGain = Math.round((80 + 0.05 * fame) * [1, 1.6, 2.4][pick.tier]);
+  const cash = pick.tier ? Math.round(rewardFor(Math.max(1, S.level)) * [0, 1.2, 3][pick.tier] / 100) * 100 : 0;
+  S.inbox.push({b:pick.id, fame:fameGain, cash, t:Date.now()});
+  setTimeout(() => toast("Nova mensagem de " + pick.name + "! Abra o celular"), 2600);
+  updPhoneBadge();
+}
+function influencerAfterEvent(champ){
+  if(S.permuta){
+    const b = brandById(S.permuta.b), f = followers(), likes = Math.round(f * (champ ? 0.09 : 0.05) * (0.8 + Math.random() * 0.4));
+    const fame = Math.round(S.permuta.fame * (champ ? 1 : 0.6)), cash = S.permuta.cash;
+    const caps = champ ? ["Mais um evento no bolso e de " + b.name + "! Valeu pela parceria 🔥", "Campeão com " + b.name + ". Quem viu, viu!", "Vitória com estilo: obrigado " + b.name + "!"]
+      : ["Não deu dessa vez, mas o visual da " + b.name + " ficou absurdo!", "Perdi o evento, mas ganhei no estilo. Valeu " + b.name + "!"];
+    const post = {b:b.id, car:S.car, likes, fame, cash, champ, cap:caps[Math.floor(Math.random() * caps.length)] + " #publi #permuta", t:Date.now()};
+    S.fame = (S.fame || 0) + fame; if(cash) pay(cash, 30);
+    // permuta: the product is yours to keep
+    if(b.cos) Object.entries(b.cos).forEach(([k, v]) => markOwn(S.car + "|" + k + "|" + v));
+    if(b.pil) Object.entries(b.pil).forEach(([k, v]) => markOwn("pilot|" + k + "|" + v));
+    if(b.acc) markOwn("pilot|acc|" + b.acc);
+    (S.posts = S.posts || []).unshift(post); S.posts.length = Math.min(S.posts.length, 30);
+    S.permuta = null; S.pendingPost = post;
+  }
+  newDM(!S.dmFirst && (S.fame || 0) >= 120); if((S.inbox || []).length) S.dmFirst = true;
+}
+// a photo: the car under a big banner of the brand, the pilot waving beside it
+function drawPostPhoto(c, w, h, post){
+  const b = brandById(post.b); if(!b) return;
+  forcePromo = {car:post.car, b:post.b};
+  try{
+    let g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#1a2033"); g.addColorStop(0.62, "#3a3f5a"); g.addColorStop(0.62, "#2a2e38"); g.addColorStop(1, "#15171d");
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    c.fillStyle = b.c; c.fillRect(0, h * 0.08, w, h * 0.2);
+    c.fillStyle = b.tc; c.font = "italic 800 " + Math.round(h * 0.11) + "px " + DISP; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(b.tx, w / 2, h * 0.18);
+    g = c.createRadialGradient(w / 2, h * 0.35, 0, w / 2, h * 0.35, w * 0.7); g.addColorStop(0, "rgba(255,240,215,.22)"); g.addColorStop(1, "rgba(255,240,215,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h);
+    const car = carById(post.car), M = MODELS[car.model], look = carLook(post.car), gy = h * 0.82;
+    const sc = Math.min(w * 0.78 / M.len, h * 0.36 / (M.roof + 1)), x0 = w * 0.04;
+    drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0, lights:true}));
+    drawPilot(c, w * 0.88, gy + 2, Math.min(h * 0.5, 30.7 * sc * 1.25), pvPilot(), post.champ ? "trophy" : "wave", 0.3);
+    c.fillStyle = "rgba(0,0,0,.45)"; rrectC(c, 8, h - 26, 64, 18, 9); c.fill();
+    c.fillStyle = "#fff"; c.font = "600 10px " + DISP; c.textAlign = "left"; c.fillText("#publi", 16, h - 17);
+  } finally { forcePromo = null; }
+}
+function drawAvatar(cvEl){
+  const r = 2, w = cvEl.clientWidth || 56; cvEl.width = w * r; cvEl.height = w * r;
+  const c = cvEl.getContext("2d"); c.setTransform(r, 0, 0, r, 0, 0); c.clearRect(0, 0, w, w);
+  const g = c.createLinearGradient(0, 0, 0, w); g.addColorStop(0, "#2c3550"); g.addColorStop(1, "#141826"); c.fillStyle = g; c.fillRect(0, 0, w, w);
+  drawPilot(c, w / 2, w * 2.9, w * 2.6, pvPilot(), "idle", 0);
+}
+let phTab = "dm";
+function openPhone(){ el("phone").hidden = false; renderPhone(); }
+function renderPhone(){
+  const fame = S.fame || 0;
+  el("phHandle").textContent = handle(); el("phTitle").textContent = S.pilot.name + " · " + fameTitle(fame);
+  el("phStats").innerHTML = '<div><b>' + fmtN(followers()) + '</b><span>seguidores</span></div><div><b>' + (S.posts || []).length + '</b><span>posts</span></div><div><b>' + fmtN(fame) + '</b><span>fama</span></div>';
+  el("phone").querySelectorAll(".ph-tabs button").forEach(x => x.setAttribute("aria-pressed", x.dataset.ph === phTab));
+  let h = "";
+  if(phTab === "dm"){
+    if(S.permuta){ const b = brandById(S.permuta.b);
+      h += '<div class="dm on"><div class="dm-h"><span class="dm-av" style="background:' + b.c + ';color:' + b.tc + '">' + b.tx.slice(0, 2) + '</span><b>' + b.name + '</b><small>permuta ativa</small></div>' +
+        '<div class="dm-msg">Tudo certo! Já está no seu ' + (b.cos ? "carro" : "piloto") + ': ' + b.what + '. Corra o próximo evento e a foto sai no final. Capricha!</div></div>'; }
+    (S.inbox || []).forEach((o, i) => { const b = brandById(o.b); if(!b) return;
+      h += '<div class="dm"><div class="dm-h"><span class="dm-av" style="background:' + b.c + ';color:' + b.tc + '">' + b.tx.slice(0, 2) + '</span><b>' + b.name + '</b><small>mensagem nova</small></div>' +
+        '<div class="dm-msg">E aí, ' + S.pilot.name + '! Aqui é da ' + b.name + '. A gente acompanha seus rachas e curtiu demais. Queremos te mandar ' + b.what + ' pra você usar na próxima corrida e postar uma foto com a gente. Topa a permuta?</div>' +
+        '<canvas data-dmprev="' + i + '"></canvas>' +
+        '<div class="dm-rew">Você ganha: <b>o produto é seu</b> + <b>' + fmtN(o.fame * 28) + ' seguidores</b> (+' + o.fame + ' de fama)' + (o.cash ? ' + cachê de <b>' + money(o.cash) + '</b>' : '') + '</div>' +
+        '<div class="row2"><button class="btn ghost" type="button" data-dmno="' + i + '">Recusar</button><button class="btn" type="button" data-dmyes="' + i + '"' + (S.permuta ? ' disabled' : '') + '>' + (S.permuta ? 'Termine a permuta atual' : 'Aceitar permuta') + '</button></div></div>'; });
+    if(!h) h = '<div class="ph-empty">' + (fame < 120 ? 'Ninguém te conhece ainda. Vença eventos para ganhar fama: com ' + "120 de fama as marcas começam a te mandar mensagem." : 'Nenhuma mensagem nova. Continue vencendo: as marcas escrevem depois dos eventos.') + '</div>';
+  } else {
+    const ps = S.posts || [];
+    h = ps.length ? '<div class="ph-grid">' + ps.map((p, i) => '<div><canvas data-post="' + i + '"></canvas><span>♥ ' + fmtN(p.likes) + '</span></div>').join("") + '</div>' : '<div class="ph-empty">Nenhum post ainda. Aceite uma permuta e corra com ela.</div>';
+  }
+  el("phBody").innerHTML = h;
+  requestAnimationFrame(() => {
+    drawAvatar(el("phAv"));
+    el("phBody").querySelectorAll("canvas[data-dmprev]").forEach(cv => {
+      const o = S.inbox[+cv.dataset.dmprev]; if(!o) return;
+      const r = 2, w = cv.clientWidth || 300, hh = cv.clientHeight || 120; cv.width = w * r; cv.height = hh * r; const c = cv.getContext("2d"); c.setTransform(r, 0, 0, r, 0, 0);
+      drawPostPhoto(c, w, hh, {b:o.b, car:S.car, champ:false});
+    });
+    el("phBody").querySelectorAll("canvas[data-post]").forEach(cv => {
+      const p = (S.posts || [])[+cv.dataset.post]; if(!p) return;
+      const r = 2, w = cv.clientWidth || 100; cv.width = w * r; cv.height = w * r; const c = cv.getContext("2d"); c.setTransform(r, 0, 0, r, 0, 0);
+      drawPostPhoto(c, w, w, p);
+    });
+  });
+}
+el("phoneBtn").addEventListener("click", openPhone);
+el("phClose").addEventListener("click", () => { el("phone").hidden = true; });
+el("phone").addEventListener("click", e => {
+  if(e.target.id === "phone"){ el("phone").hidden = true; return; }
+  const t = e.target.closest("button"); if(!t || t.disabled) return;
+  if(t.dataset.ph){ phTab = t.dataset.ph; renderPhone(); return; }
+  if(t.dataset.dmno !== undefined){ S.inbox.splice(+t.dataset.dmno, 1); updPhoneBadge(); save(); renderPhone(); return; }
+  if(t.dataset.dmyes !== undefined){
+    const o = S.inbox[+t.dataset.dmyes]; if(!o || S.permuta) return;
+    S.permuta = {b:o.b, fame:o.fame, cash:o.cash}; S.inbox.splice(+t.dataset.dmyes, 1); updPhoneBadge(); save(); coinSfx();
+    toast("Permuta aceita! Corra o próximo evento com " + brandById(o.b).name + " e a foto sai no final");
+    renderPhone(); dirty = true;
+  }
+});
+// the post appears once the podium is over: a camera flash, the photo, the likes rolling in
+function showPost(post){
+  const b = brandById(post.b); S.pendingPost = null; save();
+  el("postModal").hidden = false;
+  el("poHandle").textContent = handle(); el("poSub").textContent = "Parceria paga com " + b.name;
+  el("poCap").innerHTML = "<b>" + handle() + "</b> " + post.cap;
+  el("poRew").textContent = "+" + fmtN(post.fame * 28) + " seguidores · +" + post.fame + " de fama" + (post.cash ? " · cachê " + money(post.cash) : "") + " · " + b.what.replace(/^(um|uma|o|a|os|as) /, "") + " agora é seu";
+  const f = el("poFlash"); f.classList.add("on"); setTimeout(() => f.classList.remove("on"), 60);
+  if(sfxReady()) noiseBurst({type:"highpass", f0:3000, gain:0.12, dur:0.08, att:0.002});
+  requestAnimationFrame(() => {
+    const cv = el("poCv"), r = 2, w = cv.clientWidth || 340; cv.width = w * r; cv.height = w * r; const c = cv.getContext("2d"); c.setTransform(r, 0, 0, r, 0, 0); drawPostPhoto(c, w, w, post);
+    drawAvatar(el("poAv"));
+  });
+  const t0 = performance.now(), roll = () => { const k = Math.min(1, (performance.now() - t0) / 2200); el("poLikes").textContent = Math.round(post.likes * (1 - Math.pow(1 - k, 3))).toLocaleString("pt-BR"); if(k < 1 && !el("postModal").hidden) requestAnimationFrame(roll); };
+  roll();
+}
+el("poOk").addEventListener("click", () => { el("postModal").hidden = true; });
+setInterval(() => {
+  updPhoneBadge();
+  if(S.pendingPost && !storyOpen && el("postModal").hidden && el("phone").hidden && (!R || (R.phase !== "podium" && R.phase !== "result")) && !garageOpen) showPost(S.pendingPost);
+}, 800);
 function doPrestige(){
   const gain = tokensIfReset();
   S.tokens += gain; S.prestiges++;
@@ -8052,12 +8304,16 @@ function toast(msg){
 /* ---------- buy confirmation ---------- */
 let buyGo = null;
 // what each option costs: [base price, share of the car's price]; the dearer the car, the dearer its parts
-const COS_PRICE = {paint:[250, 0.03], finish:[200, 0.02], vinyl:[150, 0.015], vinylColor:[60, 0.005], stickers:[50, 0.004], neon:[400, 0.02], light:[120, 0.008],
-  flame:[150, 0.01], flameSize:[100, 0.006], ckCluster:[300, 0.012], ckTach:[250, 0.01], ckDash:[150, 0.006], ckWheel:[250, 0.01], ckWheelC:[80, 0.004],
-  ckKnob:[120, 0.006], ckKnobC:[60, 0.003], exModel:[300, 0.015], sound:[900, 0.05], turboSnd:[400, 0.02], wmodel:[450, 0.03], aro:[180, 0.012],
-  rim:[150, 0.01], tire:[200, 0.012], tireC:[60, 0.004], cal:[100, 0.006], wing:[700, 0.035], wingF:[150, 0.008], tala:[300, 0.015]};
-const PIL_PRICE = {hair:150, hairC:60, glasses:120, tattoo:250, outfit:200, suit:120, stripe:60, shoes:100, acc:150, pants:100, gloves:120, helmet:400};
-Object.values(COS_PRICE).forEach(v => v[0] *= 16); Object.keys(PIL_PRICE).forEach(k => PIL_PRICE[k] *= 16);
+const COS_PRICE = {paint:[6000], finish:[7000], vinyl:[1500], vinylColor:[300], stickers:[120], neon:[1200], light:[400],
+  flame:[600], flameSize:[400], ckCluster:[2500], ckTach:[900], ckDash:[2000], ckWheel:[1500], ckWheelC:[300],
+  ckKnob:[250], ckKnobC:[100], exModel:[700], sound:[12000], turboSnd:[1200], wmodel:[4500], aro:[1500],
+  rim:[900], tire:[2400], tireC:[200], cal:[600], wing:[3500], wingF:[1500], tala:[2500]};
+// a part costs a bit more on a dearer car (bigger wheels, better brands), but only gently: 0,7x on a popular car, up to 4x on a hypercar
+const carK = car => Math.min(4, Math.max(0.7, Math.pow(Math.max(car.price || 0, 15000) / 50000, 0.35)));
+// performance parts by tier, in reais, before the car factor
+const PART_BRL = {kit:[0, 3500, 12000, 22000], aero:[0, 600, 1200, 2200, 4500, 8000], rodas:[0, 4000, 14000], susp:[0, 1800, 4500, 8000, 14000],
+  escape:[0, 1800, 2800, 6500], blower:[0, 18000, 30000, 55000]};
+const PIL_PRICE = {hair:60, hairC:150, glasses:350, tattoo:900, outfit:600, suit:250, stripe:120, shoes:450, acc:300, pants:250, gloves:400, helmet:1500};
 const PIL_MUL = {"outfit|couro":1.6, "outfit|kart":1.4, "outfit|macacao2":1.3, "helmet|carbono":2.4, "helmet|f1":1.8, "helmet|drag":1.5, "helmet|retro":1.2, "gloves|drift":1.3, "gloves|couro":1.2, "shoes|corrida":1.5, "shoes|basquete":1.3, "shoes|chinelo":0.4};
 const COS_FREE = {finish:"brilho", vinyl:"none", light:"#fff1c9", flame:"#ff9a1f", flameSize:"m", sound:"orig", wmodel:"orig", tire:"orig", tireC:"#f4f5f8", exModel:"orig"};
 const PIL_FREE = defaultPilot();
@@ -8075,7 +8331,7 @@ function cosPrice(key, val, carId){
   if(key === "wing") mul = {ug2:1.3, bat:1.4, loop:1.6, drag:1.5, chassis:1.9, tri:0.9, evo:1.1, ducktop:0.8}[val] || 1;
   if(key === "wingF" && val === "cromo") mul = 1.8;
   if(key === "tala") mul = {xlargo:1.6, largo:1.2}[val] || 1;
-  return nicePrice(Math.max(pr[0], car.price * pr[1]) * mul * (1 - Math.min(0.5, spBonus("parts"))));
+  return nicePrice(pr[0] * carK(car) * mul * (1 - Math.min(0.5, spBonus("parts"))));
 }
 function pilPrice(key, val){ return (!PIL_PRICE[key] || PIL_FREE[key] === val || val === "none") ? 0 : nicePrice(PIL_PRICE[key] * (PIL_MUL[key + "|" + val] || 1)); }
 function cosOwned(key, val, carId){
@@ -8960,11 +9216,11 @@ function drawGarage(){
   const c = gctx; c.setTransform(r, 0, 0, r, 0, 0);
   if(gView === "in" && R){
     try{
-      ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H); drawCockpit(performance.now() / 1000); ctx.restore();
+      ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H); ckGarage = true; try{ drawCockpit(performance.now() / 1000); } finally { ckGarage = false; } ctx.restore();
       const k = Math.max(w / W, h / H), sw = w / k, sh = h / k;
       c.drawImage(cv, (W - sw) / 2 * dpr, (H - sh) * dpr, sw * dpr, sh * dpr, 0, 0, w, h);
       c.fillStyle = "rgba(8,9,12,.55)"; rrectC(c, 8, 8, 92, 22, 11); c.fill();
-      c.fillStyle = "#ffb547"; c.font = "600 11px " + DISP; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("VISTA INTERNA", 18, 19);
+      c.fillStyle = "#ffb547"; c.font = "600 11px " + DISP; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("NA GARAGEM", 18, 19);
       requestAnimationFrame(drawGarage); return;
     }catch(e){ gView = "out"; }
   }
