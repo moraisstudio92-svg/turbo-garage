@@ -419,7 +419,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v151</span>
+  <span id="tgVer">v152</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -718,10 +718,14 @@ const FLAME_PAL = {
 const FLAME_ALIAS = {"#ffae2b":"#ff9a1f", "#4fb8ff":"#2f8cff", "#5ef08a":"#3ee66b", "#b77bff":"#a855f7", "#ff5fae":"#a855f7"};
 const RIMS = [["#e9edf3","Cromada"],["#3c414a","Cromo negro"],["#e8c66a","Cromo dourado"],["#c9d0da","Prata"],["#5b616d","Grafite"],["#1e2128","Preta"],["#d4af37","Dourada"],["#b9893b","Bronze"],["#eef0f3","Branca"],["#d93a3a","Vermelha"],
   ["#b76e79","Ouro rosê"],["#2f63d6","Azul candy"],["#7a0c12","Vinho candy"],["#2e7d32","Verde"],["#8a5cf6","Roxa"],["#ff7a1a","Laranja"],["#f2d45c","Amarela"],
-  ["#39ff14","Verde neon"],["#ffea00","Amarelo neon"],["#ff6a00","Laranja neon"],["#ff2bd6","Rosa neon"],["#00e5ff","Azul neon"],["#b026ff","Roxo neon"]];
+  ["#39ff14","Verde neon"],["#ffea00","Amarelo neon"],["#ff6a00","Laranja neon"],["#ff2bd6","Rosa neon"],["#00e5ff","Azul neon"],["#b026ff","Roxo neon"],["#ccff00","Limão neon"],
+  ["#2a2c31","Preto fosco"],["#4a4e57","Grafite fosco"],["#6b5a45","Bronze fosco"],["#d9dbd8","Branco fosco"],["#5d6b4a","Verde militar fosco"],
+  ["#2b4fa8","Azul metálico"],["#9e1b22","Vermelho metálico"],["#2f6b45","Verde metálico"],["#cdb98a","Champagne"],["#8a919c","Titânio"],["#7c5a3a","Cobre metálico"]];
 // chrome finishes reflect the world like a mirror: bright sky above, the dark horizon across the middle, the road below
 const RIM_CHROME = {"#e9edf3":["#ffffff","#dde2ea","#8d949f","#2e333b","#aab1bc","#eef1f5","#8c939e"], "#3c414a":["#aab2be","#555c67","#2a2e35","#0c0e11","#3d434d","#7d8591","#262a30"], "#e8c66a":["#fff6d2","#f0d48a","#a8822a","#4a3508","#c9a24a","#ffe9a8","#9a7420"]};
-const CALIPERS = [["#d93a3a","Vermelha"],["#ffd35a","Amarela"],["#2f63d6","Azul"],["#63d692","Verde"],["#ff7a1a","Laranja"],["#1e2128","Preta"]];
+const CALIPERS = [["#d93a3a","Vermelha"],["#8e1a1f","Vermelho escuro"],["#ffd35a","Amarela"],["#2f63d6","Azul"],["#5ad6ff","Azul-claro"],["#63d692","Verde"],["#ff7a1a","Laranja"],["#8a5cf6","Roxa"],["#ff6fb5","Rosa"],
+  ["#eef0f3","Branca"],["#1e2128","Preta"],["#2a2c31","Preto fosco"],["#5b616d","Grafite fosco"],["#c9cfda","Prata metálica"],["#d4af37","Dourada metálica"],["#b9893b","Bronze metálico"],["#b76e79","Rosê metálico"],
+  ["#39ff14","Verde neon"],["#ccff00","Limão neon"],["#ffea00","Amarelo neon"],["#ff6a00","Laranja neon"],["#ff2bd6","Rosa neon"],["#00e5ff","Azul neon"],["#b026ff","Roxo neon"]];
 function defCust(){
   return {kit:0, kitMax:0, aero:0, aeroMax:0, rodas:0, rodasMax:0, susp:0, suspMax:0, escape:0, escapeMax:0, blower:0, blowerMax:0,
     paint:null, finish:"brilho", vinyl:"none", vinylColor:"#1b1d22", stickers:[], neon:null, rim:null, cal:null, light:"#fff1c9", flame:"#ff9a1f", flameSize:"m", sound:"orig", wmodel:"orig", aro:null, tire:"orig", tireC:"#f4f5f8"};
@@ -851,7 +855,7 @@ function carLook(id){
     wheelStyle:(k.wmodel && k.wmodel !== "orig") ? k.wmodel : (car.wmodel || "orig"), spokes:car.spokes, disc:car.disc, tire:(k.tire && k.tire !== "orig") ? k.tire : (car.tire || "orig"), tireC:k.tireC || "#f4f5f8", wheelScale:1 + 0.012 * (inch - car.inch),
     rimFrac:Math.min(0.9, Math.max(0.5, (0.565 + (inch - 13) * 0.034) * (carById(id).rimK || 1) * ({fino:1.07, largo:0.95, xlargo:0.9}[k.tala] || 1))),
     spoiler:k.wing === "none" ? null : (k.wing && k.wing !== "orig") ? "nfs_" + k.wing : k.aero ? AERO_KIND[k.aero] : undefined, wingF:k.wingF || "", tala:k.tala || "",
-    kit:k.kit, drop:suspDrop(car, k.susp, k.kit), tip:k.escape, blower:k.blower || 0, light:k.light, flame:k.flame, flameSize:k.flameSize || "m", neon:k.neon,
+    kit:k.kit, drop:suspDrop(car, k.susp, k.kit), tip:k.escape, blower:k.blower || 0, blowerC:k.blowerC || "", light:k.light, flame:k.flame, flameSize:k.flameSize || "m", neon:k.neon,
     vinyl:k.vinyl, vinylColor:k.vinylColor, stickers:k.stickers || [], num:(CARS.indexOf(car) * 17 + 7) % 99, exModel:k.exModel || "orig",
     spons:k.sponsVis === "off" ? [] : [...new Set((S.spons || []).slice().reverse())].slice(0, 8), promo:promoOf(id)};
 }
@@ -3930,7 +3934,8 @@ function drawCar(c, x, baseY, s, key, color, o){
     const bx = mid ? Math.max(cw / 2 + 2, rwX * 0.5) : wsX + (L - wsX) * 0.42;          // centre of the case
     const yb = Math.max(surf(bx - cw / 2), surf(bx + cw / 2)) - 0.15;                     // sits on the highest point of the panel under it
     const ch = 4.2, plate = 0.9, f = mid ? -1 : 1;                                       // f: which way is the front of the engine
-    const alu = (y0, y1) => { const g = c.createLinearGradient(0, Y(y1), 0, Y(y0)); g.addColorStop(0, "#f7f9fc"); g.addColorStop(0.35, "#c3c9d3"); g.addColorStop(0.55, "#8a919c"); g.addColorStop(0.8, "#d9dde4"); g.addColorStop(1, "#6d737e"); return g; };
+    const BLF = o.blowerC === "preto" ? ["#5a5e66", "#24262b", "#121316", "#33363c", "#0b0c0e"] : o.blowerC === "cromo" ? ["#ffffff", "#dde5f0", "#262a31", "#cfd8e4", "#14171c"] : null;
+    const alu = (y0, y1) => { const g = c.createLinearGradient(0, Y(y1), 0, Y(y0)); if(BLF){ [0, 0.35, 0.55, 0.8, 1].forEach((p, i) => g.addColorStop(p, BLF[i])); return g; } g.addColorStop(0, "#f7f9fc"); g.addColorStop(0.35, "#c3c9d3"); g.addColorStop(0.55, "#8a919c"); g.addColorStop(0.8, "#d9dde4"); g.addColorStop(1, "#6d737e"); return g; };
     const edge = () => { c.strokeStyle = OUT; c.lineWidth = Math.max(0.4, 0.22 * s); c.stroke(); };
     // belt and pulley at the front of the case, the belt dropping into the engine bay
     const px = bx + f * (cw / 2 + 0.8), py = yb + plate + ch * 0.45, pr = 1.45;
@@ -8217,6 +8222,7 @@ function renderEstilo(){
   h += swatchRow("Costura e detalhes do volante", "ckWheelC", CK_WHEELC, k.ckWheelC || null);
   h += chipRow("Modelo do câmbio", "ckKnob", CK_KNOB, k.ckKnob || "");
   h += swatchRow("Cor do câmbio", "ckKnobC", CK_KNOBC, k.ckKnobC || null);
+  if((k.blowerMax || 0) > 0 || (pv && pv.part === "blower")) h += chipRow("Acabamento do blower", "blowerC", [["", "Alumínio original"], ["cromo", "Cromado"], ["preto", "Preto"]], k.blowerC || "");
   h += '<div class="sec">Escapamento</div>';
   h += visGrid("Ponteira", "exModel", EX_MODELS, k.exModel || "orig", "exth");
   h += '<div class="sec">Rodas</div>';
@@ -8224,7 +8230,7 @@ function renderEstilo(){
   h += '<div class="sw-row"><div class="sw-t">Modelo<span>' + (WHEELS.find(w => w[0] === wm) || WHEELS[0])[1] + '</span></div><div class="wgrid">' +
     WHEELS.map(([id, n]) => { const lp = cosOwned("wmodel", id) ? 0 : cosPrice("wmodel", id); return '<button class="wopt' + (lp ? " lk" : "") + '" data-cos="wmodel" data-val="' + id + '" aria-label="Roda ' + n + '" aria-pressed="' + (id === wm) + '"><canvas class="wth" data-w="' + id + '"></canvas><span>' + n + '</span>' + (lp ? '<i class="prc">' + money(lp) + '</i>' : '') + '</button>'; }).join("") + '</div></div>';
   const aros = [];
-  for(let i = 13; i <= 20; i++) aros.push([i === car.inch ? "" : String(i), i + '"' + (i === car.inch ? " original" : "")]);
+  for(let i = Math.min(car.inch, 20); i <= 20; i++) aros.push([i === car.inch ? "" : String(i), i + '"' + (i === car.inch ? " original" : "")]);
   h += chipRow("Aro: roda pequena ou grande", "aro", aros, k.aro && +k.aro !== car.inch ? String(k.aro) : "");
   h += swatchRow("Cor da roda", "rim", [[null, "Original", car.rim]].concat(RIMS), k.rim);
   h += visGrid("Pneu", "tire", TIRES, k.tire || "orig", "tith");
@@ -8764,7 +8770,7 @@ let buyGo = null;
 const COS_PRICE = {paint:[6000], finish:[7000], vinyl:[1500], vinylColor:[300], stickers:[120], neon:[1200], light:[400],
   flame:[600], flameSize:[400], ckCluster:[2500], ckTach:[900], ckDash:[2000], ckWheel:[1500], ckWheelC:[300],
   ckKnob:[250], ckKnobC:[100], exModel:[700], sound:[12000], turboSnd:[1200], wmodel:[4500], aro:[1500],
-  rim:[900], tire:[2400], tireC:[200], cal:[600], wing:[3500], wingF:[1500], tala:[2500]};
+  rim:[900], tire:[2400], blowerC:[900], tireC:[200], cal:[600], wing:[3500], wingF:[1500], tala:[2500]};
 // a part costs a bit more on a dearer car (bigger wheels, better brands), but only gently: 0,7x on a popular car, up to 4x on a hypercar
 const carK = car => Math.min(4, Math.max(0.7, Math.pow(Math.max(car.price || 0, 15000) / 50000, 0.35)));
 // performance parts by tier, in reais, before the car factor
@@ -9763,7 +9769,11 @@ function pvFocus(p){
   const key = p.part || p.cos || (p.stk ? "stickers" : "");
   if(["wmodel", "aro", "rim", "tire", "tireC", "cal", "tala", "rodas"].includes(key)) return "wheel";
   if(["wing", "wingF", "aero"].includes(key)) return "tail";
-  if(["exModel", "escape"].includes(key)) return "tip";
+  if(["exModel", "escape"].includes(key)){
+    const xm = key === "exModel" ? p.val : (custOf(S.car).exModel || "orig");
+    return {capo:"exhood", dump:"exhood", zoomies:"zoomies", lateral:"exside", lateraldupla:"exside", sidepipe:"sidepipe"}[xm] || "tip";
+  }
+  if(key === "blowerC") return pvFocus({part:"blower"});
   if(["flame", "flameSize"].includes(key)) return "flame";
   if(key === "light") return "front";
   if(key === "neon") return "neon";
@@ -9807,7 +9817,8 @@ function drawPreview(c, w, h){
         const sc = Math.min((w - 20) / (M.len + 3), (gy - 14) / (M.roof + 2)), x0 = (w - M.len * sc) / 2;
         const L = M.len, wx = M.wheels[0], deckY = M.deck !== undefined ? M.deck : M.belt;
         const tailY = (M.hatchback ? M.roof : deckY) + 3;
-        const T = focus === "wheel" ? [wx, M.r, 2.4] : focus === "tail" ? [L * 0.15, tailY, 1.75] : focus === "tip" ? [L * 0.03, M.r * 0.55, 2.6] : focus === "front" ? [L * 0.86, M.belt - 2, 1.9] : focus === "flame" ? [L * 0.06, M.r + 1, 1.9] : [L / 2, M.roof / 2, 1];
+        const T = focus === "wheel" ? [wx, M.r, 2.4] : focus === "tail" ? [L * 0.15, tailY, 1.75] : focus === "tip" ? [L * 0.03, M.r * 0.55, 2.6] : focus === "exside" ? [M.wheels[0] + M.r + 3, (M.bot || 4) + 1.2, 2.5] : focus === "sidepipe" ? [(M.wheels[0] + M.wheels[1]) / 2, (M.bot || 4) + 2, 1.45]
+          : focus === "exhood" ? [M.wheels[1] - M.r * 0.4 - 2.5, M.belt + 2.5, 2.1] : focus === "zoomies" ? [M.wheels[1] - M.r * 0.2 - 2, M.belt + 1, 2.2] : focus === "front" ? [L * 0.86, M.belt - 2, 1.9] : focus === "flame" ? [L * 0.06, M.r + 1, 1.9] : [L / 2, M.roof / 2, 1];
         const tx = x0 + T[0] * sc, ty = gy - T[1] * sc, Z = T[2], z = 1 + (Z - 1) * zk;
         c.save(); c.translate(w / 2, h * 0.48); c.scale(z, z); c.translate(-(tx * zk + w / 2 * (1 - zk)), -(ty * zk + h * 0.48 * (1 - zk)));
         c.save(); c.translate(0, 2 * gy); c.scale(1, -1); c.globalAlpha = 0.16; drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0, lights:false})); c.restore();
