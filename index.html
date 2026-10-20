@@ -384,48 +384,34 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 <script>
 (function(){
 "use strict";
-const SAVE_KEY = "turbo-garage-v1";
+const SAVE_KEY = "turbo-garage-v2";
 
 const CARS = [
-  {id:"pardal",      name:"Ciou 1.0",         tag:"Hatch compacto de 3 portas", spec:"1.0 8V · 70 cv · 5 marchas",            model:"ciou",         vk:160, t100:13.5, inch:13, price:0,          color:"#c9cfda", rim:"#aab2bf", cal:"#3a3d45", spokes:4},
-  {id:"besouro",     name:"Besouro 1600",     tag:"Clássico nacional a ar",    spec:"1.6 boxer a ar · 65 cv · 4 marchas",    model:"bug",          vk:145, t100:16.5, inch:15, price:900,        color:"#2f63d6", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
-  {id:"arara",       name:"Arara 1600",       tag:"Perua clássica a ar",       spec:"1.6 boxer a ar · 54 cv · 4 marchas",    model:"variant",      vk:138, t100:18.0, inch:14, price:1200,       color:"#f2d45c", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
-  {id:"sabia",       name:"Sabiá 1.4",        tag:"Sedã compacto",             spec:"1.4 8V · 92 cv · 5 marchas",            model:"sedan",        vk:172, t100:12.0, inch:14, price:1800,       color:"#7a8494", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
-  {id:"sucuarana",   name:"Suçuarana GT",     tag:"Esportivo de fibra nacional", spec:"1.6 boxer a ar · 90 cv · 4 marchas",  model:"puma",         vk:170, t100:11.5, inch:14, price:3500,       color:"#ff7a1a", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"tucano",      name:"Tucano 1.6 16V",   tag:"Hatch esportivo",           spec:"1.6 16V · 108 cv · 5 marchas",          model:"hatch16",      vk:192, t100:9.9,  inch:14, price:5000,       color:"#f2d45c", rim:"#d6dbe3", cal:"#3a3d45", spokes:4},
-  {id:"gaivota",     name:"Gaivota GTi 2.0",  tag:"Hatch quadrado lendário",   spec:"2.0 8V · 120 cv · 5 marchas",           model:"gol",          vk:190, t100:8.9,  inch:14, price:6500,       color:"#eef0ea", rim:"#1e2128", cal:"#d93a3a", spokes:6},
-  {id:"uirapuru",    name:"Uirapuru Turbo",   tag:"Hatch turbo dos anos 90",   spec:"1.4 turbo · 118 cv · 5 marchas",        model:"uno",          vk:195, t100:8.5,  inch:13, price:7500,       color:"#e5484d", rim:"#c9d0da", cal:"#d93a3a", spokes:4},
-  {id:"tiziu",       name:"Tiziu GTS 2.0",    tag:"Hatch 3 portas dos anos 90", spec:"2.0 16V · 150 cv · 5 marchas",          model:"tiziu",        vk:205, t100:8.2,  inch:15, price:8500,       color:"#1f6b4a", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
+  {id:"bolinha", name:"Bolinha 1.0", tag:"Hatch 3 portas dos anos 90", spec:"1.0 16V · 70 cv · 5 marchas", model:"bola", vk:160, t100:13.5, inch:13, price:0, color:"#c9cfda", rim:"#aab2bf", cal:"#3a3d45", spokes:4},
+  {id:"mille", name:"Mille Escada", tag:"Hatch quadradinho popular", spec:"1.0 8V · 58 cv · 5 marchas", model:"mille", vk:150, t100:15.4, inch:13, price:900, color:"#e5484d", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
+  {id:"fuscao", name:"Fuscão", tag:"Clássico nacional a ar", spec:"1.6 boxer a ar · 65 cv · 4 marchas", model:"bug", vk:145, t100:16.5, inch:15, price:1500, color:"#2f63d6", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
+  {id:"chevetinho", name:"Chevetinho", tag:"Sedã 2 portas de tração traseira", spec:"1.6 8V · 82 cv · 4 marchas", model:"chevette", vk:165, t100:13.0, inch:13, price:2500, color:"#ff7a1a", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
   {id:"carcara",     name:"Carcará 1.6 Pick-up", tag:"Picape compacta",        spec:"1.6 16V · 120 cv · 5 marchas",         model:"picape",       vk:182, t100:10.4, inch:15, price:4200,       color:"#c8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"onca",        name:"Onça SS 4.1",      tag:"Cupê nacional de 6 cilindros", spec:"4.1 6 cil. · 171 cv · 4 marchas",    model:"opala",        vk:185, t100:9.5,  inch:14, price:9500,       color:"#1b1d22", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"haru",        name:"Haru GT 1.6",      tag:"Cupê retrô de tração traseira", spec:"1.6 16V · 130 cv · giro 7.600",      model:"coupeclassic", vk:198, t100:8.6,  inch:14, price:12000,      color:"#eef0ea", rim:"#1e2128", cal:"#d93a3a", spokes:6},
-  {id:"kiri",        name:"Kiri Si",          tag:"Sedã japonês VTEC",         spec:"2.0 16V VTEC · 192 cv · corta a 8.000 rpm", model:"civic",    vk:222, t100:7.6,  inch:17, price:14000,      color:"#d63a2f", rim:"#2a2e37", cal:"#d93a3a", spokes:5},
-  {id:"loboguara",   name:"Lobo-guará GT V8", tag:"Fastback V8 nacional",      spec:"5.0 V8 · 199 cv · 4 marchas",           model:"maverick",     vk:200, t100:8.2,  inch:14, price:16000,      color:"#ff7a1a", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"garanhao",    name:"Garanhão 390 Fastback", tag:"Pony car fastback dos anos 60", spec:"6.4 V8 · 320 cv · 4 marchas",     model:"pony",         vk:205, t100:7.2,  inch:15, price:20000,      color:"#2f63d6", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
+  {id:"xerao", name:"Xerão XR3", tag:"Hatch esportivo dos anos 80", spec:"1.8 8V · 99 cv · 5 marchas", model:"xr3", vk:185, t100:10.0, inch:14, price:6000, color:"#eef0ea", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
+  {id:"kadetao", name:"Kadetão GSi", tag:"Hatch esportivo 2.0", spec:"2.0 8V · 121 cv · 5 marchas", model:"kadett", vk:195, t100:9.2, inch:14, price:8500, color:"#c8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
+  {id:"opalao", name:"Opalão SS", tag:"Cupê nacional de 6 cilindros", spec:"4.1 6 cil. · 171 cv · 4 marchas", model:"opala", vk:200, t100:8.6, inch:14, price:12000, color:"#1b1d22", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
   {id:"gaviao",      name:"Gavião GTI 1.8T",  tag:"Hatch alemão turbo",        spec:"1.8 20V turbo · 180 cv · 5 marchas",    model:"golf",         vk:225, t100:7.3,  inch:17, price:24000,      color:"#1b1d22", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
-  {id:"tsubame",     name:"Tsubame R",        tag:"Sedã esportivo japonês",    spec:"2.0 16V · 220 cv · corta a 8.400 rpm",  model:"tsubame",      vk:240, t100:6.4,  inch:18, price:30000,      color:"#c9cfda", rim:"#5b616d", cal:"#d93a3a", spokes:10},
-  {id:"jaburu",      name:"Jaburu TSI",       tag:"Sedã alemão turbo",         spec:"2.0 TSI · 230 cv · 6 marchas DSG",      model:"jetta",        vk:240, t100:6.5,  inch:18, price:34000,      color:"#eef0ea", rim:"#1e2128", cal:"#d93a3a", spokes:10},
-  {id:"lince",       name:"Lince GT",         tag:"Hatch turbo europeu",       spec:"2.0 turbo · 230 cv · 6 marchas",        model:"hatchgt",      vk:238, t100:6.6,  inch:17, price:45000,      color:"#e5484d", rim:"#7d8592", cal:"#d93a3a", spokes:5},
+  {id:"silvinha", name:"Silvinha S15", tag:"Cupê japonês de tração traseira", spec:"2.0 turbo · 250 cv · 6 marchas", model:"s15", vk:240, t100:6.2, inch:17, price:34000, color:"#e8d01f", rim:"#2a2e37", cal:"#d93a3a", spokes:5},
   {id:"mia",         name:"MIA BLACK",        tag:"Sedã Si FA5 preto, turbo e rebaixado", spec:"2.0 16V i-VTEC turbo · 6 marchas · corta a 8.000 rpm", model:"fa5", vk:248, t100:5.8, inch:18, price:52000, color:"#0c0e12", rim:"#c3c8cf", cal:"#3a3d45", spokes:6, wmodel:"jdm6", baseDrop:0.8, banner:"@MIA_BLACKFA5"},
-  {id:"cascavel",    name:"Cascavel 454 SS",  tag:"Muscle car de bloco grande", spec:"7.4 V8 · 450 cv · 4 marchas",          model:"chevelle",     vk:222, t100:6.0,  inch:15, price:65000,      color:"#c8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"bravo",       name:"Bravo 440",        tag:"Muscle car clássico",       spec:"7.2 V8 · 375 cv · 4 marchas",           model:"muscle",       vk:228, t100:6.2,  inch:15, price:90000,      color:"#f2b33d", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
-  {id:"tubarao",     name:"Tubarão 427",      tag:"Esportivo V8 de para-lamas altos", spec:"7.0 V8 · 435 cv · 4 marchas",    model:"stingray",     vk:238, t100:5.5,  inch:15, price:130000,     color:"#eef0ea", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
+  {id:"bavaro", name:"Bávaro E46", tag:"Cupê alemão de 6 em linha", spec:"3.2 6 cil. · 343 cv · corta a 8.000 rpm", model:"e46", vk:255, t100:5.2, inch:18, price:70000, color:"#2a3f8f", rim:"#c9d0da", cal:"#2f63d6", spokes:5},
+  {id:"potro", name:"Potro 67", tag:"Pony car fastback dos anos 60", spec:"6.4 V8 · 320 cv · 4 marchas", model:"pony", vk:225, t100:6.0, inch:15, price:90000, color:"#2d4a35", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
+  {id:"carregador", name:"Carregador 70", tag:"Muscle car de bloco grande", spec:"7.2 V8 · 375 cv · 4 marchas", model:"muscle", vk:230, t100:5.9, inch:15, price:130000, color:"#1b1d22", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
   {id:"bisao",       name:"Bisão 4x4",        tag:"Picape off-road",           spec:"6.2 V8 compressor · 700 cv · 4x4",      model:"pickup",       vk:190, t100:4.6,  inch:18, price:160000,     color:"#d63a2f", rim:"#2a2e37", cal:"#d93a3a", spokes:6},
-  {id:"kaze",        name:"Kaze RS",          tag:"Sedã japonês de giro alto", spec:"2.0 16V · 205 cv · corta a 8.800 rpm",  model:"sport",        vk:245, t100:6.0,  inch:17, price:400000,     color:"#eef0ea", rim:"#e6e8ec", cal:"#d93a3a", spokes:10},
-  {id:"harpia",      name:"Harpia 30T",       tag:"Sedã esportivo alemão",     spec:"3.0 6 cil. biturbo · 431 cv · 7 marchas", model:"harpia",     vk:285, t100:4.2,  inch:19, price:1500000,    color:"#3a3f48", rim:"#1e2128", cal:"#2f63d6", spokes:6},
-  {id:"raijin",      name:"Raijin AWD",       tag:"Sedã de rali",              spec:"2.5 boxer turbo · 310 cv · AWD",        model:"rally",        vk:255, t100:4.9,  inch:18, price:3500000,    color:"#2f63d6", rim:"#d4af37", cal:"#d93a3a", spokes:6},
-  {id:"okami",       name:"Okami GT",         tag:"Cupê japonês lendário",     spec:"3.0 6 cil. biturbo · 330 cv",           model:"coupe",        vk:290, t100:4.2,  inch:18, price:9000000,    color:"#8a5cf6", rim:"#9aa1ad", cal:"#e0a400", spokes:6},
-  {id:"garanhao5",   name:"Garanhão GT500",   tag:"Pony car moderno com compressor", spec:"5.2 V8 compressor · 760 cv · 7 marchas", model:"ponymod", vk:300, t100:3.6, inch:20, price:14000000,  color:"#1b1d22", rim:"#1e2128", cal:"#d93a3a", spokes:10},
-  {id:"jaguatirica", name:"Jaguatirica S",    tag:"SUV esportivo",             spec:"4.0 V8 biturbo · 650 cv · AWD",         model:"suv",          vk:305, t100:3.6,  inch:21, price:20000000,   color:"#1b1d22", rim:"#d4af37", cal:"#f2d45c", spokes:10},
-  {id:"guepardo",    name:"Guepardo RS",      tag:"Esportivo de motor traseiro", spec:"4.0 boxer 6 cil. · 525 cv · giro 9.000", model:"nove",       vk:312, t100:3.2,  inch:20, price:30000000,   color:"#5ad6ff", rim:"#1e2128", cal:"#f2d45c", spokes:10},
-  {id:"furia",       name:"Fúria 6.2",        tag:"Muscle moderno",            spec:"6.2 V8 compressor · 810 cv",            model:"musclemod",    vk:320, t100:3.7,  inch:20, price:45000000,   color:"#2f63d6", rim:"#1e2128", cal:"#d93a3a", spokes:5},
-  {id:"rubi",        name:"Rubi V8 Biturbo",  tag:"Berlinetta italiana de motor central", spec:"3.9 V8 biturbo · 720 cv · 7 marchas", model:"italia", vk:330, t100:2.9, inch:20, price:90000000,  color:"#e5484d", rim:"#c9d0da", cal:"#f2d45c", spokes:5},
-  {id:"escorpiao",   name:"Escorpião V10",    tag:"Superesportivo de motor central", spec:"5.2 V10 · 640 cv · AWD",         model:"super",        vk:325, t100:2.9,  inch:20, price:120000000,  color:"#63d692", rim:"#1e2128", cal:"#f2d45c", spokes:10},
-  {id:"mamangava",   name:"Mamangava 750",    tag:"Superesportivo de portas diedrais", spec:"4.0 V8 biturbo · 750 cv · 7 marchas", model:"dihedral", vk:332, t100:2.8, inch:20, price:180000000, color:"#ff7a1a", rim:"#1e2128", cal:"#1e2128", spokes:10},
-  {id:"touro",       name:"Touro V12",        tag:"Cunha de motor V12 central", spec:"6.5 V12 · 770 cv · AWD",               model:"wedge",        vk:345, t100:2.8,  inch:20, price:240000000,  color:"#f2d45c", rim:"#2a2e37", cal:"#ffd35a", spokes:6},
-  {id:"relampago",   name:"Relâmpago XR",     tag:"Protótipo de pista",        spec:"5.0 V8 · 620 cv",                       model:"proto",        vk:340, t100:3.0,  inch:19, price:300000000,  color:"#ffb547", rim:"#2a2e37", cal:"#ffb547", spokes:5},
-  {id:"tufao",       name:"Tufão W16",        tag:"Hipercarro de 16 cilindros", spec:"8.0 W16 quadriturbo · 1.500 cv · AWD", model:"quadturbo",    vk:420, t100:2.4,  inch:20, price:900000000,  color:"#2f63d6", rim:"#c9d2de", cal:"#c9d2de", spokes:10},
-  {id:"cometa",      name:"Cometa 9",         tag:"Hipercarro elétrico",       spec:"4 motores elétricos · 1.500 cv",        model:"hyper",        vk:410, t100:2.1,  inch:20, price:2000000000, color:"#63d692", rim:"#c9d2de", cal:"#63d692", spokes:12}
+  {id:"evo", name:"Evo Nove", tag:"Sedã de rali turbo AWD", spec:"2.0 turbo · 286 cv · AWD", model:"evo9", vk:255, t100:4.9, inch:17, price:400000, color:"#c8121b", rim:"#2a2e37", cal:"#d93a3a", spokes:6},
+  {id:"boxer", name:"Boxer Azul", tag:"Sedã de rali boxer turbo", spec:"2.5 boxer turbo · 300 cv · AWD", model:"rally", vk:258, t100:4.8, inch:17, price:900000, color:"#1f3fa8", rim:"#d4af37", cal:"#d93a3a", spokes:6},
+  {id:"rotativo", name:"Rotativo FD", tag:"Cupê de motor rotativo", spec:"1.3 rotativo biturbo · 280 cv", model:"fd", vk:265, t100:4.7, inch:17, price:1800000, color:"#c8121b", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
+  {id:"suprema", name:"Suprema", tag:"Cupê japonês lendário", spec:"3.0 6 cil. biturbo · 330 cv", model:"coupe", vk:285, t100:4.4, inch:18, price:4000000, color:"#ff7a1a", rim:"#9aa1ad", cal:"#e0a400", spokes:5},
+  {id:"godzilla", name:"Godzilla R34", tag:"Cupê AWD biturbo", spec:"2.6 6 cil. biturbo · 330 cv · AWD", model:"r34", vk:290, t100:4.2, inch:18, price:9000000, color:"#1f4fc0", rim:"#9aa1ad", cal:"#e0a400", spokes:6},
+  {id:"camarada", name:"Camarada SS", tag:"Muscle moderno", spec:"6.2 V8 · 455 cv · 10 marchas", model:"musclemod", vk:300, t100:4.0, inch:20, price:15000000, color:"#d63a2f", rim:"#1e2128", cal:"#d93a3a", spokes:5},
+  {id:"noveonze", name:"Nove-Onze GT3", tag:"Esportivo de motor traseiro", spec:"4.0 boxer 6 cil. · 510 cv · giro 9.000", model:"nove", vk:318, t100:3.4, inch:20, price:30000000, color:"#7ac74f", rim:"#1e2128", cal:"#f2d45c", spokes:10},
+  {id:"quarentona", name:"Quarentona", tag:"Lenda italiana biturbo", spec:"2.9 V8 biturbo · 478 cv", model:"f40", vk:324, t100:3.3, inch:17, price:90000000, color:"#d8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
+  {id:"touro", name:"Touro V12", tag:"Cunha de motor V12 central", spec:"6.5 V12 · 770 cv · AWD", model:"wedge", vk:350, t100:2.8, inch:21, price:240000000, color:"#f2b31d", rim:"#2a2e37", cal:"#ffd35a", spokes:6},
+  {id:"tufao", name:"Tufão W16", tag:"Hipercarro de 16 cilindros", spec:"8.0 W16 quadriturbo · 1.500 cv · AWD", model:"quadturbo", vk:420, t100:2.4, inch:20, price:1500000000, color:"#2f63d6", rim:"#c9d2de", cal:"#c9d2de", spokes:10}
 ];
 const UPG = [
   {id:"motor",      name:"Motor",      base:70,  r:1.4, max:10, per:true},
@@ -461,7 +447,7 @@ const MISSION_SEQ = [
 function defaultPilot(){ return {name:"Você", gender:"m", skin:"#c68a62", hair:"curto", hairC:"#1b1410", suit:"#e5484d", stripe:"#eef0ea", glasses:"none",
   height:"medio", weight:"medio", outfit:"macacao", shoes:"preto", tattoo:"none", acc:[], pants:"jeans", gloves:"none", helmet:"none", helmetWear:"cabeca"}; }
 function defaultState(){
-  return {money:100, tokens:0, level:1, maxLevel:1, car:"pardal", owned:["pardal"], sound:true, cam:"side", cust:{}, tune:{}, pilot:defaultPilot(),
+  return {money:100, tokens:0, level:1, maxLevel:1, car:"bolinha", owned:["bolinha"], sound:true, cam:"side", cust:{}, tune:{}, pilot:defaultPilot(),
     series:{me:0, op:0, heat:1},
     upg:{patrocinio:0}, spons:[],
     stats:{wins:0, losses:0, titles:0, upgrades:0, nitro:0, earned:0, noNitro:0}, ach:{}, streak:0, bestStreak:0,
@@ -479,10 +465,8 @@ function load(data){
   S.pilot = Object.assign(defaultPilot(), src.pilot || {});
   S.series = Object.assign({me:0, op:0, heat:1}, src.series || {});
   if(!Array.isArray(S.owned)) S.owned = [];
-  const MAP = {faisca:"pardal", corisco:"tucano", tempestade:"lince"};
-  S.owned = [...new Set(S.owned.map(id => MAP[id] || id))].filter(id => CARS.some(c => c.id === id));
-  if(!S.owned.length) S.owned = ["pardal"];
-  S.car = MAP[S.car] || S.car;
+  S.owned = [...new Set(S.owned)].filter(id => CARS.some(c => c.id === id));
+  if(!S.owned.length) S.owned = ["bolinha"];
   if(!S.owned.includes(S.car)) S.car = S.owned[0];
   if(!Array.isArray(S.missions)) S.missions = [];
   if(!S.cust || typeof S.cust !== "object") S.cust = {};
@@ -524,7 +508,7 @@ async function cloudInit(localSavedAt, refresh){
     const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
     if(!db || !user || typeof user.id !== "function") return;
     const uid = await user.id(); if(!uid) return;
-    const ref = db.doc("data/users/" + uid + "/save");
+    const ref = db.doc("data/users/" + uid + "/save2");
     const snap = await ref.get();
     if(snap && snap.exists){
       const d = snap.data() || {};
@@ -669,7 +653,7 @@ function suspDrop(car, susp, kit){
   return start + (end - start) * [0, 0.38, 0.7, 1][susp || 0];
 }
 function carLook(id){
-  const car = carById(id), k = pvApply(id, custOf(id)), hatch = car.model.indexOf("hatch") === 0;
+  const car = carById(id), k = pvApply(id, custOf(id));
   const inch = Math.max(13, Math.min(20, +k.aro || car.inch));
   return {color:k.paint || car.color, finish:k.finish, rim:k.rim || car.rim, caliper:k.cal || car.cal,
     wheelStyle:(k.wmodel && k.wmodel !== "orig") ? k.wmodel : (car.wmodel || "orig"), spokes:car.spokes, tire:k.tire || "orig", tireC:k.tireC || "#f4f5f8", wheelScale:1 + 0.012 * (inch - car.inch),
@@ -742,14 +726,14 @@ function potential(id){
   return Math.min(1, have / max);
 }
 const LEAGUES = [
-  {name:"Popular",        v:[135,190], t:[15,10.5],  models:["hatch","bug","hatch16","uno","sedan","gol","variant","tiziu","picape"],  boss:"gol"},
-  {name:"Hot hatch",      v:[170,225], t:[11.5,8],   models:["hatch16","uno","coupeclassic","gol","puma","hatchgt","sedan","civic","golf","tiziu","tsubame"], boss:"hatchgt"},
-  {name:"Turbo",          v:[215,250], t:[8,6.2],    models:["hatchgt","opala","sport","maverick","muscle","pickup","golf","jetta","pony","chevelle"], boss:"chevelle"},
-  {name:"Japonesa",       v:[230,265], t:[7,5.5],    models:["sport","coupe","coupeclassic","muscle","civic","tsubame","harpia","fa5"],    boss:"coupe"},
-  {name:"Rali",           v:[245,285], t:[5.8,4.4],  models:["rally","sport","coupe","pickup"],           boss:"rally"},
-  {name:"GT",             v:[270,315], t:[4.8,3.8],  models:["coupe","suv","musclemod","rally","harpia","stingray","ponymod","nove"], boss:"ponymod"},
-  {name:"Superesportivo", v:[305,350], t:[3.8,3.0],  models:["super","italia","dihedral","nove","musclemod","proto","wedge"], boss:"wedge"},
-  {name:"Hiper",          v:[360,430], t:[2.9,2.1],  models:["hyper","proto","super","wedge","quadturbo","dihedral"], boss:"quadturbo"}
+  {name:"Popular",        v:[135,190], t:[15,10.5],  models:["bola","mille","bug","chevette","picape","xr3"],  boss:"kadett"},
+  {name:"Hot hatch",      v:[170,225], t:[11.5,8],   models:["xr3","kadett","golf","opala","chevette","bola"], boss:"golf"},
+  {name:"Turbo",          v:[215,250], t:[8,6.2],    models:["golf","opala","fa5","s15","pony","muscle","pickup"], boss:"muscle"},
+  {name:"Japonesa",       v:[230,265], t:[7,5.5],    models:["s15","fa5","fd","e46","evo9","coupe"],    boss:"fd"},
+  {name:"Rali",           v:[245,285], t:[5.8,4.4],  models:["evo9","rally","pickup","e46","s15"],           boss:"rally"},
+  {name:"GT",             v:[270,315], t:[4.8,3.8],  models:["coupe","r34","musclemod","e46","nove","pony"], boss:"r34"},
+  {name:"Superesportivo", v:[305,350], t:[3.8,3.0],  models:["nove","f40","musclemod","wedge","r34"], boss:"f40"},
+  {name:"Hiper",          v:[360,430], t:[2.9,2.1],  models:["wedge","quadturbo","f40","nove"], boss:"quadturbo"}
 ];
 const leagueOf = l => Math.min(LEAGUES.length - 1, Math.floor((l - 1) / 10));
 function rivalStats(l){
@@ -1737,129 +1721,15 @@ const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-mo
 // Optional detail: sh = shoulder height, shL = shoulder crease, lines = extra creases, fx = parts that only this body has,
 // gap = clearance between tyre and arch, hexArch = angular wheel arches.
 const MODELS = {
-  hatch:{len:70, hatchback:true, pts:[[1,5],[0,8],[0.3,12],[1.5,16],[3.2,19.5],[6.5,23.3],[12,24.6],[24,25],[34,24.5],[38.5,23.6],[49,16.6],[52,15.9],[59,15],[65,13.6],[68.5,11.8],[70.2,9.5],[70.4,7],[69.6,5]],
-    win:[[9,21.5],[13,23],[24,23.5],[33.5,23],[37.3,22.3],[46,17.4],[10.5,17.4]], belt:17.4, pillar:27.2,
-    doors:[12.8,27.8,46.8], handles:[24,43], mirror:[46.6,17.4], wheels:[13,56], r:5.8,
-    head:[[63.6,13.3],[68.4,11.8],[69.9,9.8],[64.5,10.9]], tail:[[0.4,12.5],[1.3,15.7],[3.2,15.5],[2.5,12.5]]},
-  hatch16:{len:68, hatchback:true, sh:15.2, pts:[[1,5],[0,8],[0.4,12.5],[1.8,16.5],[4,20.5],[8,23.4],[14,24.4],[24,24.6],[32,24],[36,23],[46.5,16.4],[49,15.6],[56,14.6],[62,13],[66.2,11],[68,8.8],[68,6.5],[67.2,5]],
-    win:[[9.5,21.5],[14,23],[24,23.2],[31.5,22.6],[35.3,21.8],[44,17],[11.5,17]], belt:17, pillar:0,
-    doors:[22,44.6], handles:[25.5], mirror:[44.6,17], wheels:[12,55], r:5.8,
-    fx:[{t:"badge", x:6.5, y:9.6, tx:"16V"}],
-    head:[[61,12.9],[65.8,11.4],[67.3,9.3],[62,10.4]], tail:[[0.5,12.8],[1.7,16],[3.6,15.8],[2.8,12.8]]},
-  hatchgt:{len:71, hatchback:true, sh:16.2, pts:[[1,5],[0,8.5],[0.3,13],[1.2,17],[3,21.5],[6,25],[12,25.8],[26,26],[36,25.5],[40,24.6],[50,17.4],[52.5,16.8],[60,16],[66,14.8],[69.6,13],[71,10.5],[71.2,7.5],[70.4,5]],
-    win:[[10,23],[13.5,24.5],[26,24.8],[35.5,24.4],[39.3,23.7],[48,18],[12,18]], belt:18, pillar:27,
-    doors:[13,27.6,48.6], handles:[24,44.5], mirror:[48.6,18], wheels:[13,58], r:6.2, spoiler:"roof",
-    shL:[[1,16.4],[30,16.0],[58,15.6],[70,14.2]], lines:[[[56,9.6],[40,9.2],[20,10.4]]],
-    fx:[{t:"badge", x:50.5, y:13.4, tx:"GT"}],
-    head:[[64,15],[69.4,12.9],[70.8,11],[65,12.3]], tail:[[0.3,13.5],[1,16.8],[4,16.6],[3.2,13.5]]},
-  // 90s compact notchback: upright glass, flat deck, black bumpers
-  sedan:{len:74, sh:15.8, pts:[[1.2,5],[0.2,7.5],[0,11],[0.3,14.8],[1.2,16.6],[2.4,16.9],[10,17.2],[13.5,17.6],[20.5,23.6],[23,24.7],[28,25.2],[38,25.1],[42.5,24.3],[50.5,18.2],[52.2,17.6],[60,16.9],[67,15.8],[71.6,14.6],[73.6,13],[74,10.5],[73.8,7],[73,5]],
-    wins:[[[18,18.2],[22.4,23.3],[24.6,24.2],[34.6,24.3],[34.6,18.2]], [[35.9,24.3],[41.2,24.1],[48.8,18.2],[35.9,18.2]]], belt:18.2, pillar:34.6,
-    doors:[17.6,35.2,51.2], handles:[30.6,47.2], mirror:[49,18.2], wheels:[14.5,59.5], r:5.8,
-    head:[[66.6,15.8],[72.6,14.4],[73.8,12.2],[67,12.8]], tail:[[0.3,12.2],[0.6,15.2],[5.6,16.2],[4.8,12.6]]},
-  // the Japanese high-rev sedan: compact, short high deck, a rising beltline and clear tail lamps
-  sport:{len:77, spoiler:"lip", sh:16.4, pts:[[1.4,4.9],[0.3,8.2],[0,12.6],[0.5,16.2],[1.6,17.9],[3,18.4],[8,18.6],[11.6,19],[18.5,23.6],[22,25],[26,25.2],[35,25.2],[38.6,24.6],[41.6,23.8],[51.6,18.6],[53.6,18],[61,17.4],[68,16.2],[73,14.8],[75.6,13.6],[76.6,11.8],[77,9],[76.6,6.6],[75.6,4.9]],
-    wins:[[[16.6,19.6],[20.8,23.4],[23.2,24.4],[31.6,24.5],[31.6,19.3]], [[32.8,24.5],[37.8,24.3],[49.6,18.8],[32.8,19.1]]], belt:19, pillar:31.6,
-    doors:[16.4,32.2,51.8], handles:[28,47.4], mirror:[49.8,18.9], wheels:[15,62.6], r:6.4,
-    shL:[[1,16.8],[30,16.2],[60,15.4],[75,14.2]], lines:[[[60,10.6],[45,10.0],[24,11.2]]],
-    fx:[{t:"badge", x:55.6, y:13.6, tx:"RS"}],
-    head:[[67.6,16],[73.6,14.2],[75.8,12.4],[68.6,13.6]], tail:[[0.3,14],[0.9,17.6],[6.4,18.4],[5.6,14.4]]},
-  // the rally sedan: boxy four-door, tall glasshouse, short overhangs, scoop, flared arches and wing
-  rally:{len:76, spoiler:"wing", sh:17, pts:[[1.5,5.4],[0.3,9],[0,13.2],[0.6,16.4],[2.8,17.8],[10,18.3],[14,19.2],[20,24.6],[26,26],[38,26.1],[43.5,24.8],[46.5,23.6],[56,18.4],[59,17.8],[66,17],[71.5,15.6],[75,13.2],[76,10],[75.6,7],[74.8,5.4]],
-    win:[[19.6,23.2],[26,24.8],[38,24.9],[43,23.9],[45.6,22.8],[53.6,19.1],[16.4,19.1]], belt:19.1, pillar:33, doors:[17.6,33.4,54], handles:[29,50], mirror:[54,19.1], wheels:[14.5,61.5], r:6.6,
-    scoop:[[58,17.6],[60.5,18.9],[66,18.6],[67.5,17.2]], fx:[{t:"blister"}, {t:"badge", x:3.5, y:11, tx:"AWD"}],
-    head:[[67,16.6],[73.5,14.6],[75.4,12.4],[67.5,13.4]], tail:[[0.3,13.6],[0.8,16.8],[7,17.8],[6,14]]},
-  // long-nosed Japanese twin-turbo coupe: bubble roof, rounded fenders, a hoop wing on the tall tail
-  coupe:{len:78, spoiler:"pedestal", sh:14, pts:[[1.4,4.4],[0.3,7],[0,10.8],[0.4,14.2],[1.2,15.8],[2.6,16.4],[8,16.8],[12,17.4],[18,20.8],[23,22.6],[27,23.2],[33,23.2],[36.4,22.6],[39,21.6],[47.4,16.8],[49.6,16.2],[58,15.6],[66,14.6],[72,13],[75.6,11.4],[77.4,9.6],[78,7.8],[77.6,5.8],[76.4,4.4]],
-    wins:[[[21.4,17],[24.6,21.2],[26.8,22.2],[29.2,22.4],[29.2,17]], [[30.2,22.5],[34.8,22.3],[45.2,17],[30.2,17]]], belt:17, pillar:29.2,
-    doors:[29.6,47.4], handles:[31.8], mirror:[45.6,17], wheels:[15.4,63], r:6.7,
-    fx:[{t:"intake", pts:[[2.2,7.4],[3,9.6],[6.2,9.6],[6.6,7.4]]}],
-    head:[[67.6,14.4],[74.4,12],[76.4,10.4],[68.2,12.6]], tail:[[0.2,10.8],[0.5,14],[2.4,14.6],[2,11.2]]},
-  coupeclassic:{len:74, popups:true, sh:15.4, pts:[[1.5,5],[0.3,8],[0,12],[0.6,14.6],[3,15.6],[8,16],[12,17],[22,23],[26,23.8],[38,24],[42,23.2],[53,16.6],[56,16],[66,15],[72,13.8],[74,11.5],[74,7.5],[73.4,5]],
-    win:[[22.5,22.2],[26,23],[37.5,23.1],[41,22.4],[50.5,17.1],[16,17.1]], belt:17.1, pillar:29.6,
-    doors:[29,51.5], handles:[31.5], mirror:[50.8,17.1], wheels:[13,59], r:6, spoiler:"lip",
-    fx:[{t:"twotone", y:7.6, c:"#2a2c31"}],
-    head:[[69,13.6],[73.6,12.8],[73.9,11],[69.2,11.8]], tail:[[0.3,11.5],[0.6,14.2],[3.6,14.6],[3.2,11.8]]},
-  // late-60s fastback hardtop: flying-buttress sails, hidden lamps, scalloped doors, full-width tail lamps
-  muscle:{len:90, chrome:true, sh:16.4, gap:1.1, pts:[[1.6,5.2],[0.4,7.8],[0,11.5],[0.3,15.2],[0.8,16.5],[1.8,17.1],[8,17.4],[14,18.6],[24,23.4],[29,24.5],[41,24.6],[45,23.9],[54,18.6],[56,18.1],[66,17.7],[78,17.2],[85,16.6],[88.6,16.2],[89.8,15.4],[90,13],[89.6,9.5],[90,8.2],[89.6,6],[88.6,5.2]],
-    wins:[[[23.4,18.9],[27.8,22.9],[30,23.5],[37.4,23.6],[37.4,18.9]], [[38.6,23.6],[44,23.4],[52.2,18.9],[38.6,18.9]]], belt:18.9, pillar:0,
-    doors:[38,58.2], handles:[40.4], mirror:[52.6,18.9], wheels:[17.5,71.5], r:6.9,
-    shL:[[0.6,16.2],[12,16.9],[22,17.2],[30,16.4],[60,16.2],[89,15.8]],
-    fx:[{t:"vinyl"}, {t:"scallop", pts:[[60.6,13.4],[52,12.6],[42,12.8],[40.4,11.2],[50,10.4],[60.4,11.4]]}, {t:"marker"}, {t:"badge", x:61.5, y:14.6, tx:"440"}, {t:"fuelcap", x:9, y:17.3}],
-    head:[[86.4,16.3],[89.6,15.5],[90,12.6],[86.6,13]], tail:[[0,12.4],[0.25,15.2],[1.4,15.4],[1.2,12.6]]},
-  // modern heritage muscle: long flat hood with a scoop, short roof, a high flat tail
-  musclemod:{len:91, sh:17.2, pts:[[1.6,5.6],[0.4,8.5],[0,12.5],[0.5,16.2],[1,17.6],[1.8,18.2],[3,18.3],[10,18.5],[13,18.9],[22.5,24.6],[26,25.8],[29,26.2],[38,26.2],[42,25.8],[45,25],[55,19.3],[57,18.9],[70,18.6],[80,18.1],[86,17.5],[89,17.2],[90.6,16.2],[91,14],[90.7,10.5],[91,8.5],[90.4,6.4],[89.4,5.6]],
-    wins:[[[24,19.6],[27.6,24.4],[29.6,25],[33.4,25],[33.4,19.6]], [[34.7,25],[41.2,25],[44.4,24.4],[53.4,19.6],[34.7,19.6]]], belt:19.6, pillar:33.4,
-    doors:[33.8,57.4], handles:[36.6], mirror:[53.8,19.6], wheels:[18,72.5], r:6.8, gap:1.1,
-    scoop:[[60,18.6],[63,20.1],[70,19.9],[72,18.4]],
-    fx:[{t:"badge", x:63, y:15, tx:"6.2"}, {t:"marker"}],
-    head:[[85.6,17.2],[90.4,16.2],[90.8,13.6],[86,14.2]], tail:[[0.1,13.8],[0.5,16.4],[2.6,16.8],[2.4,14]]},
   // lifted off-road pickup
   pickup:{len:92, offroad:true, lift:1.2, pts:[[1,8],[0,11],[0.2,19.5],[1.5,20],[30,20],[31,20.2],[32,30.5],[34,31.5],[56,31.5],[59,30.6],[66,22.4],[69,22],[82,21.2],[89,20],[91.5,17.5],[92,13],[91.4,8]],
     wins:[[[34.5,29.6],[46.6,29.6],[46.6,23.2],[34.5,23.2]], [[48,29.6],[55.8,29.6],[58.2,29],[63.6,23.2],[48,23.2]]],
     belt:23, pillar:0, doors:[33.6,47.3,64.4], handles:[43.2,60.4], mirror:[62.6,23.2], wheels:[16,74], r:8.6,
     bed:{x0:1.5, x1:30.5, y:20},
     head:[[85,19.8],[90.4,18.6],[91.2,16.4],[85.5,17.4]], tail:[[0.15,13],[0.25,18.6],[1.5,18.6],[1.4,13]]},
-  suv:{len:86, hatchback:true, sh:19, pts:[[1.5,6.5],[0.3,9.5],[0,14],[0.8,17.5],[2.5,20.5],[6,25],[11,27.4],[22,28.4],[40,28.2],[47,27],[57,20],[61,19.4],[72,18.4],[80,16.8],[85,14.4],[86,11],[85.4,6.5]],
-    win:[[9,25],[12,26.4],[22,27.2],[39.5,27],[45.5,25.8],[54,20.4],[9.5,20.4]], belt:20.4, pillar:33,
-    doors:[13.5,33.6,55], handles:[29,51], mirror:[54.4,20.4], wheels:[16,70], r:8, spoiler:"roof",
-    shL:[[1,19.4],[40,18.8],[84,15.8]], fx:[{t:"blister"}],
-    head:[[78.5,17.6],[84.6,15],[85.4,13.4],[79,15.4]], tail:[[0.3,15],[0.8,18.5],[4.5,19],[4,15.4]]},
-  // mid-engine V10: cab-forward wedge, hexagonal arches, louvred engine cover, a big intake ahead of the rear wheel
-  super:{len:82, hexArch:true, gap:0.9, sh:13.6, pts:[[2,3.8],[0.4,6.4],[0,10],[0.4,13.6],[1.2,15.6],[2.6,16.2],[8,16.8],[16,18.1],[24,20.2],[30,21],[35,21],[39,20.3],[46,17.4],[53,14.8],[58,15],[63,15],[69,13.8],[75,11.4],[79.6,8.6],[81.6,6.6],[82,5.2],[81.2,3.8]],
-    wins:[[[27,15.4],[30.2,19.8],[34.6,20.3],[38.6,19.7],[46,16.4],[48,15.4]]], belt:15.4, pillar:0,
-    doors:[27,52.4], handles:[], mirror:[46.8,15.5], wheels:[15.5,64], r:6.4, spoiler:"lip",
-    intake:[[23.6,8.6],[25.2,13.2],[29.6,14],[29,11.4],[26.4,8.6]],
-    fx:[{t:"louvers", pts:[[10,17],[16,18],[23.4,19.7],[26.2,20.1],[24,18.6],[16,17.1],[11,16.5]]}, {t:"skirt"}, {t:"scoopline", pts:[[50,9.4],[38,10.4],[29.6,14]]}],
-    head:[[71,13.6],[78,11],[80.4,9.2],[72,11.6]], tail:[[0.4,12.8],[1,15.6],[4.6,16.4],[4.2,13.6]]},
-  // road-going prototype: bubble canopy between high fenders, a shark fin, very long tail
-  proto:{len:86, gap:0.9, sh:12.6, pts:[[1.4,3.4],[0.2,6],[0,9.6],[0.2,13.6],[0.8,15.6],[2,16.2],[10,16.4],[18,16.8],[22,16.6],[28,18.4],[32,19.6],[37,19.8],[41,19],[47,16.6],[52,14.4],[58,15.6],[63,16.2],[68,15.6],[74,12],[80,8],[84,6],[86,4.8],[85.4,3.4]],
-    wins:[[[29,16.4],[30.4,18.8],[33,19.4],[37.6,19.4],[41,18.4],[46.6,16.4]]], belt:16.4, pillar:0,
-    doors:[28.6,50.4], handles:[], mirror:[46.2,16.5], wheels:[16,66], r:6.6, spoiler:"wing",
-    intake:[[23.8,7.6],[24.8,12.4],[28.4,13],[27.2,7.6]],
-    fx:[{t:"fin", pts:[[30.6,19.2],[24,21.2],[8,20.6],[5.4,19.6],[6.4,16.4],[20,16.8],[29,18.6]]}, {t:"fenderlouver", x:66}, {t:"skirt"}, {t:"badge", x:12, y:13.4, tx:"XR"}],
-    head:[[73,13.2],[80,9.6],[81.6,8.4],[74,11.6]], tail:[[0.1,12.8],[0.5,15.4],[2.4,16],[2,13.4]]},
-  // electric hypercar: glass canopy flowing into the roof, a sculpted channel in the door, light blades
-  hyper:{len:83, gap:0.9, sh:13.4, pts:[[1.4,3.9],[0.3,6.4],[0,10],[0.4,13.6],[1.2,15.8],[2.6,16.6],[4.4,16.8],[12,17.4],[19,19],[25,20.9],[31,21.8],[36,21.8],[41,20.8],[48,17.6],[54,15.3],[60,15.6],[65,15.5],[70,14.2],[75,12],[79.6,9.4],[82,7.2],[83,5.6],[82.4,3.9]],
-    wins:[[[28,15.6],[27.2,17.6],[30,20.6],[35,21.4],[39.6,20.8],[47.6,16.6],[49.4,15.6]]], belt:15.6, pillar:0,
-    doors:[27.4,52.4], handles:[], mirror:[48.2,15.7], wheels:[16.4,65], r:6.8,
-    fx:[{t:"glassroof", x0:20, x1:40}, {t:"doorscoop", pts:[[49,10.6],[38,12.6],[30,13.4],[27,12.6],[30,11.2],[40,10.2]]}, {t:"skirt"}],
-    head:[[72,13.8],[79,11],[80.8,9.6],[73,12]], tail:[[0.2,13],[0.6,15.6],[3.6,16.6],[3.2,13.6]]}
 };
 // Brazilian classics
 Object.assign(MODELS, {
-  // the beetle: a round shell with separate bolt-on fenders, lamps on top of the front wings and a running board between them
-  bug:{len:64, chrome:true, sh:13, pts:[[2,5],[0.5,8],[0,12],[1.5,17],[5,21.5],[11,25],[19,27],[28,27.2],[36,25.6],[42,21.5],[46,19.2],[52,18.4],[58,17.5],[62,15.2],[63.6,11.5],[63.4,7.5],[62,5]],
-    wins:[[[14,21],[17,24],[24,25.6],[25.2,25.6],[25.2,20.2],[14.8,20.2]], [[26.6,25.8],[33,25.6],[37.4,23.6],[41,20.4],[26.6,20.4]]], belt:20.2, pillar:0,
-    doors:[26,42], handles:[28.5], mirror:[40.6,20.3], wheels:[13,52], r:6.4,
-    fx:[{t:"beetle"}],
-    head:[[58.2,16.4],[61,15.8],[61.8,13.8],[58.6,14.2]], tail:[[0.9,13],[1.6,16.4],[3.2,16.6],[2.6,13]]},
-  uno:{len:62, hatchback:true, sh:15, pts:[[1,5],[0,8],[0.2,14],[1,19.5],[2.5,23],[6,24.2],[30,24.4],[33,23.6],[42,17],[44,16.4],[55,15.6],[60,14.6],[61.8,12],[62,7],[61.2,5]],
-    win:[[7.5,22.6],[30.5,22.8],[32.6,22],[40.6,17],[8,17]], belt:17, pillar:24,
-    doors:[24,41.6], handles:[26.5], mirror:[40.8,17], wheels:[11,51], r:5.6,
-    fx:[{t:"badge", x:4.2, y:10.6, tx:"TURBO"}],
-    head:[[55,14.9],[59.6,14.3],[60.6,12.4],[55,12.6]], tail:[[0.4,13],[0.9,18.6],[2.4,18.8],[2.2,13]]},
-  gol:{len:66, hatchback:true, sh:14.6, pts:[[1,5],[0,8],[0.2,13.5],[0.9,17],[3,22.4],[7,23.6],[28,23.8],[31.5,23],[42,16.8],[45,16.2],[58,15.4],[64,14.4],[65.8,12],[66,7],[65,5]],
-    win:[[7.5,22],[28,22.2],[31,21.6],[40.6,16.8],[8.5,16.8]], belt:16.8, pillar:0,
-    doors:[22,41.8], handles:[24.5], mirror:[40.8,16.8], wheels:[12,54], r:5.8,
-    fx:[{t:"badge", x:46, y:13.2, tx:"GTi"}],
-    head:[[59,14.9],[64.2,14.1],[64.8,12],[59,12.5]], tail:[[0.5,12.5],[0.9,16.2],[3.6,16.4],[3.2,12.6]]},
-  opala:{len:86, chrome:true, sh:15.6, pts:[[1.5,5],[0.3,8],[0,12],[0.6,15],[3,16],[14,16.4],[19,17],[27,22.6],[33,23.4],[44,23.2],[48,22],[55,17.2],[59,16.8],[72,16.4],[82,15.6],[85.5,13.5],[86,9.5],[85.4,5]],
-    win:[[27.5,21.8],[33,22.6],[43.5,22.4],[47,21.4],[53.4,17.4],[22,17.4]], belt:17.4, pillar:0,
-    doors:[24,54], handles:[27.5], mirror:[53.2,17.4], wheels:[17,70], r:6.6,
-    fx:[{t:"vinyl"}, {t:"stripe", y0:9.8, y1:10.6, x0:6, x1:80}, {t:"badge", x:60, y:13.2, tx:"SS"}],
-    head:[[79.6,15.2],[85,13.6],[85.6,11.4],[80,12.2]], tail:[[0.3,10.5],[0.6,14.6],[2.8,15],[2.6,10.8]]},
-  maverick:{len:82, chrome:true, sh:15.4, pts:[[1.5,5],[0.3,8],[0,12],[0.5,15],[3,16.2],[8,16.6],[12,17.4],[27,22.8],[33,23.2],[40,22.6],[49,17.6],[53,17],[66,16.6],[77,15.8],[81,13.8],[82,10],[81.4,5]],
-    wins:[[[23,18],[28.5,21.4],[33,22],[35.6,19.8],[35.6,18]], [[37,21.8],[40,21.6],[47.2,17.8],[37,17.8]]], belt:17.8, pillar:0,
-    doors:[24.5,48.6], handles:[30], mirror:[47.4,17.8], wheels:[16,66], r:6.6,
-    scoop:[[56,16.9],[59,18.2],[66,18],[68.5,16.6]],
-    fx:[{t:"stripe", y0:13.2, y1:14.2, x0:4, x1:78, k:"gt"}, {t:"badge", x:56, y:12.2, tx:"V8"}],
-    head:[[75.6,15.4],[80.4,14],[81.2,11.8],[76,12.4]], tail:[[0.3,11],[0.6,14.8],[3,15.2],[2.8,11.2]]},
-  puma:{len:66, sh:12.6, pts:[[1,4.5],[0,7],[0.3,10.5],[1.8,13.2],[6,14.4],[13,16.6],[21,19.4],[29,19.8],[35,18.8],[44,13.8],[49,13],[58,12],[63.5,10.2],[65.6,8],[66,5.5],[65,4.5]],
-    win:[[20.5,18.2],[28.5,18.6],[33.6,17.8],[41.4,14],[16,14]], belt:14, pillar:0,
-    doors:[17.5,42.4], handles:[20.5], mirror:[41.4,14], wheels:[12,54], r:5.6,
-    fx:[{t:"louvers", pts:[[6,14.2],[13,16.2],[15.6,16.4],[12.6,15.2],[6.4,13.4]]}, {t:"badge", x:44.6, y:10.2, tx:"GTE"}],
-    head:[[58.4,11.8],[63.2,10.1],[64.2,8.6],[58.8,9.6]], tail:[[0.4,8.6],[0.9,11.6],[3.6,12.2],[3.2,9]]}
 });
 // German, Japanese and Brazilian street favourites
 Object.assign(MODELS, {
@@ -1869,52 +1739,10 @@ Object.assign(MODELS, {
     doors:[24,48.8], handles:[27], mirror:[48.4,18.2], wheels:[13,59], r:6.2,
     fx:[{t:"badge", x:4.5, y:11.6, tx:"GTI"}],
     head:[[64.5,15.6],[70,13.6],[71.4,11.4],[65,12.8]], tail:[[0.4,13.8],[1.2,17.4],[4.5,17.6],[3.8,13.8]]},
-  // modern German sedan: long flat roof, a sharp tornado line, chrome window line
-  jetta:{len:82, sh:17.2, pts:[[1.4,5.2],[0.3,8.6],[0,12.8],[0.5,16.4],[1.8,18],[3.6,18.4],[9,18.6],[13.5,19.2],[21,24.2],[25,25.8],[29,26.2],[40,26.2],[44,25.6],[47,24.8],[57,19.2],[59,18.7],[68,18.2],[75,17.2],[79.4,15.8],[81.4,14.4],[82,12.4],[82,9.4],[81.6,6.8],[80.6,5.2]],
-    wins:[[[19.4,19.6],[24,24.6],[26.2,25.4],[36.4,25.5],[36.4,19.6]], [[37.6,25.5],[43.6,25.2],[55,19.6],[37.6,19.6]]], belt:19.6, pillar:36.4,
-    doors:[19,36.8,57], handles:[32.6,52.6], mirror:[55.2,19.6], wheels:[16,66.6], r:6.6,
-    shL:[[1,17.6],[40,17.4],[80,16.6]], lines:[[[64,10.4],[40,10.0],[20,10.8]]],
-    fx:[{t:"badge", x:4.6, y:12.2, tx:"TSI"}],
-    head:[[74,17.2],[80.6,15.4],[81.6,13.8],[74.6,14.6]], tail:[[0.3,14.6],[0.9,17.6],[8.6,18.4],[7.6,15]]},
-  // 90s Japanese sedan: very raked glass, thin pillars, low rounded nose
-  civic:{len:79, sh:15.8, pts:[[1.4,4.8],[0.3,7.8],[0,11.6],[0.5,15],[1.6,16.6],[3,17],[9,17.4],[12,17.8],[19,22.4],[23,24.2],[27,24.8],[36,24.8],[40,24.2],[43,23.4],[53.6,17.8],[55.6,17.2],[64,16.4],[71,15.2],[75.6,13.8],[77.8,12.4],[78.8,10.4],[79,8],[78.4,6],[77.4,4.8]],
-    wins:[[[17.6,18.2],[21.6,22.6],[24.2,23.8],[33.4,23.9],[33.4,18.2]], [[34.6,23.9],[39.6,23.7],[51.6,18.2],[34.6,18.2]]], belt:18.2, pillar:33.4,
-    doors:[17.2,33.8,53.6], handles:[29.6,49], mirror:[51.8,18.2], wheels:[14.5,64], r:6.2, spoiler:"lip",
-    fx:[{t:"badge", x:4.6, y:10.6, tx:"VTEC"}],
-    head:[[70.4,15.4],[76.4,13.4],[78.2,11.6],[71,12.8]], tail:[[0.4,13.2],[1,16.4],[6.4,17.2],[5.6,13.8]]},
-  // the long wagon of the 70s: a tall glasshouse running back to an almost vertical tailgate, chrome everywhere
-  variant:{len:75, hatchback:true, chrome:true, sh:16.6, pts:[[1.5,5],[0.3,8],[0,12],[0.5,16],[1.5,19],[2.5,23.5],[4,25],[10,25.6],[36,25.6],[41,24.8],[49,18.2],[53,17.6],[64,17],[71,15.6],[74,13],[75,9.5],[74.4,5]],
-    wins:[[[5,24],[15,24.6],[15,19.2],[4,19.2]], [[16.5,24.6],[30,24.6],[30,19.2],[16.5,19.2]], [[31.5,24.6],[40.4,24],[46.8,19.2],[31.5,19.2]]], belt:19.2, pillar:0,
-    doors:[30.8,47.5], handles:[33.5], mirror:[46.4,19.2], wheels:[14,60], r:6.2,
-    fx:[{t:"stripe", y0:11.2, y1:11.6, x0:2, x1:73, chrome:1}],
-    head:[[67,16.2],[72.5,15.4],[73.6,13.2],[67.5,13.8]], tail:[[0.3,13],[0.7,17],[2.4,17.2],[2,13]]}
 });
 // three original street cars, delivered stock so the player builds them up
 Object.assign(MODELS, {
-  // Japanese sport sedan: high deck with a wing from the factory, blistered arches
-  tsubame:{len:80, spoiler:"pedestal", sh:17, pts:[[1.4,4.8],[0.3,8],[0,12.4],[0.4,16],[1.4,17.8],[3,18.4],[9,18.6],[12.5,19],[19.5,23.8],[23,25.2],[27,25.4],[37,25.4],[41,24.8],[44,24],[54,18.6],[56,18],[65,17.4],[72,16.4],[76.6,15.2],[79,14],[80,12],[80,9],[79.8,6.6],[78.6,4.8]],
-    wins:[[[17.6,19.2],[21.8,23.6],[24.2,24.6],[33.6,24.7],[33.6,19.2]], [[34.8,24.7],[40.6,24.5],[51.8,19.2],[34.8,19.2]]], belt:19.2, pillar:33.6,
-    doors:[17.2,34,54], handles:[30,50], mirror:[52,19.2], wheels:[15.5,63.5], r:6.5,
-    fx:[{t:"blister"}, {t:"badge", x:56.6, y:14.4, tx:"R"}],
-    head:[[71,16],[77,14.6],[79,12.8],[72,13.4]], tail:[[0.3,14.4],[0.9,17.4],[7,18.2],[6.2,14.8]]},
-  // German sport sedan: long bonnet, short front overhang, the kink at the back of the side glass
-  harpia:{len:84, sh:17.4, pts:[[1.4,5.1],[0.3,8.6],[0,13],[0.6,16.6],[2,18.2],[3.8,18.6],[9,18.8],[13,19.4],[20.5,24.4],[24.6,25.8],[28.6,26],[38,26],[42,25.5],[45,24.6],[55.6,19.4],[57.6,18.9],[67,18.6],[76,17.8],[81,16.6],[83.2,15.6],[84,13.6],[84,10],[83.6,7],[82.6,5.1]],
-    wins:[[[20.4,19.6],[19.4,20.6],[20,21.6],[23.6,24.4],[26.4,25.3],[35.6,25.4],[35.6,19.6]], [[36.8,25.4],[41.6,25.1],[53.6,19.6],[36.8,19.6]]], belt:19.6, pillar:35.6,
-    doors:[18.6,36,56], handles:[31.6,51.6], mirror:[53.8,19.6], wheels:[16.4,67.6], r:6.9, gap:1.1,
-    shL:[[1,17.8],[30,17.2],[60,17.0],[83,16.2]], lines:[[[66,11.6],[40,11.2],[22,12.6]]],
-    fx:[{t:"gill"}],
-    head:[[76.6,17.6],[82.8,15.8],[83.8,14],[77.4,15.2]], tail:[[0.3,14.4],[0.9,17.8],[8.4,18.6],[7.4,14.8]]},
-  tiziu:{len:69, hatchback:true, sh:15.4, pts:[[1,5],[0,8.5],[0.4,13.5],[1.4,17],[3.6,20.6],[7.6,23.6],[12,24.4],[30,24.6],[33.6,23.8],[44,17.4],[47,16.7],[56,15.8],[63,14.6],[67.4,12.6],[69,10],[68.8,7],[67.8,5]],
-    win:[[8.4,22.2],[12,23.2],[30,23.4],[33,22.6],[42,17.6],[10,17.6]], belt:17.6, pillar:24,
-    doors:[26.5,43.6], handles:[29], mirror:[43,17.6], wheels:[12.5,56], r:5.9,
-    fx:[{t:"badge", x:47.6, y:13.2, tx:"GTS"}],
-    head:[[61,15.2],[66.6,14],[68.2,11.8],[61.5,12.6]], tail:[[0.5,13.4],[1.2,17],[3.8,17.2],[3.2,13.6]]}
 });
-// the Ciou: a small, rounded three-door hatch with one long door and a quarter window behind it
-MODELS.ciou = {len:64, hatchback:true, sh:15.6, pts:[[1,5],[0,8.5],[0.3,13.5],[1.2,17.5],[3,21],[6.5,23.8],[12,24.8],[26,25],[31,24.4],[40.5,17.6],[44,16.9],[52,16.2],[58,15],[61.6,13],[63.2,10.2],[63.4,7.2],[62.6,5]],
-  wins:[[[7.6,22.2],[12,23.6],[17.4,23.8],[17.4,18.1],[8.6,18.1]], [[19,23.8],[26,23.9],[30.4,23.3],[38.4,18.1],[19,18.1]]], belt:18.1, pillar:0,
-  doors:[18.2, 39.4], handles:[21.8], mirror:[38.4,18.1], wheels:[11.5,52.5], r:5.7,
-  head:[[55.6,15.7],[61.2,13.5],[62.7,11.3],[56.2,12.7]], tail:[[0.5,13.8],[1.4,18],[3.6,18.2],[3,14]]};
 // compact car-based pickup: two seats, a low cab and a short bed, street suspension
 MODELS.picape = {len:78, sh:14.6, pts:[[1,5],[0,8],[0.2,15.5],[1.2,16.2],[27,16.2],[28,16.6],[28.6,24],[31,25.4],[41,25.4],[44,24.6],[52.5,17.4],[55.5,16.8],[66,15.8],[73,14.4],[76.6,12.2],[78,9.2],[77.8,6.6],[76.8,5]],
   wins:[[[29.6,23.6],[31.6,24.4],[40.6,24.4],[43.2,23.6],[50.8,17.8],[29.6,17.8]]], belt:17.8, pillar:0, doors:[29,51.6], handles:[32], mirror:[50.8,17.8], wheels:[13,63], r:6.1,
@@ -1930,109 +1758,34 @@ Object.assign(MODELS, {
     shL:[[0.13,15.03],[8.32,15.0],[22.77,14.71],[34.59,14.36],[54.67,13.84],[65.68,12.92]], lines:[[[54.67,6.99],[34.59,7.27],[19.82,7.45]]],
     fx:[{t:"skirt"}, {t:"stripe", y0:6.95, y1:7.3, x0:19.6, x1:54.8, chrome:1}, {t:"chin", x0:67.6, x1:74.2}, {t:"stubant", x:19.2}, {t:"decal", x:22.18, y:8.86, tx:"i-VTEC", sub:"DOHC"}, {t:"racecard", x:22.6, y:20.3, tx:"69"}],
     head:[[64.12,13.65],[70.87,12.94],[73.22,11.72],[73.73,10.17],[70.62,10.46],[66.98,11.71]], tail:[[0.13,16.69],[3.35,16.15],[2.49,14.04],[1.37,12.18],[0.25,12.31]]},
-  // 60s pony fastback: long hood, short deck, louvred quarter, a scoop in the side and a ducktail
-  pony:{len:84, chrome:true, sh:14.8, pts:[[1.4,5],[0.3,7.5],[0,11],[0.2,14.4],[0.5,15.6],[1.2,16.4],[2.2,16.6],[4,16.8],[10,18.6],[18,21.4],[24,23],[27,23.5],[36,23.6],[39,23.2],[41.5,22.6],[50,17.6],[52,17.2],[62,16.9],[72,16.4],[78,15.8],[81.4,15.6],[83.4,14.8],[84,13.4],[83.6,11],[84,9.5],[83.6,6.6],[82.6,5]],
-    wins:[[[30.4,17.9],[30.4,22.6],[37,22.8],[39.8,22.4],[48.2,17.9]]], belt:17.9, pillar:0,
-    doors:[29.8,50.2], handles:[32.2], mirror:[48.4,17.9], wheels:[16.5,66.5], r:6.2,
-    shL:[[1,15.2],[20,15.4],[30,14.6],[60,14.6],[83,14.2]],
-    fx:[{t:"qlouver", pts:[[21.6,17.9],[25.6,21.4],[28.6,22.4],[29.4,22.4],[29.4,17.9]]}, {t:"sidescoop", pts:[[24.2,10.4],[29.4,13.6],[32.6,13.4],[32.2,10.4]], lead:[[52,13.2],[40,13.0],[32.6,13.4]]}, {t:"marker"}, {t:"badge", x:60, y:13, tx:"390 GT"}],
-    head:[[78.6,15.4],[83,14.7],[83.6,12.6],[79,13.2]], tail:[[0,11.6],[0.2,14.4],[1.4,14.6],[1.2,11.8]]},
-  // 1970 hardtop: notchback with long sails, cowl-induction bonnet, vinyl top and chrome
-  chevelle:{len:90, chrome:true, sh:16, pts:[[1.6,5.2],[0.4,8],[0,12],[0.3,15.6],[1,16.6],[2,16.9],[9,17.2],[12,17.6],[16.5,19.2],[23,23],[27,24.2],[30,24.4],[40,24.4],[43,23.9],[46,23.2],[55.5,18.4],[57.5,18],[68,17.8],[80,17.4],[86,16.8],[88.6,16.4],[89.7,15.4],[90,12.6],[89.7,9.8],[90,8.6],[89.6,6.4],[88.6,5.2]],
-    wins:[[[23.6,18.8],[26.6,22.4],[28.6,23.2],[36.5,23.3],[36.5,18.8]], [[37.6,23.3],[43.6,23.2],[53.4,18.8],[37.6,18.8]]], belt:18.8, pillar:0,
-    doors:[37.2,57.6], handles:[39.6], mirror:[53.8,18.8], wheels:[18,71], r:6.4,
-    fx:[{t:"vinyl"}, {t:"cowl", x0:62, x1:79, h:0.85}, {t:"marker"}, {t:"badge", x:63, y:14.2, tx:"SS 454"}, {t:"stripe", y0:5.9, y1:6.4, x0:25, x1:63, chrome:1}],
-    head:[[85.6,16.6],[89.5,15.6],[89.8,13.2],[86,13.6]], tail:[[0,12.2],[0.3,15.2],[1.8,15.5],[1.6,12.4]]},
-  // big-block sports car: pointed nose, peaked fenders front and back, a tunnel roof, side gills
-  stingray:{len:84, chrome:true, popups:true, sh:13.6, gap:1.1, pts:[[1.2,4.3],[0.2,6.6],[0,9.8],[0.4,13],[1.2,14.8],[3,15.5],[9,16.4],[15,17.2],[19,17.3],[22,18.2],[26.5,21.2],[30,22.1],[35.5,22.2],[38.5,21.6],[47,16],[50,15.4],[55,15.6],[60,16.2],[65,16],[71,14.8],[77,13],[81.6,10.8],[83.6,9.4],[84,8.2],[83.4,6.2],[82,4.6]],
-    wins:[[[29,16.2],[29.4,21],[30.6,21.6],[35.6,21.7],[38,21.2],[45.6,16.2]]], belt:16.2, pillar:0,
-    doors:[28.6,48.4], handles:[30.8], mirror:[45.6,16.2], wheels:[16.5,62], r:6.3,
-    gills:[52.2,11.4], fx:[{t:"ttop", x:32.6}, {t:"badge", x:56.4, y:14.6, tx:"427"}],
-    head:[[66,15.8],[72,14.6],[72.5,14.2],[66.5,15.3]], tail:[[0.1,10],[0.3,13.4],[1.6,13.6],[1.4,10.2]]},
-  // modern pony car: fastback roof, shark nose, three-bar tail lamps
-  ponymod:{len:86, spoiler:"lip", sh:16.8, pts:[[1.6,5.4],[0.4,8],[0,12],[0.6,15.6],[1.2,17.2],[2.2,17.7],[3.4,17.6],[7,17.7],[12,19.4],[19,22.6],[25,24.6],[28.5,25],[35,25],[38.5,24.4],[41,23.6],[51,18.6],[53,18.2],[64,18],[74,17.4],[80,16.6],[83.8,16.2],[85.6,15.4],[86,14.2],[85.4,11.6],[86,9.6],[85.6,6.8],[84.6,5.4]],
-    wins:[[[24,19.1],[27.4,23.6],[29.6,24.2],[33,24.2],[33,19.1]], [[34.2,24.2],[38.4,24],[48.6,19.1],[34.2,19.1]]], belt:19.1, pillar:33,
-    doors:[33.4,52.6], handles:[36], mirror:[49,19.1], wheels:[18,70], r:6.8, gap:1.1,
-    shL:[[1,17.2],[30,16.8],[60,16.4],[85,15.4]], lines:[[[60,11.6],[44,11.0],[26,12.6]]],
-    fx:[{t:"gill"}, {t:"badge", x:60.6, y:15.2, tx:"GT500"}],
-    head:[[80.6,16.4],[85.4,15.4],[85.8,14.4],[81,15]], tail:[[0,13.6],[0.6,16.8],[2.8,17.2],[2.4,14]]},
-  // Italian mid-engine V8: rounded nose, scoop running through the door, flying buttresses, twin round tail lamps
-  italia:{len:83, gap:0.9, sh:13.2, pts:[[1.4,3.8],[0.3,6.2],[0,9.8],[0.3,13],[1,15.2],[2.2,16.2],[3.8,16.5],[8,16.8],[16,18],[22,19.6],[27,21],[32,21.6],[36,21.6],[40,20.8],[47,17.6],[53,15.2],[58,15.6],[63,15.6],[68,14.6],[74,12.4],[79,9.8],[82,7.6],[83,6],[82.6,4.6],[81.4,3.8]],
-    wins:[[[30,15.4],[30.4,19.6],[32.4,20.6],[36.6,20.7],[39.6,20],[46.6,16.4],[48.4,15.4]]], belt:15.4, pillar:0,
-    doors:[29.6,51.6], handles:[], mirror:[47.2,15.5], wheels:[16,64.5], r:6.5, spoiler:"lip",
-    intake:[[26.6,9.4],[27.6,13.2],[32.2,13.9],[30.4,10.6]],
-    fx:[{t:"buttress", pts:[[19,17.6],[25,19.8],[28.4,20.7],[26.8,19.4],[21,17.4]]}, {t:"scoopline", pts:[[50,10.4],[40,11.6],[32.4,14]]}, {t:"skirt"}],
-    head:[[70.6,13.8],[77.2,11.2],[79.2,9.6],[71.4,12]], tail:[[0.3,12.8],[0.7,15],[2.6,15.6],[2.2,13.2]]},
-  // British-style mid-engine: teardrop canopy, a scoop shaped into the dihedral door, air-brake wing
-  dihedral:{len:82, gap:0.9, sh:13, pts:[[1.2,3.6],[0.3,6],[0,9.6],[0.3,13],[1,15.4],[2,16.2],[3.6,16.4],[10,16.8],[17,17.8],[23,19.6],[28,20.9],[33,21.4],[37,21.2],[41,20.2],[48,17.2],[54,14.6],[59,14.6],[64,14.4],[69,13.2],[75,10.8],[79.6,8.2],[81.6,6.4],[82,5],[81.4,3.6]],
-    wins:[[[28,15.4],[26.6,17.6],[28.6,20.2],[32.4,20.9],[37.6,20.8],[41.6,19.6],[48.2,16.4],[50,15.4]]], belt:15.4, pillar:0,
-    doors:[27.4,52.6], handles:[], mirror:[48.4,15.5], wheels:[15.8,64.2], r:6.5, spoiler:"lip",
-    intake:[[24.6,7.6],[25.6,13.2],[29,13.6],[28.6,7.6]],
-    fx:[{t:"doorscoop", pts:[[50,9.8],[42,12.8],[33,13.6],[30.6,12.6],[33,10.6],[42,9.8]]}, {t:"skirt"}],
-    head:[[71.6,13],[77,10.8],[78.6,9.4],[73.4,11]], tail:[[0.2,13],[0.6,15.4],[3.4,16.2],[3,14]]},
-  // rear-engine icon: frog-eye lamps on the wings, a roof that falls to the engine lid, big rear haunches
-  nove:{len:81, sh:15, pts:[[1.6,4.4],[0.4,6.8],[0,10.4],[0.4,13.6],[1.2,15.6],[2.4,16.8],[3.6,17.3],[6,17.6],[10,18.4],[16,20.4],[22,22.4],[27,23.3],[32,23.5],[36,23.4],[40,22.6],[47,18.6],[50,17.4],[54,16.6],[58,16.8],[63,16.9],[68,16.4],[73,15.6],[76.6,14.6],[79.2,12.6],[80.6,10.2],[81,8],[80.6,5.8],[79.6,4.4]],
-    wins:[[[22.2,17.8],[25.6,20.8],[29.4,22.2],[34.4,22.4],[34.4,17.8]], [[35.4,22.4],[38.6,22.1],[45.6,18],[35.4,18]]], belt:17.8, pillar:0,
-    doors:[34.9,50.6], handles:[37.6], mirror:[46,17.9], wheels:[18,62.5], r:6.5, spoiler:"swan",
-    intake:[[23.4,7.6],[24.2,11.4],[27.4,11.8],[26.8,7.6]],
-    fx:[{t:"skirt"}, {t:"badge", x:4.6, y:12.6, tx:"RS"}],
-    head:[[71,16.2],[76.4,15],[78.2,13.6],[71.6,14.2]], tail:[[0.2,12.4],[0.6,15.2],[3,16],[2.6,13]]},
-  // the extreme V12 wedge: one line from nose to roof, angular arches, an air box behind the glass
-  wedge:{len:86, hexArch:true, gap:0.9, sh:13, pts:[[1.4,3.6],[0.3,6],[0,9.6],[0.2,13.4],[0.8,15.8],[2,16.6],[4,16.9],[12,17.6],[20,19],[26,20.3],[32,20.6],[35,20.5],[40,19.2],[48,16.6],[56,14],[64,11.6],[72,9.4],[79,7.4],[84,5.9],[86,5],[85.6,4],[84.6,3.6]],
-    wins:[[[29.4,15.4],[31.6,19.3],[35.2,19.7],[39,18.9],[47.4,15.4]]], belt:15.4, pillar:0,
-    doors:[29,51], handles:[], mirror:[47.2,15.5], wheels:[16.5,67], r:6.7, spoiler:"pedestal",
-    intake:[[26,7.4],[27.2,13.4],[31.8,14.4],[32.6,13],[29.4,7.4]],
-    fx:[{t:"ear", pts:[[21.6,17.6],[25.6,19.4],[28.8,19.6],[27.6,17.4]]}, {t:"louvers", pts:[[6,17.2],[14,18.2],[21,19.2],[19,17.8],[8,16.6]]}, {t:"skirt"}, {t:"badge", x:70, y:11, tx:"V12"}],
-    head:[[76,11.2],[82.6,8],[83.8,7.1],[77,9.8]], tail:[[0.1,12.6],[0.6,15.6],[3,16.4],[2.6,13.2]]},
-  // quad-turbo W16 grand tourer: the polished C sweeping round the cabin, darker front body
-  quadturbo:{len:82, gap:0.9, sh:13.6, pts:[[1.4,3.8],[0.3,6.2],[0,10],[0.3,13.6],[1,15.6],[2.4,16.4],[4,16.6],[12,16.9],[18,18.2],[24,20.4],[29,21.6],[34,22],[38,21.8],[42,20.8],[49,17.4],[54,15.4],[60,15.6],[65,15.4],[70,14.4],[75,12.6],[79.4,10.2],[81.6,7.8],[82,5.6],[81.2,3.8]],
-    wins:[[[29.6,15.6],[29.8,19.6],[31.8,21],[37.6,21.2],[41.4,20.2],[48,16.6],[49.6,15.6]]], belt:15.6, pillar:0,
-    doors:[29.4,52.8], handles:[], mirror:[48.4,15.7], wheels:[16,64.8], r:6.8, spoiler:"lip",
-    fx:[{t:"cline", pts:[[30.6,21.4],[26.6,19.4],[23.8,14.8],[23.6,9.4],[26.6,6.4],[34,5.6]]}, {t:"skirt"}, {t:"badge", x:54, y:12.4, tx:"W16"}],
-    head:[[72,14],[78.4,11.4],[80.2,9.8],[73,12.2]], tail:[[0.2,13],[0.6,15.6],[3.4,16.3],[3,13.6]]}
 });
 // what each body looks like up close: lamps, trim, bumpers, mirrors, lines and extras, so no two cars read the same
 const STYLE = {
-  hatch:       {head:"rect80", tail:"block",  bumper:"black", rub:1, line:"none", antenna:1, mirror:"black"},
-  hatch16:     {head:"rect80", tail:"block",  bumper:"black", rub:1, line:"high", fog:1, mirror:"black"},
-  hatchgt:     {head:"angry",  tail:"vert",   line:"none", vent:1, mirror:"body"},
-  sedan:       {head:"rect80", tail:"wide",   bumper:"black", rub:1, line:"none", antenna:1, mirror:"black"},
-  sport:       {head:"projector", tail:"clear", line:"none", vent:1, mirror:"body"},
-  rally:       {head:"projector", tail:"l",   clad:1, line:"high", mud:1, mirror:"body"},
-  coupe:       {head:"drop",   tail:"round",  line:"none", mirror:"body"},
-  coupeclassic:{head:"popup",  tail:"wide",   bumper:"black", line:"none", mirror:"black"},
-  muscle:      {head:"hidden", tail:"fullwidth", trim:"chrome", line:"none", mirror:"bullet"},
-  musclemod:   {head:"quad",   tail:"bar",    line:"none", mirror:"body"},
   pickup:      {head:"rect",   tail:"vert",   clad:1, line:"none", mirror:"black"},
-  suv:         {head:"angry",  tail:"vert",   clad:1, rails:1, line:"none", mirror:"body"},
-  super:       {head:"y",      tail:"bar",    line:"none", mirror:"race"},
-  proto:       {head:"slim",   tail:"bar",    line:"none", mirror:"race"},
-  hyper:       {head:"slim",   tail:"bar",    line:"none", mirror:"race", flush:1},
-  bug:         {head:"round",  tail:"round",  trim:"chrome", line:"none", mirror:"bullet"},
-  uno:         {head:"rect80", tail:"vert",   bumper:"black", rub:1, line:"none", antenna:1, mirror:"black"},
-  gol:         {head:"rect80", tail:"block",  bumper:"black", rub:1, line:"none", mirror:"black"},
-  opala:       {head:"quad",   tail:"wide",   trim:"chrome", line:"none", mirror:"bullet"},
-  maverick:    {head:"round",  tail:"wide",   trim:"chrome", line:"coke", mirror:"bullet"},
-  puma:        {head:"round",  tail:"round",  trim:"chrome", line:"none", mirror:"bullet"},
   golf:        {head:"projector", tail:"block", line:"high", mirror:"body"},
-  jetta:       {head:"projector", tail:"bar", trim:"chrome", line:"none", mirror:"body"},
-  civic:       {head:"angry",  tail:"l",      line:"none", mirror:"body"},
   fa5:         {head:"projector", tail:"fa",   line:"none", mirror:"body", fog:"amber"},
-  variant:     {head:"round",  tail:"vert",   trim:"chrome", rails:1, line:"none", mirror:"bullet"},
-  tsubame:     {head:"angry",  tail:"l",      line:"kick", vent:1, mirror:"body"},
-  harpia:      {head:"angry",  tail:"l",      line:"none", mirror:"body"},
-  tiziu:       {head:"rect80", tail:"block",  bumper:"black", rub:1, line:"none", antenna:1, mirror:"black"},
   picape:      {head:"projector", tail:"vert", line:"high", mirror:"black"},
-  ciou:        {head:"projector", tail:"vert", line:"high", mirror:"black"},
-  pony:        {head:"round",  tail:"triple", trim:"chrome", line:"none", mirror:"bullet"},
-  chevelle:    {head:"quad",   tail:"wide",   trim:"chrome", line:"none", mirror:"bullet"},
-  stingray:    {head:"popup",  tail:"round",  trim:"chrome", line:"coke", mirror:"bullet"},
-  ponymod:     {head:"angry",  tail:"triple", line:"none", mirror:"body"},
-  italia:      {head:"drop",   tail:"ring",   line:"none", mirror:"race", flush:1},
-  dihedral:    {head:"drop",   tail:"bar",    line:"none", mirror:"race", flush:1},
-  nove:        {head:"frog",   tail:"bar",    line:"none", mirror:"body"},
-  wedge:       {head:"y",      tail:"y",      line:"none", mirror:"race", flush:1},
-  quadturbo:   {head:"slim",   tail:"bar",    line:"none", mirror:"race", flush:1}
+  bola:        {head:"drop", tail:"block", bumper:"black", rub:1, line:"none", mirror:"black"},
+  mille:       {head:"rect80", tail:"vert", bumper:"black", rub:1, line:"none", antenna:1, mirror:"black"},
+  bug:         {head:"round", tail:"round", trim:"chrome", line:"none", mirror:"bullet"},
+  chevette:    {head:"rect80", tail:"wide", trim:"chrome", line:"none", mirror:"bullet"},
+  xr3:         {head:"rect80", tail:"wide", bumper:"black", rub:1, line:"high", fog:1, mirror:"black"},
+  kadett:      {head:"rect80", tail:"wide", line:"high", fog:1, mirror:"body"},
+  opala:       {head:"quad", tail:"wide", trim:"chrome", line:"none", mirror:"bullet"},
+  e46:         {head:"projector", tail:"l", line:"high", mirror:"body"},
+  s15:         {head:"angry", tail:"l", line:"none", mirror:"body"},
+  evo9:        {head:"angry", tail:"l", vent:1, line:"high", mirror:"body"},
+  rally:       {head:"angry", tail:"l", line:"high", mud:1, mirror:"body"},
+  fd:          {head:"popup", tail:"round", line:"none", mirror:"body"},
+  coupe:       {head:"drop", tail:"round", line:"none", mirror:"body"},
+  r34:         {head:"angry", tail:"round", line:"none", vent:1, mirror:"body"},
+  pony:        {head:"round", tail:"triple", trim:"chrome", line:"none", mirror:"bullet"},
+  muscle:      {head:"hidden", tail:"fullwidth", trim:"chrome", line:"none", mirror:"bullet"},
+  musclemod:   {head:"angry", tail:"bar", line:"none", mirror:"body"},
+  nove:        {head:"frog", tail:"bar", line:"none", mirror:"body"},
+  f40:         {head:"popup", tail:"bar", line:"none", mirror:"race", flush:1},
+  wedge:       {head:"y", tail:"y", line:"none", mirror:"race", flush:1},
+  quadturbo:   {head:"slim", tail:"bar", line:"none", mirror:"race", flush:1}
 };
 // Side silhouettes must follow the fenders, not the bonnet: sample the smoothed outline and
 // lift it into a fender over each wheel wherever the body line runs lower than the wheel arch.
@@ -2056,6 +1809,30 @@ function fenderize(M){
   });
   return out;
 }
+// the 2026 garage: every body from its real length, wheelbase, height and tyre size
+Object.assign(MODELS, {
+  bola:{len:66.68,hatchback:true,sh:14.1,pts:[[1.23,4.38],[0.0,5.78],[0.0,9.8],[0.44,14.0],[1.66,16.8],[4.55,20.48],[9.1,23.54],[15.4,24.59],[29.75,24.76],[36.4,24.36],[40.25,23.28],[50.05,16.19],[52.85,15.66],[60.9,14.7],[64.75,13.65],[66.33,11.64],[66.68,7.88],[65.98,4.38]],wins:[[[28.35,23.54],[38.33,23.54],[47.95,16.89],[28.35,16.89]],[[27.04,23.63],[27.04,16.89],[13.3,17.33],[10.5,18.38],[14.35,22.58],[17.5,23.71]]],belt:16.71,pillar:0,doors:[27.74,50.84],handles:[28.7],mirror:[48.48,17.06],wheels:[10.24,53.43],r:5.04,fx:[{t:"stubant",x:33.25}],head:[[60.2,14.88],[65.28,13.65],[66.33,11.55],[60.38,12.25]],tail:[[0.09,10.5],[0.61,15.4],[2.98,15.75],[2.71,10.68]]},
+  mille:{len:63.77,hatchback:true,sh:14.6,pts:[[1.05,4.2],[0.0,5.6],[0.0,9.1],[0.14,15.75],[0.53,20.65],[1.58,24.15],[3.85,25.2],[8.4,25.34],[34.12,25.29],[37.28,24.59],[47.08,17.06],[49.88,16.36],[58.28,15.66],[62.3,14.88],[63.53,12.6],[63.79,7.35],[63.0,4.2]],wins:[[[27.3,24.24],[36.23,24.24],[45.33,17.33],[27.3,17.33]],[[26.08,24.24],[26.08,17.33],[6.83,17.5],[5.78,20.65],[6.65,24.24]]],belt:17.24,pillar:0,doors:[26.69,48.65],handles:[27.65],mirror:[45.85,17.41],wheels:[9.8,51.14],r:4.92,head:[[59.33,15.58],[63.0,14.88],[63.44,12.78],[59.41,13.04]],tail:[[0.0,9.8],[0.14,16.8],[1.93,16.89],[1.93,9.8]]},
+  bug:{len:71.23,chrome:true,sh:16.4,pts:[[1.93,5.78],[0.0,7.53],[0.18,11.2],[1.93,15.05],[5.78,18.55],[11.38,22.23],[18.38,25.2],[26.25,26.34],[33.25,26.25],[39.38,25.2],[44.1,22.75],[47.25,19.16],[51.63,18.29],[57.75,17.5],[63.35,16.28],[67.55,13.83],[70.18,10.5],[71.23,7.88],[70.0,5.78]],wins:[[[15.75,19.43],[19.25,22.58],[25.38,24.59],[32.03,24.94],[32.03,19.43]],[[33.34,24.99],[38.5,24.68],[42.35,22.58],[45.15,19.6],[33.34,19.6]]],belt:18.99,pillar:0,deck:17.5,doors:[32.73,47.6],handles:[34.3],mirror:[45.15,19.95],wheels:[15.4,57.4],r:5.78,fx:[{t:"beetle"}],head:[[62.3,16.89],[65.98,15.84],[66.68,13.83],[63.0,14.35]],tail:[[2.45,11.2],[3.5,15.4],[5.78,15.75],[5.08,11.2]]},
+  chevette:{len:73.33,chrome:true,sh:14.6,pts:[[1.4,5.25],[0.0,6.65],[0.0,11.2],[0.44,15.05],[2.45,16.36],[14.0,16.66],[17.5,17.24],[25.9,22.75],[29.75,23.19],[41.13,23.14],[44.1,22.49],[51.8,16.94],[54.43,16.54],[68.25,15.66],[72.28,15.14],[73.15,13.3],[72.62,10.85],[73.33,7.35],[72.28,5.25]],wins:[[[19.25,17.5],[26.6,22.23],[29.75,22.61],[32.9,22.61],[32.9,17.33]],[[34.12,22.66],[42.7,22.49],[50.23,17.33],[34.12,17.33]]],belt:17.24,pillar:0,deck:16.62,doors:[33.43,52.33],handles:[35.0],mirror:[50.75,17.5],wheels:[16.8,58.71],r:5.06,fx:[{t:"stripe",y0:12.25,y1:12.95,x0:3.5,x1:70.0}],head:[[68.78,15.49],[72.45,15.02],[72.8,12.6],[68.78,12.86]],tail:[[0.0,11.2],[0.44,15.4],[3.68,15.75],[3.41,11.38]]},
+  xr3:{len:70.88,hatchback:true,sh:14.0,pts:[[1.4,4.55],[0.0,5.78],[0.0,9.8],[0.35,14.53],[1.93,16.71],[4.38,17.24],[8.23,19.95],[15.4,23.24],[22.75,23.63],[37.63,23.54],[41.13,22.75],[51.63,16.36],[54.43,15.84],[64.75,14.96],[69.83,13.91],[70.7,11.38],[70.88,7.35],[70.0,4.55]],wins:[[[29.75,22.61],[38.5,22.61],[49.53,16.71],[29.75,16.71]],[[28.44,22.66],[28.44,16.71],[14.35,17.33],[10.85,18.81],[16.8,22.61]]],belt:16.62,pillar:0,doors:[29.05,51.89],handles:[30.1],mirror:[49.88,16.89],wheels:[13.83,55.83],r:5.06,fx:[{t:"badge",x:61.25,y:12.6,tx:"XR3"}],head:[[64.75,15.05],[69.83,14.09],[70.53,12.08],[64.75,12.69]],tail:[[0.0,9.8],[0.35,14.7],[3.15,15.09],[2.98,10.15]]},
+  kadett:{len:70.0,hatchback:true,spoiler:"roof",sh:14.1,pts:[[1.23,4.73],[0.0,5.95],[0.0,10.5],[0.61,14.88],[2.63,16.8],[7.18,19.78],[13.83,23.28],[20.13,23.89],[35.88,23.84],[40.25,22.93],[51.63,16.36],[54.43,15.84],[63.88,14.79],[68.6,13.56],[69.91,11.03],[70.0,7.35],[68.95,4.73]],wins:[[[29.05,22.84],[38.15,22.84],[49.53,16.77],[29.05,16.77]],[[27.74,22.89],[27.74,16.77],[12.6,17.33],[9.8,18.55],[17.5,22.84]]],belt:16.71,pillar:0,doors:[28.35,52.24],handles:[29.4],mirror:[49.88,16.89],wheels:[11.55,55.65],r:5.06,fx:[{t:"badge",x:60.38,y:12.6,tx:"GSi"},{t:"skirt"}],head:[[63.88,14.96],[68.6,13.74],[69.3,12.34],[63.88,13.04]],tail:[[0.0,10.5],[0.53,15.05],[3.5,15.44],[3.33,10.85]]},
+  opala:{len:80.5,chrome:true,sh:14.7,pts:[[1.58,5.78],[0.0,7.35],[0.0,12.25],[0.61,15.49],[3.33,16.54],[15.4,16.84],[20.13,17.41],[29.75,22.75],[35.0,23.45],[44.8,23.36],[47.6,22.75],[55.48,17.06],[58.1,16.71],[75.6,16.19],[79.45,15.66],[80.33,13.3],[79.8,11.2],[80.5,7.7],[79.1,5.78]],wins:[[[23.1,17.5],[30.8,22.19],[34.83,22.68],[37.28,22.68],[37.28,17.41]],[[38.06,22.68],[44.98,22.58],[53.73,17.41],[38.06,17.41]]],belt:17.33,pillar:0,deck:16.8,doors:[36.75,57.75],handles:[38.33],mirror:[54.08,17.59],wheels:[19.08,65.75],r:5.64,fx:[{t:"vinyl"},{t:"stripe",y0:9.8,y1:10.59,x0:6.13,x1:75.25},{t:"badge",x:62.13,y:13.3,tx:"SS"}],head:[[75.6,16.28],[79.8,15.75],[80.15,13.39],[75.6,13.65]],tail:[[0.0,12.25],[0.26,15.75],[2.8,16.36],[2.63,12.6]]},
+  e46:{len:78.61,sh:14.8,pts:[[1.4,5.25],[0.0,6.83],[0.0,12.25],[0.53,16.8],[2.63,17.76],[12.25,18.2],[16.62,18.59],[25.38,23.07],[31.5,24.01],[42.0,23.91],[46.38,22.96],[56.0,17.12],[58.63,16.77],[72.62,15.44],[77.53,14.39],[78.49,12.08],[78.61,7.0],[77.35,5.25]],wins:[[[22.58,17.89],[30.1,22.75],[34.83,23.28],[34.83,17.5],[26.6,17.5],[24.5,18.38]],[[35.88,23.24],[45.5,22.93],[54.43,17.41],[35.88,17.41]]],belt:17.41,pillar:0,deck:18.2,doors:[34.83,56.7],handles:[37.63],mirror:[54.6,17.59],wheels:[15.4,63.19],r:5.78,fx:[{t:"gill"},{t:"skirt"},{t:"badge",x:68.78,y:10.85,tx:"M3"}],head:[[71.75,15.58],[77.44,14.53],[78.14,12.69],[71.75,13.39]],tail:[[0.0,12.25],[0.35,16.89],[5.25,17.33],[4.9,12.6]]},
+  s15:{len:77.79,spoiler:"pedestal",sh:14.2,pts:[[1.4,5.08],[0.0,6.48],[0.0,11.2],[0.53,16.28],[2.63,17.33],[11.38,17.68],[16.62,18.2],[25.38,22.05],[30.63,22.49],[39.38,22.4],[43.75,21.53],[55.13,15.84],[57.75,15.44],[70.88,14.0],[76.65,12.95],[77.7,10.68],[77.79,7.0],[76.65,5.08]],wins:[[[21.53,17.24],[28.88,21.49],[34.83,21.75],[34.83,16.84],[25.38,16.84]],[[35.88,21.79],[43.05,21.46],[53.38,16.14],[35.88,16.14]]],belt:16.8,pillar:0,deck:17.68,doors:[34.83,55.65],handles:[36.75],mirror:[53.55,16.36],wheels:[15.75,59.94],r:5.57,fx:[{t:"skirt"},{t:"chin",x0:64.75,x1:77.35}],head:[[69.12,14.21],[76.48,13.16],[77.35,11.29],[69.12,12.25]],tail:[[0.0,11.2],[0.35,16.54],[4.9,16.89],[4.55,11.64]]},
+  evo9:{len:78.58,spoiler:"nfs_evo",sh:15.8,pts:[[1.4,5.25],[0.0,6.65],[0.0,12.25],[0.53,17.5],[2.63,18.55],[12.25,18.99],[16.62,19.43],[25.38,24.5],[30.63,25.38],[42.88,25.29],[46.38,24.5],[56.88,17.71],[59.5,17.36],[72.62,16.31],[77.53,15.26],[78.49,12.6],[78.58,7.35],[77.35,5.25]],wins:[[[20.13,18.81],[27.3,23.98],[31.5,24.59],[35.88,24.59],[35.88,18.38]],[[37.28,24.59],[45.5,24.41],[55.13,18.29],[37.28,18.29]]],belt:18.38,pillar:0,deck:19.25,doors:[19.6,36.58,58.28],handles:[21.88,39.03],mirror:[55.48,18.55],wheels:[16.45,62.39],r:5.64,fx:[{t:"skirt"},{t:"chin",x0:66.5,x1:78.23},{t:"fenderlouver",x:67.38,y:14.7}],head:[[70.88,16.49],[77.44,15.44],[78.23,13.48],[70.88,14.0]],tail:[[0.0,12.25],[0.35,17.68],[4.55,18.06],[4.2,12.64]]},
+  rally:{len:78.14,spoiler:"nfs_tri",sh:15.6,pts:[[1.4,5.25],[0.0,6.65],[0.0,12.25],[0.53,17.33],[2.63,18.38],[11.38,18.81],[15.75,19.25],[24.5,24.29],[29.75,24.94],[42.0,24.85],[45.5,24.06],[55.13,17.54],[57.75,17.24],[70.88,16.31],[77.0,15.09],[78.05,12.25],[78.14,7.35],[77.0,5.25]],wins:[[[18.38,18.9],[25.38,23.8],[29.75,24.24],[34.12,24.24],[34.12,18.2]],[[35.88,24.24],[44.63,24.06],[53.38,18.11],[35.88,18.11]]],belt:18.2,pillar:0,deck:19.16,doors:[17.68,35.18,56.0],handles:[20.13,37.63],mirror:[53.55,18.29],wheels:[16.36,60.55],r:5.57,scoop:[[60.9,17.33],[63.35,18.73],[67.9,18.55],[69.65,17.06]],fx:[{t:"blister"},{t:"skirt"},{t:"badge",x:3.5,y:11.2,tx:"STI"}],head:[[70.0,16.49],[76.91,15.26],[77.7,13.39],[70.0,14.0]],tail:[[0.0,12.25],[0.35,17.5],[4.38,17.89],[4.03,12.64]]},
+  fd:{len:75.16,popups:true,spoiler:"pedestal",sh:12.8,pts:[[1.4,5.08],[0.0,6.48],[0.0,10.85],[0.7,15.4],[3.15,16.8],[8.75,17.5],[17.5,20.13],[26.25,21.44],[33.25,21.53],[39.38,20.65],[49.88,15.44],[54.25,14.39],[64.75,12.78],[71.75,11.2],[74.9,9.8],[75.16,7.35],[74.03,5.08]],wins:[[[19.25,18.59],[26.25,20.69],[31.85,20.93],[31.85,15.61],[22.75,16.14]],[[33.25,20.86],[39.03,20.16],[48.3,15.49],[33.25,15.49]]],belt:15.4,pillar:0,deck:17.33,doors:[32.46,51.63],handles:[34.12],mirror:[48.48,15.66],wheels:[15.4,57.84],r:5.57,fx:[{t:"skirt"}],head:[[63.7,13.13],[72.28,11.24],[74.29,10.24],[65.1,12.08]],tail:[[0.0,10.85],[0.53,15.23],[3.5,16.1],[3.15,11.2]]},
+  coupe:{len:79.1,spoiler:"nfs_tri",sh:13.2,pts:[[1.4,5.25],[0.0,6.65],[0.0,11.2],[0.53,16.28],[2.63,17.5],[11.38,18.2],[17.5,19.43],[27.13,22.05],[33.25,22.31],[40.25,21.7],[43.75,20.65],[53.38,15.44],[56.88,14.91],[68.25,13.69],[76.13,12.11],[78.75,9.8],[79.1,7.35],[77.88,5.25]],wins:[[[20.13,19.08],[27.13,21.39],[32.9,21.7],[32.9,16.1],[24.5,16.8]],[[34.12,21.61],[40.78,21.18],[51.63,15.61],[34.12,15.61]]],belt:15.75,pillar:0,deck:18.2,doors:[33.25,54.6],handles:[35.0],mirror:[51.8,15.84],wheels:[17.85,62.48],r:5.57,fx:[{t:"skirt"},{t:"intake",pts:[[75.25,5.6],[76.13,8.4],[78.4,8.4],[78.75,5.6]]}],head:[[68.25,13.86],[75.78,12.29],[78.14,10.68],[69.12,12.43]],tail:[[0.0,11.2],[0.35,16.45],[3.85,17.33],[3.5,11.55]]},
+  r34:{len:80.5,spoiler:"nfs_tri",sh:15.1,pts:[[1.4,5.25],[0.0,6.65],[0.0,12.25],[0.53,17.68],[2.63,18.55],[14.0,18.9],[18.38,19.43],[28.0,23.45],[32.38,23.8],[42.88,23.71],[46.38,22.93],[56.88,17.47],[59.5,17.12],[74.38,16.14],[79.28,15.09],[80.41,12.6],[80.5,7.35],[79.1,5.25]],wins:[[[21.88,19.25],[28.88,22.93],[35.35,23.1],[35.35,17.68],[24.5,17.89]],[[36.4,23.1],[45.5,22.75],[55.13,17.68],[36.4,17.68]]],belt:17.68,pillar:0,deck:18.9,doors:[35.35,58.28],handles:[37.1],mirror:[55.3,17.94],wheels:[17.5,64.14],r:5.72,fx:[{t:"skirt"},{t:"chin",x0:68.25,x1:80.15},{t:"fenderlouver",x:69.12,y:15.05},{t:"badge",x:59.5,y:10.5,tx:"GT-R"}],head:[[73.5,16.31],[79.1,15.26],[79.98,13.48],[73.5,14.09]],tail:[[0.0,12.25],[0.35,17.76],[4.03,18.2],[3.68,12.6]]},
+  pony:{len:82.08,chrome:true,sh:14.7,pts:[[1.58,5.78],[0.0,7.35],[0.0,12.25],[0.35,16.28],[1.75,17.24],[5.78,17.41],[11.38,18.73],[21.88,21.88],[30.63,22.89],[41.13,22.75],[44.63,22.09],[52.5,17.12],[55.13,16.84],[77.0,16.31],[81.38,15.79],[81.9,14.0],[81.55,12.25],[82.08,7.88],[80.85,5.78]],wins:[[[37.63,22.09],[44.1,21.81],[50.75,17.33],[37.63,17.33]]],belt:17.33,pillar:0,deck:16.8,doors:[36.49,56.88],handles:[38.15],mirror:[51.63,17.5],wheels:[18.38,66.38],r:5.64,fx:[{t:"qlouver",pts:[[23.63,17.5],[28.88,21.18],[35.0,21.96],[36.75,21.96],[36.75,17.5]]},{t:"sidescoop",pts:[[25.9,12.08],[30.8,14.26],[33.08,14.18],[32.9,12.08]],lead:[[52.5,13.83],[42.0,13.83],[33.08,14.18]]},{t:"marker"},{t:"badge",x:61.25,y:13.3,tx:"390 GT"}],head:[[78.75,16.19],[81.73,15.79],[81.99,13.48],[78.75,13.74]],tail:[[0.0,12.25],[0.18,16.28],[1.58,16.71],[1.49,12.6]]},
+  muscle:{len:92.42,chrome:true,sh:15.1,pts:[[1.58,5.78],[0.0,7.35],[0.0,12.6],[0.35,16.62],[2.1,17.71],[12.25,17.89],[17.5,18.38],[27.13,22.75],[34.12,23.61],[44.63,23.45],[48.13,22.66],[56.88,17.54],[59.5,17.24],[86.63,16.8],[91.53,16.28],[92.31,14.0],[92.05,12.25],[92.42,7.88],[91.0,5.78]],wins:[[[26.6,18.55],[33.25,22.66],[39.38,22.75],[39.38,17.76],[29.75,17.76]],[[40.25,22.75],[47.25,22.58],[55.13,17.76],[40.25,17.76]]],belt:17.68,pillar:0,deck:17.85,doors:[39.38,61.25],handles:[41.13],mirror:[56.0,18.03],wheels:[21.88,73.89],r:5.78,fx:[{t:"vinyl"},{t:"scallop",pts:[[64.75,13.48],[52.5,12.95],[42.0,13.13],[40.25,11.55],[52.5,10.68],[64.75,11.55]]},{t:"marker"},{t:"badge",x:66.5,y:14.53,tx:"R/T"},{t:"fuelcap",x:9.1,y:17.33}],head:[[86.63,16.84],[91.88,16.31],[92.09,14.0],[86.63,14.26]],tail:[[0.0,12.6],[0.18,16.8],[1.4,17.24],[1.31,12.95]]},
+  musclemod:{len:83.7,spoiler:"lip",sh:16.3,pts:[[1.4,5.6],[0.0,7.35],[0.0,13.3],[0.53,18.38],[2.63,19.25],[11.38,19.6],[15.75,19.99],[25.38,23.28],[31.5,23.61],[41.13,23.45],[44.63,22.61],[54.25,18.76],[57.75,18.41],[77.0,17.19],[82.25,15.84],[83.56,13.3],[83.7,7.88],[82.25,5.6]],wins:[[[24.5,20.13],[30.63,22.66],[35.88,22.84],[35.88,18.94],[28.0,18.94]],[[36.75,22.79],[43.75,22.58],[52.5,18.94],[36.75,18.94]]],belt:18.9,pillar:0,deck:19.78,doors:[35.88,56.88],handles:[37.63],mirror:[52.85,19.08],wheels:[17.15,66.34],r:6.13,scoop:[[61.25,18.34],[63.35,19.16],[69.12,18.99],[70.88,17.85]],fx:[{t:"skirt"},{t:"badge",x:67.38,y:14.0,tx:"SS"},{t:"marker"}],head:[[76.13,17.36],[82.25,16.14],[83.3,14.53],[76.13,15.4]],tail:[[0.0,13.3],[0.35,18.55],[4.55,19.08],[4.2,13.65]]},
+  nove:{len:80.03,spoiler:"nfs_bat",sh:13.5,pts:[[1.4,5.6],[0.0,7.18],[0.0,12.25],[0.7,16.62],[3.5,18.38],[10.5,19.78],[19.25,21.53],[28.0,22.38],[35.0,22.31],[40.25,21.53],[50.75,15.79],[54.25,15.09],[61.25,14.35],[66.5,14.0],[73.5,12.95],[78.4,11.03],[80.03,7.88],[78.75,5.6]],wins:[[[19.25,18.9],[26.25,21.39],[30.63,21.63],[30.63,16.31],[22.75,16.84]],[[31.68,21.67],[39.38,21.09],[49.0,16.14],[31.68,16.14]]],belt:16.1,pillar:0,deck:18.9,doors:[30.63,51.63],handles:[32.38],mirror:[49.35,16.36],wheels:[18.73,61.72],r:6.21,intake:[[21.88,7.35],[22.75,11.2],[26.25,11.55],[25.9,7.35]],fx:[{t:"skirt"},{t:"badge",x:4.38,y:10.85,tx:"GT3"}],head:[[67.9,14.21],[74.38,12.99],[75.6,11.55],[69.12,12.25]],tail:[[0.0,12.25],[0.53,16.8],[3.85,18.38],[3.5,12.6]]},
+  f40:{len:76.27,popups:true,sh:11.4,pts:[[1.4,5.25],[0.0,6.65],[0.0,12.25],[0.0,17.33],[0.7,18.81],[2.8,19.16],[7.7,18.9],[12.25,17.59],[22.75,19.16],[28.88,19.67],[35.0,19.46],[40.25,18.41],[49.88,13.69],[53.38,12.99],[66.5,11.24],[74.38,9.14],[76.13,7.35],[75.25,5.25]],wins:[[[26.25,18.99],[35.0,18.83],[47.25,14.0],[26.25,14.0]]],belt:14.0,pillar:0,deck:17.5,doors:[26.25,50.4],handles:[],mirror:[47.6,14.26],wheels:[17.5,60.38],r:5.83,intake:[[17.5,7.35],[20.13,12.6],[25.38,13.3],[23.63,7.35]],fx:[{t:"louvers",pts:[[8.4,18.55],[14.0,17.68],[21.88,18.99],[19.25,18.38],[10.5,17.85]]},{t:"skirt"}],head:[[66.15,11.41],[74.03,9.31],[75.08,8.4],[67.9,10.24]],tail:[[0.0,12.25],[0.18,16.62],[1.75,17.24],[1.58,12.6]]},
+  wedge:{len:83.65,hexArch:true,spoiler:"pedestal",gap:0.9,sh:11.8,pts:[[1.4,5.25],[0.0,6.65],[0.0,11.38],[0.35,15.75],[2.63,17.5],[12.25,18.38],[24.5,19.43],[33.25,19.88],[39.38,19.6],[45.5,17.71],[56.0,13.51],[66.5,11.24],[77.0,9.14],[82.78,7.35],[83.65,6.3],[82.25,5.25]],wins:[[[28.88,14.35],[29.75,19.16],[38.5,19.11],[52.5,14.53]]],belt:14.35,pillar:0,deck:17.33,doors:[28.88,55.13],handles:[],mirror:[52.5,14.7],wheels:[19.43,66.68],r:6.21,intake:[[24.5,7.88],[26.25,13.65],[30.63,14.35],[31.5,12.25],[28.0,7.88]],fx:[{t:"ear",pts:[[20.13,18.55],[26.25,19.6],[28.88,19.69],[28.0,18.55]]},{t:"louvers",pts:[[3.5,17.5],[12.25,18.29],[20.13,19.25],[18.38,18.55],[5.25,17.33]]},{t:"skirt"},{t:"badge",x:70.0,y:9.8,tx:"V12"}],head:[[74.38,9.63],[81.55,7.74],[82.43,7.0],[75.6,8.75]],tail:[[0.0,11.38],[0.18,15.75],[1.58,16.62],[1.4,11.9]]},
+  quadturbo:{len:79.52,spoiler:"lip",gap:0.9,sh:12.5,pts:[[1.4,5.25],[0.0,6.65],[0.0,12.25],[0.35,16.62],[2.63,18.38],[10.5,19.43],[21.0,20.65],[29.75,21.21],[36.75,21.0],[42.0,19.46],[52.5,14.56],[61.25,12.99],[71.75,11.24],[77.88,9.8],[79.52,7.7],[78.4,5.25]],wins:[[[26.6,15.05],[26.78,19.6],[28.88,20.65],[36.75,20.48],[50.75,15.09]]],belt:15.05,pillar:0,deck:18.9,doors:[26.25,52.5],handles:[],mirror:[51.1,15.23],wheels:[15.23,62.67],r:6.21,fx:[{t:"cline",pts:[[28.0,20.74],[24.15,18.9],[21.88,14.35],[21.88,9.1],[24.5,6.13],[32.38,5.43]]},{t:"skirt"},{t:"badge",x:52.5,y:12.25,tx:"W16"}],head:[[70.88,11.41],[77.88,10.01],[78.75,8.93],[71.75,10.5]],tail:[[0.0,12.25],[0.35,16.62],[3.5,17.06],[3.15,12.6]]}
+});
 Object.values(MODELS).forEach(M => {
   M.bot = M.pts[0][1];
   M.roof = Math.max(...M.pts.map(p => p[1]));
@@ -2572,7 +2349,7 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
 // Flat side-profile illustration: outline, flat paint with a highlight band, trim, reflective glass.
 function drawCar(c, x, baseY, s, key, color, o){
   o = o || {};
-  const M = MODELS[key] || MODELS.hatch, L = M.len, bot = M.bot, hb = !!M.hatchback;
+  const M = MODELS[key] || MODELS.bola, L = M.len, bot = M.bot, hb = !!M.hatchback;
   baseY += (o.shake || 0);
   const baseW = baseY;
   baseY += ((M.offroad ? -(M.lift || 0) : 0) + (o.drop || 0)) * s;   // the body moves, the tyres stay on the ground
@@ -3249,7 +3026,6 @@ function drawCar(c, x, baseY, s, key, color, o){
       const ry = bot + (M.belt - bot) * 0.44;
       c.fillStyle = "#121418"; c.fillRect(X(M.wheels[0] - M.r - 1.4), Y(ry + 0.9), (M.wheels[1] - M.wheels[0] + 2 * M.r + 2.8) * s, 1.3 * s);
       c.fillStyle = "rgba(255,255,255,.14)"; c.fillRect(X(M.wheels[0] - M.r - 1.4), Y(ry + 0.9), (M.wheels[1] - M.wheels[0] + 2 * M.r + 2.8) * s, Math.max(0.4, 0.2 * s));
-      if(key === "gol" || key === "tiziu"){ c.fillStyle = "#c8121b"; c.fillRect(X(M.wheels[0] - M.r - 1.4), Y(ry + 0.35), (M.wheels[1] - M.wheels[0] + 2 * M.r + 2.8) * s, Math.max(0.4, 0.22 * s)); }
     }
     if(SY.bumper === "black" && !KD){
       // big black plastic bumpers wrapping the corners
@@ -3495,8 +3271,9 @@ function drawCar(c, x, baseY, s, key, color, o){
           panel(() => rr([[xle2 - ch2 * 0.3, yw + 0.4], [xle2 - ch2 * 0.65, yw + 0.4], [xle2 - ch2 * 0.6, yw2], [xle2 - ch2 * 0.35, yw2]], 0.2), color, yw2, yw);
           airfoil(xle2, yw2, ch2, 1.0, ch2 * 0.08, wingC);
         }
-        const tipTop = kind === "evo" ? yw + rise + 1.3 * sc + 0.9 : yw + rise + 1.4;
-        panel(() => rr([[xle - 0.9, yw + 0.7], [xte - 0.25, tipTop], [xte - 0.35, yw + rise - 0.6], [xle - 1.6, yw - 0.5]], 0.45), epC, tipTop, yw - 0.6);
+        // turned-down tip cap that closes the end of the plane, only a little taller than the wing itself
+        const tipTop = kind === "evo" ? yw + rise + 1.3 * sc + 0.45 : yw + rise + 0.55;
+        panel(() => rr([[xle - 0.6, yw + 0.5], [xte - 0.2, tipTop], [xte - 0.3, yw + rise - 0.55], [xle - 1.2, yw - 0.45]], 0.35), epC, tipTop, yw - 0.6);
       } else {
         const D = {ug:[5.2, 4.8, 0], ug2:[5.4, 4.9, 0], bat:[5.8, 5.4, 0], drag:[6.6, 6.6, 2.2], chassis:[6.2, 6.2, 3.0]}[kind] || [5.2, 4.8, 0];
         const ch = D[0] * sc, h = D[1] * sc, xte = EX - 0.3 - D[2], xle = xte + ch, yw = EY + h, rise = ch * 0.12;
@@ -3533,7 +3310,7 @@ function drawCar(c, x, baseY, s, key, color, o){
   // a supercharger through the bonnet (on the engine lid of mid and rear-engined cars): polished Roots case with fins,
   // the manifold plate, the drive pulley and belt dropping into the engine bay, and a scoop on top
   if(o.blower){
-    const bt = o.blower, MIDENG = {super:1, proto:1, hyper:1, italia:1, dihedral:1, wedge:1, quadturbo:1, nove:1, bug:1, puma:1};
+    const bt = o.blower, MIDENG = {wedge:1, quadturbo:1, nove:1, bug:1, f40:1};
     const surf = x => { let best = null; M.pts.forEach((p, i) => { const q = M.pts[(i + 1) % M.pts.length]; if((p[0] - x) * (q[0] - x) <= 0 && p[0] !== q[0] && p[1] > bot + 3){ const y = p[1] + (q[1] - p[1]) * (x - p[0]) / (q[0] - p[0]); if(best === null || y > best) best = y; } }); return best === null ? M.belt : best; };
     const xsW2 = [].concat(...WINS.map(w => w.map(p => p[0]))), wsX = Math.max(...xsW2), rwX = Math.min(...xsW2);
     const mid = !!MIDENG[key], cw = [0, 9.4, 10.2, 11.2][bt];
@@ -3951,7 +3728,7 @@ function drawCar(c, x, baseY, s, key, color, o){
 // Rear view of a car for the cockpit camera; k = pixels per metre at that distance.
 function drawRear(c, cx, gy, k, key, color, look){
   look = look || {};
-  const M = MODELS[key] || MODELS.sedan, off = !!M.offroad, tall = (M.roof - M.bot) / 20;
+  const M = MODELS[key] || MODELS.chevette, off = !!M.offroad, tall = (M.roof - M.bot) / 20;
   const wide = look.kit >= 2 ? 1.06 : 1, w = (off ? 2.05 : 1.86) * k * wide;
   const low = off ? -0.3 : (look.drop || 0) / U_PER_M;
   // heights come from the side profile: ground clearance, beltline (deck) and the roof line over the rear quarter
@@ -3963,7 +3740,7 @@ function drawRear(c, cx, gy, k, key, color, look){
   const bh = (look.dims ? look.dims.bh : off ? 0.72 : Math.max(0.38, (deckU - M.bot * 0.5) / U)) * k;
   const ch = (off ? Math.min(0.8, 0.44 * tall) : Math.max(0.1, Math.min(0.85, (rearTop - deckU) / U))) * k;
   const by = gy - clr, OUT = "#0b0d12", lw = Math.max(0.6, 0.018 * k);
-  const hatch = !!M.hatchback, ledBar = ["super","hyper","proto","musclemod","italia","dihedral","wedge","quadturbo","nove","ponymod"].includes(key), round = key === "bug" || key === "puma";
+  const hatch = !!M.hatchback, ledBar = ["musclemod","wedge","quadturbo","nove","f40"].includes(key), round = key === "bug" || key === "puma";
   const doBody = look.part !== "cabin", doCab = round ? look.part !== "cabin" : look.part !== "body";
   c.save(); c.lineJoin = "round"; c.lineCap = "round";
   if(doBody){
@@ -4150,7 +3927,7 @@ function paintMinis(root){
   const autoSw = () => { const b = SW_STYLE[S.car] || "sport", rk = {oem:0, oem4:0, classic:0, sport:1, rally:2, gt:3, race:4}, tw = stgT >= 8 ? 3 : stgT >= 5 ? 2 : stgT >= 3 ? 1 : 0; return (rk[b] || 0) >= tw ? b : ["oem", "sport", "rally", "gt"][tw]; };
   thumb("canvas.swth", (c, v) => { c.save(); c.translate(26, 27); c.scale(0.5, 0.5); drawWheelArt(c, 41, v || autoSw(), {acc:"#ffb547", rimCol:kk.ckWheelC, frac:0.7, gear:"3"}); c.restore(); });
   thumb("canvas.clth", (c, v) => {
-    const DS0 = Object.assign({}, DASH[S.car] || DASH.pardal); if(v) DS0.cluster = v;
+    const DS0 = Object.assign({}, DASH[S.car] || DASH.bolinha); if(v) DS0.cluster = v;
     c.fillStyle = kk.ckDash || DS0.mat; rrectC(c, 1, 12, 50, 28, 6); c.fill();
     c.save(); c.translate(26, 26); c.scale(0.62, 0.62); drawClusterArt(c, 0, 0, 41, DS0, {spd:"142", sp:0.55, frac:0.7, blink:false, gear:"3"}); c.restore();
   });
@@ -4168,7 +3945,7 @@ function paintMinis(root){
   });
   thumb("canvas.wgth", (c, v) => {
     // the car's tail, close up, wearing that wing
-    const car = carById(S.car), look = carLook(S.car), M = MODELS[car.model] || MODELS.hatch, sc = 52 / 30;
+    const car = carById(S.car), look = carLook(S.car), M = MODELS[car.model] || MODELS.bola, sc = 52 / 30;
     const sp = v === "none" ? null : v === "orig" ? (custOf(S.car).aero ? AERO_KIND[custOf(S.car).aero] : undefined) : "nfs_" + v;
     c.fillStyle = "#1a1d24"; c.fillRect(0, 0, 52, 52);
     c.save(); c.beginPath(); c.rect(0, 0, 52, 52); c.clip();
@@ -5206,7 +4983,7 @@ function danceEnv(time, v, shiftT){
 }
 function drawSide(now){
   const th = THEME[R.track.theme] || THEME.avenida;
-  const pc = carById(S.car), look = carLook(S.car), MP = MODELS[pc.model] || MODELS.hatch, MR = MODELS[R.r.model] || MODELS.sedan;
+  const pc = carById(S.car), look = carLook(S.car), MP = MODELS[pc.model] || MODELS.bola, MR = MODELS[R.r.model] || MODELS.chevette;
   if(side.race !== R){ side.race = R; side.ppm = 0; }
   // camera zooms out a little when the rival is close but not alongside, so both fit when possible
   const gap = Math.abs(R.r.x - R.p.x), want = Math.max(17, Math.min(31, W * 0.9 / (gap + 8.5)));
@@ -5637,7 +5414,7 @@ const RIV_SC = 7;   // texture resolution of the rival's side profile (pixels pe
 function drawCockpit(now){
   const th = THEME[R.track.theme] || THEME.avenida, p = R.p, r = R.r;
   const pc = carById(S.car), look = carLook(S.car), P = getSnd(), nk = drv.nk || 0, KC = custOf(S.car);
-  const DS = Object.assign({}, DASH[S.car] || DASH.pardal);
+  const DS = Object.assign({}, DASH[S.car] || DASH.bolinha);
   if(KC.ckCluster) DS.cluster = KC.ckCluster;
   if(KC.ckDash){ DS.mat = KC.ckDash; DS.top = shade(KC.ckDash, 0.12); DS.door = shade(KC.ckDash, 0.06); DS.light = lumHex(KC.ckDash) > 0.55; }
   const launchK = R.phase === "race" && R.time < 1.8 ? 1 - R.time / 1.8 : 0;
@@ -5893,7 +5670,7 @@ function drawCockpit(now){
   const zSt = 5.5 - camW;
   if(zSt > 0.8) items.push({z:zSt, f:() => { const q = proj(0, 0, zSt); drawStarter(q[0], q[1], R.phase, R.t, 1.7 * q[2]); }});
   // the rival in the left lane, in real perspective: rear face plus the side panel mapped onto its plane
-  const MR = MODELS[r.model] || MODELS.sedan, lenR = MR.len / U_PER_M, zrR = (r.x - lenR) - camW, zfR = r.x - camW;
+  const MR = MODELS[r.model] || MODELS.chevette, lenR = MR.len / U_PER_M, zrR = (r.x - lenR) - camW, zfR = r.x - camW;
   const rivalOn = zfR > -8 && zrR < 120;
   if(rivalOn){
     const sc = RIV_SC, ow = Math.ceil(MR.len * sc + 8), oh = Math.ceil((MR.roof + 6) * sc);
@@ -7687,7 +7464,7 @@ gpanel.addEventListener("click", onPanelClick);
 function doPrestige(){
   const gain = tokensIfReset();
   S.tokens += gain; S.prestiges++;
-  Object.assign(S, {money:100, level:1, maxLevel:1, car:"pardal", owned:["pardal"], upg:{patrocinio:0}, spons:[], tune:{}, series:{me:0, op:0, heat:1}, missions:[]});
+  Object.assign(S, {money:100, level:1, maxLevel:1, car:"bolinha", owned:["bolinha"], upg:{patrocinio:0}, spons:[], tune:{}, series:{me:0, op:0, heat:1}, missions:[]});
   Object.values(S.cust || {}).forEach(k => PARTS.forEach(p => { k[p.id] = 0; k[p.id + "Max"] = 0; }));
   fillMissions(); newRace();
   toast("Garagem vendida! +" + gain + " Fichas Turbo.");
@@ -7873,12 +7650,27 @@ const ENGINE_TONES = {
   // small turbo triple: a thrummy, uneven three-beat
   tres:{cyl:3, cross:0, lope:0, rotary:0, idle:850, red:6500, iv:[1], amp:[1,.88,.94], pipe:1.6, fb:0.55, tau:2.0, bright:1500, grit:0.6, drive:2.1, rasp:.12, raspF:1100, raspQ:2.2, popChance:.45, crackle:.15}
 };
+// the 2026 garage: each new car takes the cockpit, wheel and engine voice of the closest old one, then the old ones go
+(() => {
+  const FROM = {"bolinha": "pardal", "mille": "uirapuru", "fuscao": "besouro", "chevetinho": "sabia", "xerao": "tucano", "kadetao": "tiziu", "opalao": "onca", "silvinha": "tsubame", "bavaro": "harpia", "potro": "garanhao", "carregador": "bravo", "evo": "raijin", "boxer": "raijin", "rotativo": "kaze", "suprema": "okami", "godzilla": "okami", "camarada": "furia", "noveonze": "guepardo", "quarentona": "rubi"};
+  const ids = new Set(CARS.map(c => c.id));
+  [SW_STYLE, DASH_FAM, DASH, SND].forEach(T => {
+    Object.entries(FROM).forEach(([n, o]) => { if(T[n] === undefined && T[o] !== undefined) T[n] = JSON.parse(JSON.stringify(T[o])); });
+    Object.keys(T).forEach(k => { if(!ids.has(k)) delete T[k]; });
+  });
+  // the Mille is a plain 1.0, no turbo; the Evo is an inline four, not a boxer; the R34 an inline six
+  if(SND.mille) Object.assign(SND.mille, {turbo:0, bov:0, red:6200, idle:850});
+  if(SND.evo){ delete SND.evo.boxer; Object.assign(SND.evo, {turbo:1, bov:1, red:7000}); }
+  if(SND.godzilla) Object.assign(SND.godzilla, {red:8000});
+  if(SND.rotativo) Object.assign(SND.rotativo, ENGINE_TONES.rotativo, {turbo:1, bov:1, red:9000, idle:1000});
+})();
+
 const SOUNDS = [["orig","Original"],["grave","Grave V8"],["bigblock","V8 big block"],["v8plano","V8 virabrequim plano"],["v12","V12"],["seislinha","6 em linha"],["v6","V6"],["boxer6","Boxer 6"],
   ["cinco","5 cilindros"],["esportivo","Esportivo 4 cil."],["ap","AP 8V"],["tres","3 cilindros"],["boxer","Boxer"],["rotativo","Rotativo"],["pista","Pista V10"]];
 const sndCache = {};
 function getSnd(){
   const k = pvApply(S.car, custOf(S.car)), tone = k.sound || "orig", tb = tuneOf(S.car).turbo || 0, ts = k.turboSnd || "",
-    xm = k.exModel || "orig", key = S.car + ":" + (k.escape || 0) + ":" + tone + ":" + tb + ":" + ts + ":" + xm + ":" + (k.blower || 0), base = SND[S.car] || SND.pardal;
+    xm = k.exModel || "orig", key = S.car + ":" + (k.escape || 0) + ":" + tone + ":" + tb + ":" + ts + ":" + xm + ":" + (k.blower || 0), base = SND[S.car] || SND.bolinha;
   if(!sndCache[key]){
     const t = k.escape || 0;
     if(base.ev && tone === "orig") sndCache[key] = base;
