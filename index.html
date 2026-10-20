@@ -396,6 +396,7 @@ const CARS = [
   {id:"xerao", name:"Xerão XR3", tag:"Hatch esportivo dos anos 80", spec:"1.8 8V · 99 cv · 5 marchas", model:"xr3", vk:185, t100:10.0, inch:14, price:6000, color:"#5e1420", rim:"#e9ebee", cal:"#3a3d45", spokes:5, wmodel:"pepper", rimK:1.15},
   {id:"caravana", name:"Caravana 4.1", tag:"Perua clássica de 6 cilindros", spec:"4.1 6 cil. · 171 cv · 4 marchas", model:"caravan", vk:195, t100:9.2, inch:17, price:8500, color:"#d4bd8f", rim:"#d9dde3", cal:"#d93a3a", spokes:10, wmodel:"rays10", rimK:1.08},
   {id:"opalao", name:"Opalão Diplomata", tag:"Sedã 4 portas de 6 cilindros", spec:"4.1 6 cil. · 141 cv · 5 marchas", model:"opala", vk:200, t100:8.6, inch:15, price:12000, color:"#1f3d2c", rim:"#ecebe2", cal:"#3a3d45", spokes:10, wmodel:"dipl", rimK:1.15},
+  {id:"landau", name:"Landô", tag:"Sedã de luxo com teto de vinil", spec:"5.0 V8 · 199 cv · 3 marchas automático", model:"landau", vk:205, t100:8.0, inch:15, price:16000, color:"#8a9a96", rim:"#e9ecf0", cal:"#3a3d45", spokes:10, wmodel:"landau", tire:"faixafina", rimK:1.09},
   {id:"gaviao",      name:"Gavião GTI 1.8T",  tag:"Hatch alemão turbo",        spec:"1.8 20V turbo · 180 cv · 5 marchas",    model:"golf",         vk:225, t100:7.3,  inch:17, price:24000,      color:"#1b1d22", rim:"#c9d0da", cal:"#d93a3a", spokes:5},
   {id:"silvinha", name:"Silvinha S15", tag:"Cupê japonês de tração traseira", spec:"2.0 turbo · 250 cv · 6 marchas", model:"s15", vk:240, t100:6.2, inch:17, price:34000, color:"#e8d01f", rim:"#2a2e37", cal:"#d93a3a", spokes:5},
   {id:"mia",         name:"MIA BLACK",        tag:"Sedã Si FA5 preto, turbo e rebaixado", spec:"2.0 16V i-VTEC turbo · 6 marchas · corta a 8.000 rpm", model:"fa5", vk:248, t100:5.8, inch:18, price:52000, color:"#0c0e12", rim:"#c3c8cf", cal:"#3a3d45", spokes:6, wmodel:"jdm6", baseDrop:0.8, banner:"@MIA_BLACKFA5"},
@@ -727,9 +728,9 @@ function potential(id){
   return Math.min(1, have / max);
 }
 const LEAGUES = [
-  {name:"Popular",        v:[135,190], t:[15,10.5],  models:["bola","mille","bug","chevette","picape","hilux","xr3"],  boss:"kadett"},
-  {name:"Hot hatch",      v:[170,225], t:[11.5,8],   models:["xr3","caravan","golf","opala","chevette","bola"], boss:"golf"},
-  {name:"Turbo",          v:[215,250], t:[8,6.2],    models:["golf","opala","fa5","s15","pony","muscle","pickup"], boss:"muscle"},
+  {name:"Popular",        v:[135,190], t:[15,10.5],  models:["bola","mille","bug","chevette","picape","hilux","xr3"],  boss:"xr3"},
+  {name:"Hot hatch",      v:[170,225], t:[11.5,8],   models:["xr3","caravan","golf","opala","landau","chevette","bola"], boss:"golf"},
+  {name:"Turbo",          v:[215,250], t:[8,6.2],    models:["golf","opala","landau","fa5","s15","pony","muscle","pickup"], boss:"muscle"},
   {name:"Japonesa",       v:[230,265], t:[7,5.5],    models:["s15","fa5","fd","e46","evo9","coupe"],    boss:"fd"},
   {name:"Rali",           v:[245,285], t:[5.8,4.4],  models:["evo9","rally","pickup","e46","s15"],           boss:"rally"},
   {name:"GT",             v:[270,315], t:[4.8,3.8],  models:["coupe","r34","musclemod","e46","nove","pony"], boss:"r34"},
@@ -1632,12 +1633,16 @@ function finish(){
   R.result = {win, amount, me:S.series.me, op:S.series.op, done, margin:Math.abs(R.p.fin - R.r.fin)};
   if(done){
     const champ = S.series.me >= 2;
-    const prize = Math.max(champ ? 70 : 0, base * (champ ? 0.85 : 0.1) * (R.rain ? 1.2 : 1) * (1 + spBonus("event")));
+    const prize = Math.max(champ ? 250 : 0, base * (champ ? 0.85 : 0.1) * (R.rain ? 1.2 : 1) * (1 + spBonus("event")));
     pay(prize, 40);
+    // events won in a row: every third one in a row pays a bonus that grows with the run (R$150, R$300, R$450...)
+    S.evStreak = champ ? (S.evStreak || 0) + 1 : 0;
+    const evBonus = champ && S.evStreak % 3 === 0 ? 150 * (S.evStreak / 3) : 0;
+    if(evBonus){ pay(evBonus, 40); setTimeout(() => toast(S.evStreak + " corridas seguidas! Bônus +" + money(evBonus)), 1400); }
     const et = eventType(R.level);
     let betRes = 0;
     if(S.series.bet){ betRes = champ ? S.series.bet : -Math.min(S.money, S.series.bet); S.money += betRes; if(champ) S.stats.earned += betRes; }
-    R.event = {champ, prize, level:R.level, type:et, bet:betRes, comeback:champ && S.series.first === "op"};
+    R.event = {champ, prize, level:R.level, type:et, bet:betRes, comeback:champ && S.series.first === "op", bonus:evBonus, run:S.evStreak};
     if(champ) S.fame = (S.fame || 0) + ({boss:120, nemesis:200, aposta:60}[et] || 20) * mult * (1 + spBonus("fame"));
     if(champ){
       S.stats.titles++;
@@ -1774,6 +1779,7 @@ const STYLE = {
   xr3:         {head:"amber", tail:"fusca", line:"none", mirror:"black"},
   caravan:     {head:"rect", tail:"smoke", line:"none", mirror:"black"},
   opala:       {head:"rect", tail:"redside", line:"none", mirror:"black"},
+  landau:      {head:"rect", tail:"redside", line:"none", mirror:"bullet", trim:"chrome"},
   e46:         {head:"projector", tail:"l", line:"high", mirror:"body"},
   s15:         {head:"angry", tail:"l", line:"none", mirror:"body"},
   evo9:        {head:"angry", tail:"l", vent:1, line:"high", mirror:"body"},
@@ -1821,6 +1827,7 @@ Object.assign(MODELS, {
   xr3:{len:69.76,hatchback:true,nofuel:true,nomarker:true,softpaint:true,nofender:true,lightsill:true,gap:0.6,sh:12.8,pts:[[8.91,4.39],[2.47,5.04],[1.61,6.65],[0.0,7.09],[0.0,9.45],[1.61,9.77],[1.4,13.3],[1.17,15.14],[2.47,15.56],[6.23,17.06],[8.91,18.67],[13.2,21.35],[16.96,23.19],[19.64,23.61],[28.23,23.71],[37.89,23.61],[39.5,23.29],[42.18,21.35],[44.87,18.88],[47.01,17.06],[48.41,16.1],[51.84,15.24],[56.14,14.28],[60.43,13.3],[64.19,12.34],[66.87,11.59],[67.73,10.96],[68.15,9.01],[69.55,9.01],[69.76,6.88],[69.23,5.79],[67.41,5.37],[64.19,4.73],[61.5,3.43],[22.86,3.43],[8.91,3.87]],wins:[[[26.41,15.56],[13.2,15.79],[16.64,19.53],[20.18,22.75],[26.41,22.75]],[[46.25,15.24],[28.12,15.35],[28.12,22.96],[39.18,22.96],[41.65,21.04],[44.33,18.13]]],belt:15.45,pillar:0,doors:[26.41,47.86],handles:[],mirror:[44.54,16.0],wheels:[15.35,57.31],r:5.04,exh:[3.01,4.52],winR:0.7,fx:[{t:"pin",c:"#c9ccd1",pts:[[65.26,11.59],[59.36,12.78],[46.48,13.42],[26.08,13.63],[5.48,13.84]]},{t:"badge",x:3.15,y:13.91,tx:"XR3"},{t:"dhandle",x:28.44,y:14.0},{t:"lock",x:27.69,y:13.2},{t:"dark",pts:[[51.31,4.94],[22.65,4.94],[22.65,3.43],[51.31,3.43]]},{t:"lip",pts:[[7.0,17.33],[0.0,17.22],[0.54,16.31],[2.47,15.56],[6.23,16.19]]},{t:"archtrim"},{t:"pbumper",pts:[[69.55,9.01],[63.11,9.01],[62.9,7.74],[65.57,5.79],[69.23,5.9]]},{t:"pbumper",pts:[[8.91,9.66],[0.0,9.66],[0.0,7.09],[8.05,6.65]]}],head:[[67.73,11.38],[66.22,10.96],[66.01,8.59],[68.15,8.7]],tail:[[2.47,12.57],[1.4,12.78],[1.3,10.1],[2.57,9.98]]},
   caravan:{len:82.36,hatchback:true,nofuel:true,nomarker:true,softpaint:true,nofender:true,lightsill:true,gap:0.95,sh:11.9,pts:[[2.98,4.29],[0.35,5.83],[0.0,8.33],[1.79,9.05],[1.93,11.2],[2.07,12.6],[2.36,13.83],[2.98,15.05],[4.38,17.15],[5.78,19.25],[6.83,20.83],[7.35,21.53],[7.96,22.09],[8.75,22.47],[9.8,22.65],[12.25,22.72],[18.45,22.73],[37.49,22.37],[48.79,21.89],[49.86,21.18],[54.39,16.19],[56.53,15.47],[61.29,14.75],[68.43,13.56],[74.38,12.5],[79.73,11.66],[80.57,10.96],[80.92,7.61],[82.23,7.14],[82.36,4.04],[81.52,1.91],[55.34,2.03],[27.97,2.5],[16.66,2.85]],wins:[[[24.15,20.58],[12.25,20.58],[8.68,14.63],[21.07,14.63]],[[36.05,20.83],[26.78,20.83],[23.21,14.63],[36.05,14.63]],[[53.9,14.75],[49.39,20.83],[37.24,20.83],[37.24,14.63]]],belt:14.53,pillar:0,deck:17.5,doors:[36.54,54.39],handles:[],mirror:[48.79,14.53],wheels:[22.02,68.67],r:4.99,exh:[2.63,3.5],winR:0.6,fx:[{t:"dhandle",x:35.0,y:12.08},{t:"rack",x0:13.09,x1:36.89,y:23.63},{t:"pbumper",pts:[[82.36,7.26],[78.54,7.26],[78.54,5.48],[82.36,5.48]]},{t:"pbumper",pts:[[2.98,8.8],[0.0,8.58],[0.0,6.67],[2.98,6.67]]}],head:[[80.68,10.71],[78.89,10.71],[78.89,8.21],[80.68,8.21]],tail:[[2.14,12.62],[0.35,12.37],[0.35,9.64],[2.03,9.64]]},
   opala:{len:82.18,nofuel:true,nomarker:true,softpaint:true,nofender:true,lightsill:true,gap:0.75,sh:14.0,pts:[[2.33,5.57],[1.0,6.23],[0.19,7.42],[0.14,10.27],[1.93,10.61],[2.05,13.41],[2.33,14.72],[3.33,15.38],[10.94,16.31],[16.91,16.98],[18.57,17.71],[20.9,19.37],[23.54,21.68],[25.53,23.21],[27.53,23.75],[33.5,24.01],[44.1,24.01],[48.42,23.82],[49.42,23.35],[52.06,20.37],[54.72,17.24],[56.05,16.64],[58.7,16.45],[64.0,16.05],[70.63,15.12],[76.6,14.0],[79.78,13.53],[80.45,12.93],[80.71,9.75],[81.92,9.22],[82.18,6.77],[81.25,4.78],[78.93,3.59],[62.02,2.12],[28.86,2.0],[14.26,4.78]],wins:[[[29.65,21.82],[27.39,21.82],[24.75,16.98],[29.65,16.85]],[[39.6,22.16],[30.45,22.16],[30.45,16.71],[39.6,16.71]],[[53.73,16.71],[50.21,22.02],[40.79,22.16],[40.79,16.71]]],belt:16.59,pillar:0,deck:17.5,doors:[23.87,40.13,56.51],handles:[],mirror:[51.4,17.71],wheels:[22.23,68.92],r:5.64,exh:[4.03,4.38],winR:0.6,fx:[{t:"twotone",y:10.41,c:"#121c16"},{t:"chrome",w:0.18,pts:[[2.0,10.36],[14.93,10.36]]},{t:"chrome",w:0.18,pts:[[56.05,9.8],[23.87,9.8]]},{t:"chrome",w:0.18,pts:[[56.05,5.5],[23.87,5.5]]},{t:"archlip"},{t:"dark",pts:[[23.21,18.31],[17.38,17.9],[17.24,17.19],[23.01,17.24]]},{t:"dhandle",x:40.95,y:14.53},{t:"dhandle",x:25.2,y:14.88},{t:"pbumper",pts:[[82.18,9.22],[74.62,9.22],[74.62,6.44],[81.92,6.44]]},{t:"pbumper",pts:[[4.31,10.61],[0.14,10.27],[0.19,7.3],[4.31,7.3]]}],head:[[80.71,12.74],[78.59,12.6],[78.59,9.94],[80.71,9.82]],tail:[[3.78,14.19],[2.19,14.33],[2.12,11.41],[3.71,11.27]]},
+  landau:{len:92.84,nofuel:true,nomarker:true,softpaint:true,nofender:true,lightsill:true,chromebelt:true,notail:true,gap:0.6,sh:14.4,pts:[[4.11,6.28],[2.14,6.44],[0.77,6.97],[0.16,8.65],[0.07,9.78],[0.91,10.33],[1.68,10.55],[1.59,12.76],[1.75,14.12],[2.21,15.05],[2.89,15.73],[3.89,16.1],[8.84,16.42],[16.45,16.71],[22.54,16.94],[24.68,17.1],[26.36,18.46],[28.86,20.69],[30.92,22.51],[31.83,23.19],[32.9,23.73],[35.49,24.03],[40.06,24.19],[46.92,24.33],[53.78,24.26],[56.05,24.1],[57.12,23.8],[57.73,23.28],[60.62,20.6],[63.67,17.87],[65.42,16.94],[66.34,16.8],[73.57,16.64],[81.18,16.19],[87.27,15.87],[90.7,15.51],[91.86,15.12],[92.38,14.51],[92.23,12.99],[91.86,11.46],[91.61,10.33],[92.45,10.01],[92.84,9.4],[92.61,8.8],[90.79,8.58],[89.72,7.65],[89.27,6.28],[85.16,6.21],[73.57,4.99],[65.96,4.92],[50.72,4.92],[33.97,4.92],[33.2,4.99],[20.27,7.05],[18.13,7.42],[12.64,6.9],[5.02,6.28]],wins:[[[45.92,17.03],[32.6,17.03],[36.86,22.89],[45.92,22.89]],[[63.37,17.03],[47.44,17.03],[47.44,22.89],[55.67,22.89],[56.51,22.51]]],belt:17.03,pillar:0,deck:16.94,doors:[30.99,47.15,64.58],handles:[],mirror:[59.33,15.33],wheels:[26.04,78.91],r:5.6,exh:[10.52,5.37],winR:0.6,fx:[{t:"vinyl",c:"#1a2236"},{t:"dark",pts:[[63.37,17.03],[56.51,22.66],[57.58,23.35],[65.57,16.87]]},{t:"dark",pts:[[45.92,17.03],[45.92,22.89],[47.44,22.89],[47.44,17.03]]},{t:"crease",pts:[[4.27,12.92],[27.88,13.14],[58.35,13.21],[81.18,13.28],[91.7,13.21]]},{t:"crease",a:0.5,pts:[[33.36,9.1],[50.72,9.49],[72.43,9.94]]},{t:"chrome",w:0.2,pts:[[2.75,15.35],[8.84,16.03],[16.45,16.57],[24.68,16.94]]},{t:"brushed",w:0.42,pts:[[3.5,9.64],[11.11,8.94],[18.74,8.19]]},{t:"brushed",w:0.42,pts:[[33.06,7.58],[73.57,7.58]]},{t:"brushed",w:0.42,pts:[[84.23,7.58],[89.72,7.58]]},{t:"archchrome"},{t:"chrome",w:0.42,pts:[[31.76,15.96],[34.88,15.96]]},{t:"chrome",w:0.42,pts:[[47.9,15.96],[51.19,15.96]]},{t:"lock",x:49.19,y:14.05},{t:"lamp",c:"#c0161b",pts:[[2.21,12.3],[5.25,12.3],[5.25,11.39],[2.21,11.39]]},{t:"bumper",pts:[[0.07,9.78],[0.91,10.33],[2.89,10.17],[3.82,6.97],[2.14,6.51],[0.77,7.05]]},{t:"bumper",pts:[[90.02,9.33],[90.18,10.01],[92.45,10.1],[92.84,9.4],[92.61,8.8],[90.48,8.65]]}],head:[[92.38,14.51],[91.25,14.35],[90.79,10.47],[91.86,10.4]],tail:[[1.59,13.9],[1.91,13.9],[1.91,10.85],[1.59,10.85]]},
   e46:{len:78.61,sh:14.8,pts:[[1.4,5.25],[0.0,6.83],[0.0,12.25],[0.53,16.8],[2.63,17.76],[12.25,18.2],[16.62,18.59],[25.38,23.07],[31.5,24.01],[42.0,23.91],[46.38,22.96],[56.0,17.12],[58.63,16.77],[72.62,15.44],[77.53,14.39],[78.49,12.08],[78.61,7.0],[77.35,5.25]],wins:[[[22.58,17.89],[30.1,22.75],[34.83,23.28],[34.83,17.5],[26.6,17.5],[24.5,18.38]],[[35.88,23.24],[45.5,22.93],[54.43,17.41],[35.88,17.41]]],belt:17.41,pillar:0,deck:18.2,doors:[34.83,56.7],handles:[37.63],mirror:[54.6,17.59],wheels:[15.4,63.19],r:5.78,fx:[{t:"gill"},{t:"skirt"},{t:"badge",x:68.78,y:10.85,tx:"M3"}],head:[[71.75,15.58],[77.44,14.53],[78.14,12.69],[71.75,13.39]],tail:[[0.0,12.25],[0.35,16.89],[5.25,17.33],[4.9,12.6]]},
   s15:{len:77.79,spoiler:"pedestal",sh:14.2,pts:[[1.4,5.08],[0.0,6.48],[0.0,11.2],[0.53,16.28],[2.63,17.33],[11.38,17.68],[16.62,18.2],[25.38,22.05],[30.63,22.49],[39.38,22.4],[43.75,21.53],[55.13,15.84],[57.75,15.44],[70.88,14.0],[76.65,12.95],[77.7,10.68],[77.79,7.0],[76.65,5.08]],wins:[[[21.53,17.24],[28.88,21.49],[34.83,21.75],[34.83,16.84],[25.38,16.84]],[[35.88,21.79],[43.05,21.46],[53.38,16.14],[35.88,16.14]]],belt:16.8,pillar:0,deck:17.68,doors:[34.83,55.65],handles:[36.75],mirror:[53.55,16.36],wheels:[15.75,59.94],r:5.57,fx:[{t:"skirt"},{t:"chin",x0:64.75,x1:77.35}],head:[[69.12,14.21],[76.48,13.16],[77.35,11.29],[69.12,12.25]],tail:[[0.0,11.2],[0.35,16.54],[4.9,16.89],[4.55,11.64]]},
   evo9:{len:78.58,spoiler:"nfs_evo",sh:15.8,pts:[[1.4,5.25],[0.0,6.65],[0.0,12.25],[0.53,17.5],[2.63,18.55],[12.25,18.99],[16.62,19.43],[25.38,24.5],[30.63,25.38],[42.88,25.29],[46.38,24.5],[56.88,17.71],[59.5,17.36],[72.62,16.31],[77.53,15.26],[78.49,12.6],[78.58,7.35],[77.35,5.25]],wins:[[[20.13,18.81],[27.3,23.98],[31.5,24.59],[35.88,24.59],[35.88,18.38]],[[37.28,24.59],[45.5,24.41],[55.13,18.29],[37.28,18.29]]],belt:18.38,pillar:0,deck:19.25,doors:[19.6,36.58,58.28],handles:[21.88,39.03],mirror:[55.48,18.55],wheels:[16.45,62.39],r:5.64,fx:[{t:"skirt"},{t:"chin",x0:66.5,x1:78.23},{t:"fenderlouver",x:67.38,y:14.7}],head:[[70.88,16.49],[77.44,15.44],[78.23,13.48],[70.88,14.0]],tail:[[0.0,12.25],[0.35,17.68],[4.55,18.06],[4.2,12.64]]},
@@ -1869,11 +1876,11 @@ const CARBON = "#1b1e25";
 
 // Wheel models (side view), drawn over tyre, brake disc and caliper. rear = rear axle (drag setups).
 // lip = polished outer ring width (fraction of the rim radius): deep wheels show a wide lip and a step down to the face.
-const WHEELS = [["orig","Original"],["gti5","GTI 5 raios"],["v10","10 raios em V"],["uno6","6 raios finos"],["unocal","Calota do Mille"],["vwbug","Calotão do Fusca"],["vwsteel","Roda do Fusca 1600"],["chev","Aço furada do Chevette"],["pepper","XR3 pepper-pot"],["rays10","10 raios finos"],["dipl","Diplomata"],["split10","5 raios duplos"],["deep5","5 raios borda polida"],["mesh","Mesh clássica"],["sixflat","6 raios forjada"],["split5","Raio duplo"],["five","5 raios côncava"],["deep3","3 peças deep dish"],
+const WHEELS = [["orig","Original"],["gti5","GTI 5 raios"],["v10","10 raios em V"],["uno6","6 raios finos"],["unocal","Calota do Mille"],["vwbug","Calotão do Fusca"],["vwsteel","Roda do Fusca 1600"],["chev","Aço furada do Chevette"],["pepper","XR3 pepper-pot"],["rays10","10 raios finos"],["dipl","Diplomata"],["split10","5 raios duplos"],["deep5","5 raios borda polida"],["landau","Calotão cromado"],["mesh","Mesh clássica"],["sixflat","6 raios forjada"],["split5","Raio duplo"],["five","5 raios côncava"],["deep3","3 peças deep dish"],
   ["multi","Multi-raios"],["rotor","Rotor"],["turbofan","Turbofan"],["petal","Pétala"],["disco","Aero disco"],["aco","Aço furada"],["y10","10 raios em Y"],["cruz","Cruz 4 raios"],["teia","Teia"],["helice","Hélice"],["calota","Calota cromada"],["mono7","Monobloco 7 raios"],["raiada","Raiada (arame)"],["telefone","Telefone"],["drift","Drift"],["torque","Torque 5 raios"],["slotmag","Slot mag"],["dayton","Raiada 100 raios"],["spinner","Spinner"],["vip","VIP deep dish"],["torcido","Raios torcidos"],["laminas","Lâminas"],["colmeia","Colmeia"],["xcruz","Raios em X"],["seis","6 raios largos"],["jdm6","6 raios JDM côncava"],["drag","Drag runner + slick"]];
 const WHEEL_IDS = WHEELS.map(w => w[0]);
 // tyre models: tread for the dirt, slicks for the strip, and raised lettering on the sidewall in any colour
-const TIRES = [["orig","Original"],["letras","Letras em relevo"],["drift","Drift"],["semislick","Semi-slick"],["at","Off-road AT"],["mt","Off-road lameiro"],["dragr","Drag radial"],["slick","Slick de pista"],["faixa","Faixa branca"],["faixadupla","Faixa dupla"],["faixalarga","Banda branca larga"]];
+const TIRES = [["orig","Original"],["letras","Letras em relevo"],["drift","Drift"],["semislick","Semi-slick"],["at","Off-road AT"],["mt","Off-road lameiro"],["dragr","Drag radial"],["slick","Slick de pista"],["faixa","Faixa branca"],["faixadupla","Faixa dupla"],["faixalarga","Banda branca larga"],["faixafina","Banda branca fina"]];
 const TIRE_TXT = {letras:"TURBO GARAGE  GT RADIAL  ", drift:"DRIFT SPEC  RS-R  ", semislick:"SEMI SLICK  R888  ", at:"ALL TERRAIN  T/A  ", mt:"MUD TERRAIN  M/T  ", dragr:"DRAG RADIAL  ", slick:"SLICK  ·  RACING  ·  "};
 const TIRE_COLORS = [["#f4f5f8","Branca"],["#ffd23f","Amarela"],["#ff3b3b","Vermelha"],["#3d8bff","Azul"],["#3ee66b","Verde"],["#ff8a1f","Laranja"],["#ff4fa0","Rosa"],["#a855f7","Roxa"],["#38e8ff","Ciano"],["#d4af37","Dourada"]];
 const WHEEL_ALIAS = {split6:"split5", estrela:"five"};
@@ -1931,6 +1938,12 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     c.strokeStyle = "#08090b"; c.lineWidth = Math.max(0.5, r * 0.03); circ(c, cx, cy, r * (tire === "mt" ? 0.76 : 0.84)); c.stroke();
   }
   if(tire === "slick" || tire === "semislick"){ c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = Math.max(0.5, r * 0.02); circ(c, cx, cy, r * 0.97); c.stroke(); }
+  if(tire === "faixafina"){
+    // a slim cream whitewall hugging the hubcap, the rest of the sidewall black
+    const w0 = rr * 1.0, w1 = rr + (r - rr) * 0.4;
+    c.fillStyle = "#efeadb"; c.beginPath(); c.arc(cx, cy, w1, 0, TAU); c.arc(cx, cy, w0, 0, TAU, true); c.fill();
+    c.strokeStyle = "rgba(0,0,0,.25)"; c.lineWidth = Math.max(0.5, r * 0.018); circ(c, cx, cy, w1); c.stroke();
+  }
   if(tire === "faixalarga"){
     // the classic wide whitewall: white from the rim edge out across most of the sidewall, a soft groove at its outer edge
     const w0 = rr * 1.01, w1 = rr + (r - rr) * 0.72, wg = c.createRadialGradient(cx - r * 0.2, cy - r * 0.25, w0 * 0.5, cx, cy, w1);
@@ -2180,6 +2193,20 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     for(let k = 0; k < 5; k++){ const a = spin + k * TAU / 5; wedge(a, 0.3, 0.36, 0.2, 0.79, m);
       c.strokeStyle = "rgba(0,0,0,.25)"; c.lineWidth = lw(0.03); seg(a + 0.15, 0.3, a + 0.2, 0.74); c.strokeStyle = "rgba(255,255,255,.4)"; c.lineWidth = lw(0.02); seg(a - 0.12, 0.3, a - 0.16, 0.74); }
     c.globalAlpha = 1; ring(0.79, 0.025, "#8d939c"); ring(0.25, 0.05); lugs = 5; capK = 0.12;
+  } else if(style === "landau"){
+    // full chrome hubcap: polished outer lip, a ring of fine turbine slots, a domed polished centre and a dark medallion
+    const hg = c.createRadialGradient(cx - rr * 0.35, cy - rr * 0.4, rr * 0.05, cx, cy, rr);
+    hg.addColorStop(0, "#ffffff"); hg.addColorStop(0.5, "#c8cdd5"); hg.addColorStop(0.85, "#868c96"); hg.addColorStop(1, "#e8ebef");
+    c.fillStyle = hg; circ(c, cx, cy, rr * 0.98); c.fill();
+    for(let k = 0; k < 44; k++){ const a = spin + k * TAU / 44; wedge(a, 0.028, 0.032, 0.75, 0.89, "rgba(22,24,28,.85)"); }
+    const dg = c.createRadialGradient(cx - rr * 0.22, cy - rr * 0.28, rr * 0.02, cx, cy, rr * 0.7);
+    dg.addColorStop(0, "#ffffff"); dg.addColorStop(0.4, "#d3d7de"); dg.addColorStop(0.85, "#7c828c"); dg.addColorStop(1, "#b9bec6");
+    c.fillStyle = dg; circ(c, cx, cy, rr * 0.7); c.fill();
+    c.fillStyle = "rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(cx - rr * 0.25, cy - rr * 0.3, rr * 0.22, rr * 0.08, -0.7, 0, TAU); c.fill();
+    ring(0.97, 0.03, "#6d737d"); ring(0.7, 0.025, "#5d636c"); ring(0.9, 0.02, "#6d737d");
+    c.fillStyle = "#1d2027"; circ(c, cx, cy, rr * 0.14); c.fill(); ring(0.14, 0.03, "#d9dde3");
+    c.strokeStyle = "#c9ced6"; c.lineWidth = lw(0.02); seg(spin, 0.02, spin, 0.11); seg(spin + Math.PI, 0.02, spin + Math.PI, 0.11);
+    c.globalAlpha = 1; lugs = 0; capK = 0;
   } else if(style === "aco"){
     const sg = c.createRadialGradient(cx, cy, rr * 0.2, cx, cy, rr);
     sg.addColorStop(0, shade(rim, -0.1)); sg.addColorStop(1, shade(rim, -0.45));
@@ -2794,7 +2821,7 @@ function drawCar(c, x, baseY, s, key, color, o){
     if(f.t === "vinyl"){
       // vinyl top: grained black over the roof and pillars, down to the window line
       c.save(); c.beginPath(); c.rect(X(-2), Y(M.roof + 2), (winX1 + 3) * s, (M.roof + 2 - M.belt - 0.1) * s); c.clip();
-      const vg = c.createLinearGradient(0, Y(M.roof), 0, Y(M.belt)); vg.addColorStop(0, "#2c2e33"); vg.addColorStop(0.4, "#16171a"); vg.addColorStop(1, "#0c0d0f");
+      const vg = c.createLinearGradient(0, Y(M.roof), 0, Y(M.belt)); vg.addColorStop(0, f.c ? shade(f.c, 0.22) : "#2c2e33"); vg.addColorStop(0.4, f.c || "#16171a"); vg.addColorStop(1, f.c ? shade(f.c, -0.45) : "#0c0d0f");
       c.fillStyle = vg; c.fillRect(X(-2), Y(M.roof + 2), (winX1 + 3) * s, (M.roof + 2 - M.belt) * s);
       c.fillStyle = "rgba(255,255,255,.05)"; for(let i = 0; i < 160; i++) c.fillRect(X(hash(i * 3.3) * (winX1 + 1)), Y(M.belt + hash(i * 5.9) * (M.roof - M.belt)), Math.max(0.4, 0.18 * s), Math.max(0.4, 0.18 * s));
       c.restore();
@@ -2891,6 +2918,20 @@ function drawCar(c, x, baseY, s, key, color, o){
       const pl = dy => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1] + dy)) : c.moveTo(X(p[0]), Y(p[1] + dy))); c.stroke(); };
       c.lineJoin = "round"; c.strokeStyle = "rgba(0,0,0,.5)"; c.lineWidth = Math.max(0.5, 0.24 * s); pl(0);
       c.strokeStyle = "rgba(255,255,255,.22)"; c.lineWidth = Math.max(0.4, 0.14 * s); pl(0.22);
+    } else if(f.t === "crease"){
+      // a pressed body line: light on its upper lip, a soft shadow just under it
+      const a0 = f.a || 1, pl = dy => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1] + dy)) : c.moveTo(X(p[0]), Y(p[1] + dy))); c.stroke(); };
+      c.lineJoin = "round"; c.lineCap = "round";
+      c.strokeStyle = "rgba(255,255,255," + (0.32 * a0) + ")"; c.lineWidth = Math.max(0.4, 0.16 * s); pl(0.08);
+      c.strokeStyle = "rgba(0,0,0," + (0.2 * a0) + ")"; c.lineWidth = Math.max(0.4, 0.3 * s); pl(-0.2); c.lineCap = "butt";
+    } else if(f.t === "brushed"){
+      // brushed-aluminium rocker moulding: satin grey with a darker lower edge and a fine bright top line
+      const pl = () => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1]))); c.stroke(); };
+      const ys = f.pts.map(p => p[1]), g = c.createLinearGradient(0, Y(Math.max(...ys) + f.w / 2), 0, Y(Math.min(...ys) - f.w / 2));
+      g.addColorStop(0, "#d6d4cf"); g.addColorStop(0.35, "#8f8a84"); g.addColorStop(0.7, "#6b6661"); g.addColorStop(1, "#3c3a38");
+      c.lineCap = "butt"; c.strokeStyle = "rgba(15,16,18,.45)"; c.lineWidth = (f.w + 0.1) * s; pl();
+      c.strokeStyle = g; c.lineWidth = f.w * s; pl();
+      c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = Math.max(0.3, 0.06 * s); c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1] + f.w * 0.38)) : c.moveTo(X(p[0]), Y(p[1] + f.w * 0.38))); c.stroke();
     } else if(f.t === "chrome"){
       // polished trim strip: dark edge, bright core, a hot line of light
       const pl = () => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1]))); c.stroke(); };
@@ -3352,7 +3393,7 @@ function drawCar(c, x, baseY, s, key, color, o){
   // belt-line trim under the windows
   {
     // it runs along the bottom edge of each pane, so it rises with the glass instead of crossing the bodywork
-    c.strokeStyle = M.chrome ? "#d9dde4" : "#111318"; c.lineWidth = Math.max(0.5, 0.4 * s); c.lineCap = "round";
+    c.strokeStyle = (M.chrome || M.chromebelt) ? "#d9dde4" : "#111318"; c.lineWidth = Math.max(0.5, 0.4 * s); c.lineCap = "round";
     WINS.forEach(wp => {
       const ys = wp.map(p => p[1]), lo = Math.min(...ys), hi = Math.max(...ys), lim = lo + (hi - lo) * 0.3;
       const b = wp.filter(p => p[1] <= lim).sort((p, q) => p[0] - q[0]);
@@ -3771,7 +3812,7 @@ function drawCar(c, x, baseY, s, key, color, o){
     c.fillStyle = fl; c.beginPath(); c.ellipse(fx0, fy0, rb * 3.5, rb * 0.22, 0, 0, TAU); c.fill();
     c.restore();
   }
-  {
+  if(!M.notail){
     const tys = M.tail.map(p => p[1]), txs = M.tail.map(p => p[0]), tT = Math.max(...tys), tB = Math.min(...tys), tx0 = Math.min(...txs), tx1 = Math.max(...txs), TS = SYs.tail || "block";
     const red = (y0, y1) => { const g = c.createLinearGradient(0, Y(y1), 0, Y(y0)); g.addColorStop(0, "#ff6a5f"); g.addColorStop(0.45, "#c3121c"); g.addColorStop(1, "#5a070c"); return g; };
     if(TS === "round" || TS === "ring"){
@@ -4041,18 +4082,44 @@ function drawCar(c, x, baseY, s, key, color, o){
   };
   if(o.flash) FT.forEach(([fx, fy, fa, fk]) => fireAt(fx, fy, fa, fk));
   if(o.nitro){
-    const f = (42 + Math.random() * 20) * s;
-    const gl = c.createRadialGradient(ex - f * 0.2, ey, 0, ex - f * 0.2, ey, f * 0.7);
-    gl.addColorStop(0, "rgba(90,180,255,.45)"); gl.addColorStop(1, "rgba(90,180,255,0)");
-    c.fillStyle = gl; circ(c, ex - f * 0.2, ey, f * 0.7); c.fill();
-    const g = c.createLinearGradient(ex, 0, ex - f, 0);
-    g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.18, "rgba(150,230,255,.95)"); g.addColorStop(0.55, "rgba(70,140,255,.75)"); g.addColorStop(1, "rgba(150,90,255,0)");
-    c.fillStyle = g; c.beginPath(); c.moveTo(ex, ey - 2.8 * s);
-    c.quadraticCurveTo(ex - f * 0.45, ey - 3.6 * s, ex - f, ey + (Math.random() - 0.5) * 1.5 * s);
-    c.quadraticCurveTo(ex - f * 0.45, ey + 3.6 * s, ex, ey + 2.8 * s); c.fill();
-    c.fillStyle = "rgba(255,255,255,.95)"; c.beginPath(); c.moveTo(ex, ey - 1.1 * s); c.lineTo(ex - f * 0.35, ey); c.lineTo(ex, ey + 1.1 * s); c.fill();
-    c.fillStyle = "rgba(220,245,255,.85)";
-    for(let k = 1; k <= 3; k++){ c.beginPath(); c.ellipse(ex - f * (0.18 + k * 0.15), ey, 1.6 * s * (1 - k * 0.18), 1.1 * s * (1 - k * 0.2), 0, 0, TAU); c.fill(); }
+    // nitrous through the exhaust: from each outlet a blue-white jet leaves at exactly the bore's size, held tight by
+    // its speed, with bright shock diamonds in its core, and opens into a violet plume that frays out behind the car
+    const Rn = Math.random;
+    FT.forEach(([wx, wy, ang, kf]) => {
+      const bore = Math.max(1.1, 0.6 * s * ts * Math.min(1.25, kf + 0.2)), FL = (24 + Rn() * 7) * s * Math.min(1.15, 0.45 + kf * 0.6);
+      if(Math.abs(ang) < 0.75){
+        // blue light thrown on the tarmac under the jet
+        const gw = FL * 0.75, gx = wx - Math.cos(ang) * FL * 0.45; c.save(); c.globalCompositeOperation = "lighter"; c.translate(gx, baseW); c.scale(1, 0.14);
+        const g0 = c.createRadialGradient(0, 0, 0, 0, 0, gw); g0.addColorStop(0, "rgba(80,160,255,.5)"); g0.addColorStop(1, "rgba(80,160,255,0)"); c.fillStyle = g0; circ(c, 0, 0, gw); c.fill(); c.restore();
+      }
+      c.save(); c.translate(wx, wy); c.rotate(ang); c.globalCompositeOperation = "lighter";
+      let g = c.createRadialGradient(-FL * 0.35, 0, 0, -FL * 0.35, 0, FL * 0.75); g.addColorStop(0, "rgba(70,140,255,.26)"); g.addColorStop(1, "rgba(70,140,255,0)");
+      c.fillStyle = g; c.beginPath(); c.ellipse(-FL * 0.35, 0, FL * 0.75, FL * 0.28, 0, 0, TAU); c.fill();
+      // a layer of the flame: leaves the pipe at w0, swells towards w1, closes to a point, its edges flickering
+      const layer = (w0, w1, len, stops, jit) => {
+        g = c.createLinearGradient(0, 0, -len, 0); stops.forEach(([p, col]) => g.addColorStop(p, col)); c.fillStyle = g;
+        const n = 9, hw = t => (w0 + (w1 - w0) * Math.sin(Math.min(1, t * 1.6) * Math.PI / 2)) * (1 - Math.pow(t, 2.6)), top = [], bot = [];
+        for(let k = 1; k <= n; k++){ const t = k / n; top.push([-len * t, -hw(t) * (1 - jit + Rn() * jit * 2)]); bot.push([-len * t, hw(t) * (1 - jit + Rn() * jit * 2)]); }
+        c.beginPath(); c.moveTo(0, -w0); let px = 0, py = -w0;
+        top.forEach(([x, y]) => { c.quadraticCurveTo(px, py, (px + x) / 2, (py + y) / 2); px = x; py = y; });
+        c.lineTo(top[n - 1][0], 0); px = top[n - 1][0]; py = 0;
+        bot.slice().reverse().forEach(([x, y]) => { c.quadraticCurveTo(px, py, (px + x) / 2, (py + y) / 2); px = x; py = y; });
+        c.quadraticCurveTo(px, py, 0, w0); c.closePath(); c.fill();
+      };
+      layer(bore * 1.0, bore * 3.2, FL, [[0, "rgba(130,100,255,.55)"], [0.45, "rgba(100,80,255,.38)"], [1, "rgba(160,70,255,0)"]], 0.22);
+      layer(bore * 0.9, bore * 1.9, FL * 0.8, [[0, "rgba(140,210,255,.9)"], [0.55, "rgba(70,140,255,.55)"], [1, "rgba(60,110,255,0)"]], 0.12);
+      layer(bore * 0.6, bore * 0.62, FL * 0.55, [[0, "rgba(255,255,255,1)"], [0.4, "rgba(205,242,255,.85)"], [1, "rgba(150,215,255,0)"]], 0.05);
+      // shock diamonds: bright knots evenly spaced down the core, fading as the jet slows
+      for(let k = 0; k < 5; k++){
+        const x = -FL * (0.1 + k * 0.13), dl = Math.max(0.8, bore * (1.2 - k * 0.16)), dw = Math.max(0.5, bore * (0.5 - k * 0.07)), al = 0.95 - k * 0.17;
+        g = c.createRadialGradient(x, 0, 0, x, 0, dl); g.addColorStop(0, "rgba(255,255,255," + al + ")"); g.addColorStop(1, "rgba(170,225,255,0)");
+        c.fillStyle = g; c.beginPath(); c.moveTo(x + dl, 0); c.lineTo(x, -dw); c.lineTo(x - dl, 0); c.lineTo(x, dw); c.closePath(); c.fill();
+      }
+      // the mouth of the pipe lit white-blue from inside
+      g = c.createRadialGradient(0, 0, 0, 0, 0, bore * 1.2); g.addColorStop(0, "rgba(255,255,255,.95)"); g.addColorStop(0.5, "rgba(150,215,255,.7)"); g.addColorStop(1, "rgba(90,160,255,0)");
+      c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, bore * 0.5, bore * 1.05, 0, 0, TAU); c.fill();
+      c.restore();
+    });
   }
   c.restore();
 }
@@ -4952,6 +5019,8 @@ function drawPodium(now){
   ctx.fillText("Liga " + LEAGUES[leagueOf(ev.level)].name + " · evento nº " + ev.level, cx, 42);
   ctx.fillStyle = "#ffb547"; ctx.font = "700 13px " + DISP;
   ctx.fillText("+" + money(ev.prize) + (ev.bet ? (ev.bet > 0 ? "  ·  aposta +" + money(ev.bet) : "  ·  aposta −" + money(-ev.bet)) : ""), cx, 58);
+  if(ev.bonus){ ctx.fillStyle = "#5ad6ff"; ctx.font = "700 12px " + DISP; ctx.fillText(ev.run + " seguidas · bônus +" + money(ev.bonus), cx, 74); }
+  else if(ev.champ && ev.run){ ctx.fillStyle = "#c9ced8"; ctx.font = "600 10px " + DISP; ctx.fillText("Sequência " + ev.run + " · bônus a cada 3 seguidas", cx, 74); }
   if(t < 0.4){ ctx.fillStyle = "rgba(0,0,0," + (1 - t / 0.4) + ")"; ctx.fillRect(0, 0, W, H); }
 }
 
@@ -7984,7 +8053,7 @@ const ENGINE_TONES = {
 };
 // the 2026 garage: each new car takes the cockpit, wheel and engine voice of the closest old one, then the old ones go
 (() => {
-  const FROM = {"hilao": "carcara", "bolinha": "pardal", "mille": "uirapuru", "fuscao": "besouro", "chevetinho": "sabia", "xerao": "tucano", "caravana": "onca", "opalao": "onca", "silvinha": "tsubame", "bavaro": "harpia", "potro": "garanhao", "carregador": "bravo", "evo": "raijin", "boxer": "raijin", "rotativo": "kaze", "suprema": "okami", "godzilla": "okami", "camarada": "furia", "noveonze": "guepardo", "quarentona": "rubi"};
+  const FROM = {"hilao": "carcara", "bolinha": "pardal", "mille": "uirapuru", "fuscao": "besouro", "chevetinho": "sabia", "xerao": "tucano", "caravana": "onca", "opalao": "onca", "landau": "garanhao", "silvinha": "tsubame", "bavaro": "harpia", "potro": "garanhao", "carregador": "bravo", "evo": "raijin", "boxer": "raijin", "rotativo": "kaze", "suprema": "okami", "godzilla": "okami", "camarada": "furia", "noveonze": "guepardo", "quarentona": "rubi"};
   const ids = new Set(CARS.map(c => c.id));
   [SW_STYLE, DASH_FAM, DASH, SND].forEach(T => {
     Object.entries(FROM).forEach(([n, o]) => { if(T[n] === undefined && T[o] !== undefined) T[n] = JSON.parse(JSON.stringify(T[o])); });
