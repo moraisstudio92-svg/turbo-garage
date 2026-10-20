@@ -262,8 +262,8 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--sodium);color:var(--fg);padding:10px 14px;border-radius:10px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:20;transition:opacity .25s, transform .25s}
 .toast.hide{opacity:0;transform:translate(-50%,10px);pointer-events:none}
 .toast{pointer-events:none;z-index:60}
-#askHint small{display:block;font-size:11.5px;font-weight:500;color:var(--muted)}
-#askHint{position:absolute;left:50%;transform:translateX(-50%);z-index:6;width:max-content;max-width:calc(100% - 48px);padding:6px 11px;border-radius:12px;background:rgba(10,12,16,.88);border:1px solid var(--sodium);color:var(--fg);font-size:12.5px;font-weight:600;line-height:1.3;text-align:center;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.5);animation:askP 1.4s ease-in-out infinite}
+#askHint small{font-size:11.5px;font-weight:500;color:var(--muted)}#askHint small:before{content:" · "}
+#askHint{position:absolute;left:50%;transform:translateX(-50%);z-index:6;width:max-content;max-width:calc(100% - 48px);padding:4px 11px;border-radius:12px;background:rgba(10,12,16,.88);border:1px solid var(--sodium);color:var(--fg);font-size:12.5px;font-weight:600;line-height:1.3;text-align:center;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.5);animation:askP 1.4s ease-in-out infinite}
 #askHint b{color:var(--sodium)}
 @keyframes askP{0%,100%{box-shadow:0 6px 18px rgba(0,0,0,.5),0 0 0 0 rgba(255,181,71,.45)}50%{box-shadow:0 6px 18px rgba(0,0,0,.5),0 0 0 6px rgba(255,181,71,0)}}
 button.askNow{outline:2px solid var(--sodium)!important;outline-offset:2px}
@@ -417,7 +417,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v146</span>
+  <span id="tgVer">v147</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -8731,7 +8731,7 @@ let lastAsk = null;
 // the hint over the preview, and the tapped option outlined; both go once something is bought or the preview ends
 function showAsk(html){
   const hb = el("askHint"), cv = el("gCv");
-  if(garageOpen && hb && cv){ hb.innerHTML = html; hb.style.top = (cv.offsetTop + 10) + "px"; hb.hidden = false; }
+  if(garageOpen && hb && cv){ hb.innerHTML = html; hb.style.top = (cv.offsetTop + 8) + "px"; hb.hidden = false; }
   else toast(html.replace(/<small>/g, " — ").replace(/<[^>]+>/g, ""));
   const mark = () => { document.querySelectorAll("button.askNow").forEach(b => b.classList.remove("askNow")); if(askSel){ const b = gpanel.querySelector("button" + askSel) || panel.querySelector("button" + askSel); if(b) b.classList.add("askNow"); } };
   mark(); setTimeout(mark, 0); setTimeout(mark, 60);
@@ -9658,6 +9658,84 @@ function garageAudio(dt){
 }
 el("openGarage").addEventListener("click", openGarage);
 el("gBack").addEventListener("click", closeGarage);
+// ---- the preview ----
+let pvSeen = "", pvT0 = 0, pvWhole = false, pvHold = false, pvHoldTimer = 0;
+function pvFocus(p){
+  if(!p) return "full";
+  if(p.pil || p.acc){
+    const k = p.pil || "acc", v = p.val || p.acc;
+    if(["helmet", "hair", "hairC", "glasses"].includes(k) || ["brinco", "fone", "barba"].includes(v)) return "head";
+    if(k === "gloves" || v === "relogio") return "hands";
+    if(k === "shoes") return "feet";
+    return "body";
+  }
+  const key = p.part || p.cos || (p.stk ? "stickers" : "");
+  if(["wmodel", "aro", "rim", "tire", "tireC", "cal", "tala", "rodas"].includes(key)) return "wheel";
+  if(["wing", "wingF", "aero"].includes(key)) return "tail";
+  if(["exModel", "escape"].includes(key)) return "tip";
+  if(["flame", "flameSize"].includes(key)) return "flame";
+  if(key === "light") return "front";
+  if(key === "neon") return "neon";
+  if(key === "blower") return MODELS[carById(S.car).model] && {wedge:1, quadturbo:1, nove:1, bug:1, f40:1}[carById(S.car).model] ? "tail" : "front";
+  return "full";
+}
+gCv.addEventListener("pointerdown", () => { if(!pv) return; clearTimeout(pvHoldTimer); pvHoldTimer = setTimeout(() => { pvHold = true; }, 260); });
+const pvRelease = tap => { clearTimeout(pvHoldTimer); if(!pv) return; if(pvHold){ pvHold = false; return; } if(tap){ pvWhole = !pvWhole; pvT0 = performance.now() / 1000 - 0.35; } };
+gCv.addEventListener("pointerup", () => pvRelease(true));
+gCv.addEventListener("pointerleave", () => pvRelease(false));
+gCv.addEventListener("pointercancel", () => pvRelease(false));
+function drawPreview(c, w, h){
+  const now = performance.now() / 1000, sig = JSON.stringify(pv);
+  if(sig !== pvSeen){ pvSeen = sig; pvT0 = now; pvWhole = false; }
+  const focus = pvFocus(pv), gy = h * 0.82, held = pvHold, keep = pv;
+  if(held) pv = null;   // holding the picture shows the car (or the driver) as it is now
+  try{
+    const ez = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x), zk = pvWhole || focus === "full" || focus === "neon" || focus === "rearview" ? 0 : ez((now - pvT0 - 0.35) / 0.55);
+    const dark = focus === "neon";
+    // studio: dark backdrop, a lit floor, a soft spot from above
+    let g = c.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, dark ? "#07080c" : "#1b2131"); g.addColorStop(1, dark ? "#05060a" : "#0c0f17"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
+    g = c.createLinearGradient(0, gy, 0, h); g.addColorStop(0, dark ? "#14161c" : "#2b303d"); g.addColorStop(1, "#0b0d12"); c.fillStyle = g; c.fillRect(0, gy, w, h - gy);
+    g = c.createRadialGradient(w / 2, -h * 0.2, 0, w / 2, -h * 0.2, h * 1.1); g.addColorStop(0, dark ? "rgba(255,240,215,.04)" : "rgba(255,240,215,.16)"); g.addColorStop(1, "rgba(255,240,215,0)"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
+    if(keep.pil || keep.acc){
+      // fitting room: the driver at full height, a mirror strip behind, zooming in on what changes
+      const P = pvPilot(), ph = gy * 0.9, px = w / 2, u = ph / 104;
+      c.fillStyle = "rgba(255,255,255,.04)"; c.fillRect(w * 0.18, h * 0.06, w * 0.64, gy - h * 0.06);
+      const fy = focus === "head" ? gy - 93 * u : focus === "hands" ? gy - 46 * u : focus === "feet" ? gy - 6 * u : gy - 54 * u, Z = focus === "head" ? 2.6 : focus === "hands" ? 1.9 : focus === "feet" ? 2.2 : 1.12;
+      const z = 1 + (Z - 1) * zk, fx = focus === "hands" ? px - 13 * u : px;
+      c.save(); c.translate(w / 2, h * (focus === "feet" ? 0.62 : focus === "head" ? 0.58 : 0.6)); c.scale(z, z); c.translate(-(fx * zk + w / 2 * (1 - zk)), -(fy * zk + h * 0.5 * (1 - zk)));
+      drawPilot(c, px, gy, ph, P, "idle", now);
+      c.restore();
+    } else {
+      const car = carById(S.car), M = MODELS[car.model], look = carLook(S.car);
+      const revving = grev.t >= 0;
+      if(focus === "rearview"){
+        // straight behind the car: the tips, the diffuser, the lights
+        const k = Math.min(w * 0.5 / 2.0, (gy - 16) / 1.9);
+        drawRear(c, w / 2, gy, k, car.model, look.color, Object.assign({}, look, {lights:engOn(), shake:engShake(now)}));
+      } else {
+        const sc = Math.min((w - 20) / (M.len + 3), (gy - 14) / (M.roof + 2)), x0 = (w - M.len * sc) / 2;
+        const L = M.len, wx = M.wheels[0], deckY = M.deck !== undefined ? M.deck : M.belt;
+        const tailY = (M.hatchback ? M.roof : deckY) + 3;
+        const T = focus === "wheel" ? [wx, M.r, 2.4] : focus === "tail" ? [L * 0.15, tailY, 1.75] : focus === "tip" ? [L * 0.03, M.r * 0.55, 2.6] : focus === "front" ? [L * 0.86, M.belt - 2, 1.9] : focus === "flame" ? [L * 0.06, M.r + 1, 1.9] : [L / 2, M.roof / 2, 1];
+        const tx = x0 + T[0] * sc, ty = gy - T[1] * sc, Z = T[2], z = 1 + (Z - 1) * zk;
+        c.save(); c.translate(w / 2, h * 0.48); c.scale(z, z); c.translate(-(tx * zk + w / 2 * (1 - zk)), -(ty * zk + h * 0.48 * (1 - zk)));
+        c.save(); c.translate(0, 2 * gy); c.scale(1, -1); c.globalAlpha = 0.16; drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0, lights:false})); c.restore();
+        g = c.createLinearGradient(0, gy, 0, h); g.addColorStop(0, "rgba(17,20,27,0)"); g.addColorStop(1, "rgba(17,20,27,.9)"); c.fillStyle = g; c.fillRect(-w, gy, w * 3, h);
+        const fl = focus === "flame";
+        drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {lights:engOn() || dark || focus === "front", spin:0, shake:engShake(now),
+          nitro:fl ? true : look.nitro, flash:fl ? 0.55 + 0.45 * Math.abs(Math.sin(now * 9)) : now < grev.flashUntil ? 1 - (grev.flashUntil - now) / 0.14 : 0}));
+        c.restore();
+      }
+    }
+    // labels: what you are seeing, how to switch, how to compare
+    { const bg = c.createLinearGradient(0, h - 44, 0, h); bg.addColorStop(0, "rgba(8,9,12,0)"); bg.addColorStop(1, "rgba(8,9,12,.85)"); c.fillStyle = bg; c.fillRect(0, h - 44, w, 44); }
+    const tag = held ? "ATUAL" : "PRÉVIA", hint = held ? "solte para voltar à prévia" : (focus === "full" || focus === "neon" || focus === "rearview" ? "segure para ver como está" : (pvWhole ? "toque: detalhe" : "toque: ver inteiro") + " · segure: como está");
+    c.font = "600 11px " + DISP; const tw = c.measureText(tag).width;
+    c.fillStyle = held ? "rgba(255,181,71,.9)" : "rgba(8,9,12,.6)"; rrectC(c, 8, h - 30, tw + 20, 22, 11); c.fill();
+    c.fillStyle = held ? "#1a1200" : "#ffb547"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(tag, 18, h - 19);
+    c.font = "500 11px " + DISP; c.fillStyle = "rgba(238,240,246,.7)"; c.textAlign = "right"; c.fillText(hint, w - 10, h - 19);
+  } finally { pv = keep; }
+}
 function drawGarage(){
   if(!garageOpen) return;
   const r = Math.min(3, window.devicePixelRatio || 1), w = gCv.clientWidth || 360, h = gCv.clientHeight || 220;
@@ -9673,6 +9751,7 @@ function drawGarage(){
       requestAnimationFrame(drawGarage); return;
     }catch(e){ gView = "out"; }
   }
+  if(pv){ drawPreview(c, w, h); requestAnimationFrame(drawGarage); return; }
   if(pv && !pv.pil && !pv.acc){
     const now = performance.now() / 1000, car = carById(S.car), M = MODELS[car.model], look = carLook(S.car), gy = h * 0.8;
     let g = c.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, "#1b2131"); g.addColorStop(1, "#0c0f17"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
