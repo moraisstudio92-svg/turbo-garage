@@ -261,6 +261,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .modal{z-index:38}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--sodium);color:var(--fg);padding:10px 14px;border-radius:10px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:20;transition:opacity .25s, transform .25s}
 .toast.hide{opacity:0;transform:translate(-50%,10px);pointer-events:none}
+.toast{pointer-events:none}
 .saveDot{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top,0px));transform:translate(-50%,-6px);background:rgba(10,12,16,.85);border:1px solid rgba(70,200,120,.6);color:#9be8b4;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;z-index:21;opacity:0;pointer-events:none;transition:opacity .3s, transform .3s}
 .saveDot.on{opacity:1;transform:translate(-50%,0)}
 
@@ -354,6 +355,9 @@ body.pvOn #gpanel{padding-bottom:170px}
 .post-l{font-size:14px}.post-l .heart{color:#ff3b5c;font-size:18px}
 #poCap{margin:0;font-size:13px;line-height:1.45;color:var(--fg)}
 .post-r{margin:0;font-size:13px;color:var(--sodium);font-weight:600}
+.post-r.neg{color:#ff6b6b}
+#poCap .boo{display:grid;gap:3px;margin-top:6px}
+#poCap .boo i{font-style:normal;font-size:12px;color:#ff8a8a;background:rgba(229,72,77,.12);border-radius:8px;padding:4px 8px}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .5s}
 .flash.on{opacity:.9;transition:none}
 .sheet .big{font-family:var(--display);font-weight:700;font-size:34px;color:var(--sodium);font-variant-numeric:tabular-nums}
@@ -396,7 +400,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v138</span>
+  <span id="tgVer">v139</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -787,7 +791,18 @@ const BRANDS = [
   {id:"ponteiro", tier:2, name:"Relógios Ponteiro", c:"#111317", tc:"#d4af37", tx:"PONTEIRO", st:"script", pil:{outfit:"polo", suit:"#111317"}, acc:"relogio", what:"um relógio de luxo e a polo preta da marca"},
   {id:"asfalto", tier:2, name:"Perfume Asfalto", c:"#1b1d22", tc:"#f4f5f8", tx:"ASFALTO", st:"outline", pil:{outfit:"couro"}, acc:"corrente", what:"a jaqueta de couro e a corrente da campanha"},
   {id:"bancoturbo", tier:2, name:"Banco Turbo", c:"#ff7a1a", tc:"#ffffff", tx:"BANCO TURBO", st:"badge", cos:{paint:"#ff7a1a", vinyl:"doistons", vinylColor:"#1b1d22"}, what:"a pintura laranja e preta do banco"},
-  {id:"ledmax", tier:2, name:"LED Max", c:"#0d1b2a", tc:"#22d8ff", tx:"LED MAX", st:"stencil", cos:{neon:"#22d8ff", light:"#dbe7ff"}, what:"neon ciano e farol de xenon"}
+  {id:"ledmax", tier:2, name:"LED Max", c:"#0d1b2a", tc:"#22d8ff", tx:"LED MAX", st:"stencil", cos:{neon:"#22d8ff", light:"#dbe7ff"}, what:"neon ciano e farol de xenon"},
+  // the ones that pay well and cost you your name
+  {id:"foguetinho", tier:0, bad:1, name:"Bet Foguetinho 777", c:"#6a1b9a", tc:"#ffd23f", tx:"FOGUETINHO 777", st:"badge", cos:{paint:"#8a5cf6", vinyl:"chamas", vinylColor:"#ffd23f"}, what:"uma plotagem roxa com chamas e o logo do jogo de aposta",
+    bait:"Fala, campeão!!! Proposta IMPERDÍVEL: ", hype:"É só postar e falar que você ganhou uma bolada no Foguetinho, ninguém vai saber 😉", boo:["Divulgando bet pra criançada? Vergonha.", "Perdi meu salário nesse jogo por causa de vocês.", "Vendeu a alma por um adesivo."]},
+  {id:"lucroja", tier:1, bad:1, name:"Lucro Já Investimentos", c:"#1b1d22", tc:"#d4af37", tx:"LUCRO JÁ", st:"script", pil:{outfit:"polo", suit:"#1b1d22"}, acc:"relogio", what:"a camisa da empresa e um relógio dourado",
+    bait:"Oportunidade única, piloto! ", hype:"Só falar que você triplicou seu dinheiro com a gente em 1 semana. Rendimento garantido!", boo:["Isso é pirâmide, todo mundo sabe.", "Meu tio perdeu tudo nessa empresa.", "Achei que você era sério..."]},
+  {id:"replica", tier:0, bad:1, name:"Rodas Réplica Top", c:"#d4af37", tc:"#111317", tx:"RÉPLICA TOP", st:"slant", cos:{wmodel:"deep5", rim:"#d4af37"}, what:"rodas douradas réplica \"igualzinha a original\"",
+    bait:"E aí mano! ", hype:"Fala que é original importada, ninguém percebe a diferença.", boo:["Roda réplica em carro de corrida? Perigo puro.", "Vi uma dessas rachar na pista. Que vacilo.", "Falsificado e ainda mente."]},
+  {id:"secabarriga", tier:1, bad:1, name:"Chá Seca Barriga", c:"#2e7d32", tc:"#ffffff", tx:"SECA BARRIGA", st:"pill", pil:{outfit:"camiseta", suit:"#63d692"}, what:"a camiseta do chá emagrecedor milagroso",
+    bait:"Oiii, sucesso!! ", hype:"Diz que perdeu 10 kg em 3 dias tomando o chá antes das corridas!", boo:["Vendendo milagre agora? Sério?", "Isso faz mal pra saúde, irresponsável.", "Unfollow."]},
+  {id:"rifaprimo", tier:2, bad:1, name:"Rifa do Primo", c:"#ff2ad4", tc:"#ffffff", tx:"RIFA DO PRIMO", st:"badge", cos:{neon:"#ff2ad4", paint:"#ff6fb5"}, what:"um envelopamento rosa e neon pink, e o seu carro vira o prêmio da rifa \"de mentirinha\"",
+    bait:"Salve, lenda! ", hype:"A gente sorteia um carro igual ao seu... que nunca vai ser entregue, relaxa kkkk", boo:["Rifa fake? Que decepção.", "Golpista apoiando golpista.", "Denunciado."]}
 ];
 let forcePromo = null;   // drawing an old post: which brand's look to put on the car
 const brandById = id => BRANDS.find(b => b.id === id);
@@ -6670,7 +6685,7 @@ function drawCockpit(now){
   ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); bloom(); ctx.restore();
   // ---------- the car around you: modern sport cabin (binnacle with three dials, round vents, ambient light) ----------
   const bc = look.color, MP = MODELS[pc.model], dashY = H * 0.41;
-  const nearLamp = th.lamp && !ckGarage ? mod(-camW, lampGap) : 99, sweep = th.lamp && !ckGarage ? Math.max(0, 1 - Math.abs(nearLamp - lampGap * 0.15) / (lampGap * 0.25)) : 0;
+  const lampGapC = th.lampGap / 5, nearLamp = th.lamp && !ckGarage ? mod(-camW, lampGapC) : 99, sweep = th.lamp && !ckGarage ? Math.max(0, 1 - Math.abs(nearLamp - lampGapC * 0.15) / (lampGapC * 0.25)) : 0;
   const red = P.ev ? 9000 : P.red, rpm = ckGarage ? (engOn() ? E.rpm : 0) : drv.rpm, frac = Math.min(1.05, rpm / red);
   const blink = frac > 0.97 && Math.floor(now * 14) % 2;
   const TU = tuneOf(S.car), stg = Math.round((TU.motor + TU.cambio + TU.nitro) / 3);
@@ -8035,7 +8050,7 @@ function renderPanel(force){
 /* ---------- actions ---------- */
 el("gtabs").addEventListener("click", e => {
   const b = e.target.closest(".tab"); if(!b) return;
-  gtab = b.dataset.gtab; pv = null;
+  gtab = b.dataset.gtab; endPreview();
   el("gtabs").querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t === b));
   gpanel.scrollTop = 0; renderPanel(true);
 });
@@ -8219,24 +8234,28 @@ function newDM(force){
   if(fame < 120 || S.inbox.length >= 3) return;
   if(!force && Math.random() > 0.35 + Math.min(0.4, fame / 20000)) return;
   const tier = fame >= 9000 ? 2 : fame >= 1500 ? 1 : 0;
-  const pool = BRANDS.filter(b => b.tier <= tier && !S.inbox.some(o => o.b === b.id) && !(S.permuta && S.permuta.b === b.id) && !(S.posts || []).slice(0, 3).some(q => q.b === b.id));
+  // roughly one message in four comes from a brand you would rather not be seen with
+  const wantBad = Math.random() < 0.27;
+  let pool = BRANDS.filter(b => b.tier <= tier && !!b.bad === wantBad && !S.inbox.some(o => o.b === b.id) && !(S.permuta && S.permuta.b === b.id) && !(S.posts || []).slice(0, 3).some(q => q.b === b.id));
+  if(!pool.length) pool = BRANDS.filter(b => b.tier <= tier && !S.inbox.some(o => o.b === b.id) && !(S.permuta && S.permuta.b === b.id));
   if(!pool.length) return;
   // the bigger the name, the bigger the brands that write
   const top = pool.filter(b => b.tier === tier), src = top.length && Math.random() < 0.65 ? top : pool, pick = src[Math.floor(Math.random() * src.length)];
-  const fameGain = Math.round((80 + 0.05 * fame) * [1, 1.6, 2.4][pick.tier]);
-  const cash = pick.tier ? Math.round(rewardFor(Math.max(1, S.level)) * [0, 1.2, 3][pick.tier] / 100) * 100 : 0;
+  const fameGain = pick.bad ? -Math.round(Math.max(150, fame * 0.12)) : Math.round((80 + 0.05 * fame) * [1, 1.6, 2.4][pick.tier]);
+  const cash = pick.bad ? Math.round(rewardFor(Math.max(1, S.level)) * [2.5, 3.5, 5][pick.tier] / 100) * 100 : pick.tier ? Math.round(rewardFor(Math.max(1, S.level)) * [0, 1.2, 3][pick.tier] / 100) * 100 : 0;
   S.inbox.push({b:pick.id, fame:fameGain, cash, t:Date.now()});
   setTimeout(() => toast("Nova mensagem de " + pick.name + "! Abra o celular"), 2600);
   updPhoneBadge();
 }
 function influencerAfterEvent(champ){
   if(S.permuta){
-    const b = brandById(S.permuta.b), f = followers(), likes = Math.round(f * (champ ? 0.09 : 0.05) * (0.8 + Math.random() * 0.4));
-    const fame = Math.round(S.permuta.fame * (champ ? 1 : 0.6)), cash = S.permuta.cash;
+    const b = brandById(S.permuta.b), f = followers(), likes = Math.round(f * (b.bad ? 0.015 : champ ? 0.09 : 0.05) * (0.8 + Math.random() * 0.4));
+    const fame = b.bad ? Math.max(S.permuta.fame, -Math.round((S.fame || 0) * 0.5)) : Math.round(S.permuta.fame * (champ ? 1 : 0.6)), cash = S.permuta.cash;
     const caps = champ ? ["Mais um evento no bolso e de " + b.name + "! Valeu pela parceria 🔥", "Campeão com " + b.name + ". Quem viu, viu!", "Vitória com estilo: obrigado " + b.name + "!"]
       : ["Não deu dessa vez, mas o visual da " + b.name + " ficou absurdo!", "Perdi o evento, mas ganhei no estilo. Valeu " + b.name + "!"];
-    const post = {b:b.id, car:S.car, likes, fame, cash, champ, cap:caps[Math.floor(Math.random() * caps.length)] + " #publi #permuta", t:Date.now()};
-    S.fame = (S.fame || 0) + fame; if(cash) pay(cash, 30);
+    const badCaps = ["Fechei com a " + b.name + "! Corre lá que é sucesso garantido 🤑 #publi", "Tô com a " + b.name + ", confia! #publi", "Só coisa boa com a " + b.name + " 💸 #publi"];
+    const post = {b:b.id, car:S.car, likes, fame, cash, champ, bad:!!b.bad, cap:(b.bad ? badCaps[Math.floor(Math.random() * badCaps.length)] : caps[Math.floor(Math.random() * caps.length)]) + (b.bad ? "" : " #publi #permuta"), boo:b.bad ? b.boo : null, t:Date.now()};
+    S.fame = Math.max(0, (S.fame || 0) + fame); if(cash) pay(cash, 30);
     // permuta: the product is yours to keep
     if(b.cos) Object.entries(b.cos).forEach(([k, v]) => markOwn(S.car + "|" + k + "|" + v));
     if(b.pil) Object.entries(b.pil).forEach(([k, v]) => markOwn("pilot|" + k + "|" + v));
@@ -8284,14 +8303,15 @@ function renderPhone(){
         '<div class="dm-msg">Tudo certo! Já está no seu ' + (b.cos ? "carro" : "piloto") + ': ' + b.what + '. Corra o próximo evento e a foto sai no final. Capricha!</div></div>'; }
     (S.inbox || []).forEach((o, i) => { const b = brandById(o.b); if(!b) return;
       h += '<div class="dm"><div class="dm-h"><span class="dm-av" style="background:' + b.c + ';color:' + b.tc + '">' + b.tx.slice(0, 2) + '</span><b>' + b.name + '</b><small>mensagem nova</small></div>' +
-        '<div class="dm-msg">E aí, ' + S.pilot.name + '! Aqui é da ' + b.name + '. A gente acompanha seus rachas e curtiu demais. Queremos te mandar ' + b.what + ' pra você usar na próxima corrida e postar uma foto com a gente. Topa a permuta?</div>' +
+        '<div class="dm-msg">' + (b.bad ? b.bait + 'Aqui é da ' + b.name + '. Vamos te mandar ' + b.what + ' pra usar na próxima corrida. ' + b.hype + ' Topa?' : 'E aí, ' + S.pilot.name + '! Aqui é da ' + b.name + '. A gente acompanha seus rachas e curtiu demais. Queremos te mandar ' + b.what + ' pra você usar na próxima corrida e postar uma foto com a gente. Topa a permuta?') + '</div>' +
         '<canvas data-dmprev="' + i + '"></canvas>' +
-        '<div class="dm-rew">Você ganha: <b>o produto é seu</b> + <b>' + fmtN(o.fame * 28) + ' seguidores</b> (+' + o.fame + ' de fama)' + (o.cash ? ' + cachê de <b>' + money(o.cash) + '</b>' : '') + '</div>' +
+        (b.bad ? '<div class="dm-rew">Oferecem: <b>cachê de ' + money(o.cash) + '</b> + o produto. Seguidores e fama: <b>?</b></div>'
+          : '<div class="dm-rew">Você ganha: <b>o produto é seu</b> + <b>' + fmtN(o.fame * 28) + ' seguidores</b> (+' + o.fame + ' de fama)' + (o.cash ? ' + cachê de <b>' + money(o.cash) + '</b>' : '') + '</div>') +
         '<div class="row2"><button class="btn ghost" type="button" data-dmno="' + i + '">Recusar</button><button class="btn" type="button" data-dmyes="' + i + '"' + (S.permuta ? ' disabled' : '') + '>' + (S.permuta ? 'Termine a permuta atual' : 'Aceitar permuta') + '</button></div></div>'; });
     if(!h) h = '<div class="ph-empty">' + (fame < 120 ? 'Ninguém te conhece ainda. Vença eventos para ganhar fama: com ' + "120 de fama as marcas começam a te mandar mensagem." : 'Nenhuma mensagem nova. Continue vencendo: as marcas escrevem depois dos eventos.') + '</div>';
   } else {
     const ps = S.posts || [];
-    h = ps.length ? '<div class="ph-grid">' + ps.map((p, i) => '<div><canvas data-post="' + i + '"></canvas><span>♥ ' + fmtN(p.likes) + '</span></div>').join("") + '</div>' : '<div class="ph-empty">Nenhum post ainda. Aceite uma permuta e corra com ela.</div>';
+    h = ps.length ? '<div class="ph-grid">' + ps.map((p, i) => '<div><canvas data-post="' + i + '"></canvas><span>' + (p.bad ? '⚠ ' : '♥ ') + fmtN(p.likes) + '</span></div>').join("") + '</div>' : '<div class="ph-empty">Nenhum post ainda. Aceite uma permuta e corra com ela.</div>';
   }
   el("phBody").innerHTML = h;
   requestAnimationFrame(() => {
@@ -8327,10 +8347,13 @@ function showPost(post){
   const b = brandById(post.b); S.pendingPost = null; save();
   el("postModal").hidden = false;
   el("poHandle").textContent = handle(); el("poSub").textContent = "Parceria paga com " + b.name;
-  el("poCap").innerHTML = "<b>" + handle() + "</b> " + post.cap;
-  el("poRew").textContent = "+" + fmtN(post.fame * 28) + " seguidores · +" + post.fame + " de fama" + (post.cash ? " · cachê " + money(post.cash) : "") + " · " + b.what.replace(/^(um|uma|o|a|os|as) /, "") + " agora é seu";
+  el("poCap").innerHTML = "<b>" + handle() + "</b> " + post.cap + (post.boo ? '<span class="boo">' + post.boo.map(x => "<i>" + x + "</i>").join("") + '</span>' : "");
+  el("poRew").className = "post-r" + (post.bad ? " neg" : "");
+  el("poRew").textContent = post.bad ? "Pegou mal: " + fmtN(post.fame * 28) + " seguidores · " + post.fame + " de fama · cachê " + money(post.cash) + " no bolso"
+    : "+" + fmtN(post.fame * 28) + " seguidores · +" + post.fame + " de fama" + (post.cash ? " · cachê " + money(post.cash) : "") + " · " + b.what.replace(/^(um|uma|o|a|os|as) /, "") + " agora é seu";
+  el("poSub").textContent = post.bad ? "Publicidade · " + b.name + " · comentários em chamas" : "Parceria paga com " + b.name;
   const f = el("poFlash"); f.classList.add("on"); setTimeout(() => f.classList.remove("on"), 60);
-  if(sfxReady()) noiseBurst({type:"highpass", f0:3000, gain:0.12, dur:0.08, att:0.002});
+  shutterSfx();
   requestAnimationFrame(() => {
     const cv = el("poCv"), r = 2, w = cv.clientWidth || 340; cv.width = w * r; cv.height = w * r; const c = cv.getContext("2d"); c.setTransform(r, 0, 0, r, 0, 0); drawPostPhoto(c, w, w, post);
     drawAvatar(el("poAv"));
@@ -8917,6 +8940,23 @@ function noiseBurst(o){
   s.connect(f); f.connect(g); g.connect(o.bus || AU.master);
   s.start(t, Math.random()); s.stop(t + o.dur + 0.05);
 }
+// a camera shutter: the mirror slap, a tiny gap, the curtain snapping shut, a soft mechanical tail
+function shutterSfx(){
+  if(!sfxReady()) return;
+  noiseBurst({type:"bandpass", f0:2600, Q:1.2, gain:0.22, dur:0.035, att:0.001});
+  noiseBurst({type:"lowpass", f0:900, gain:0.18, dur:0.05, att:0.001});
+  noiseBurst({type:"bandpass", f0:3800, Q:1.5, gain:0.2, dur:0.03, att:0.001, delay:0.075});
+  noiseBurst({type:"bandpass", f0:1400, Q:2, gain:0.06, dur:0.12, att:0.005, delay:0.09});
+}
+// every button answers with a soft click
+function tapSfx(){
+  if(!sfxReady()) return;
+  const ac = AU.ac, t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+  o.type = "triangle"; o.frequency.setValueAtTime(1450, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.035);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+  o.connect(g); g.connect(AU.master); o.start(t); o.stop(t + 0.07);
+}
+document.addEventListener("click", e => { const b = e.target.closest("button"); if(b && !b.disabled) tapSfx(); }, true);
 function coinSfx(){ if(!sfxReady()) return; beep(1320, 0.07, "square", 0.05); beep(1760, 0.14, "square", 0.05, 0.07); }
 function nitroFx(d){
   noiseBurst({type:"bandpass", f0:5200, f1:2500, Q:1.2, gain:0.35, dur:0.35});
@@ -9221,7 +9261,8 @@ function openGarage(){
   garageOpen = true; garageEl.hidden = false; gpanel.scrollTop = 0;
   renderPanel(true); requestAnimationFrame(drawGarage);
 }
-function closeGarage(){ pv = null; garageOpen = false; garageEl.hidden = true; grev.t = -1; renderPanel(true); }
+function endPreview(){ pv = null; buyGo = null; el("buyModal").hidden = true; document.body.classList.remove("pvOn"); }
+function closeGarage(){ endPreview(); gView = "out"; garageOpen = false; garageEl.hidden = true; grev.t = -1; renderPanel(true); }
 const grev = {t:-1, flashUntil:0, lastPop:0, cranked:false, caught:false};
 const GCRANK = 0.9, GIDLE = 1.9, GOFF = 1.9 + 4.2 + 1.6;
 function engOn(){ return grev.t >= GCRANK; }
