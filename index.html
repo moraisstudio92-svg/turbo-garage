@@ -387,7 +387,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 const SAVE_KEY = "turbo-garage-v2";
 
 const CARS = [
-  {id:"bolinha", name:"Bolinha 1.0", tag:"Hatch 3 portas dos anos 90", spec:"1.0 16V · 70 cv · 5 marchas", model:"bola", vk:160, t100:13.5, inch:13, price:0, color:"#c9cfda", rim:"#aab2bf", cal:"#3a3d45", spokes:4},
+  {id:"bolinha", name:"Bolinha 1.0", tag:"Hatch 3 portas dos anos 90", spec:"1.0 16V · 70 cv · 5 marchas", model:"bola", vk:160, t100:13.5, inch:13, price:0, color:"#c3c7cf", rim:"#b4b9c2", cal:"#3a3d45", spokes:6, wmodel:"calota"},
   {id:"mille", name:"Mille Escada", tag:"Hatch quadradinho popular", spec:"1.0 8V · 58 cv · 5 marchas", model:"mille", vk:150, t100:15.4, inch:13, price:900, color:"#e5484d", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
   {id:"fuscao", name:"Fuscão", tag:"Clássico nacional a ar", spec:"1.6 boxer a ar · 65 cv · 4 marchas", model:"bug", vk:145, t100:16.5, inch:15, price:1500, color:"#2f63d6", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
   {id:"chevetinho", name:"Chevetinho", tag:"Sedã 2 portas de tração traseira", spec:"1.6 8V · 82 cv · 4 marchas", model:"chevette", vk:165, t100:13.0, inch:13, price:2500, color:"#ff7a1a", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
@@ -657,7 +657,7 @@ function carLook(id){
   const inch = Math.max(13, Math.min(20, +k.aro || car.inch));
   return {color:k.paint || car.color, finish:k.finish, rim:k.rim || car.rim, caliper:k.cal || car.cal,
     wheelStyle:(k.wmodel && k.wmodel !== "orig") ? k.wmodel : (car.wmodel || "orig"), spokes:car.spokes, tire:k.tire || "orig", tireC:k.tireC || "#f4f5f8", wheelScale:1 + 0.012 * (inch - car.inch),
-    rimFrac:Math.min(0.9, Math.max(0.48, (0.5 + (inch - 13) * 0.045) * ({fino:1.07, largo:0.95, xlargo:0.9}[k.tala] || 1))),
+    rimFrac:Math.min(0.9, Math.max(0.5, (0.565 + (inch - 13) * 0.034) * ({fino:1.07, largo:0.95, xlargo:0.9}[k.tala] || 1))),
     spoiler:k.wing === "none" ? null : (k.wing && k.wing !== "orig") ? "nfs_" + k.wing : k.aero ? AERO_KIND[k.aero] : undefined, wingF:k.wingF || "", tala:k.tala || "",
     kit:k.kit, drop:suspDrop(car, k.susp, k.kit), tip:k.escape, blower:k.blower || 0, light:k.light, flame:k.flame, flameSize:k.flameSize || "m", neon:k.neon,
     vinyl:k.vinyl, vinylColor:k.vinylColor, stickers:k.stickers || [], num:(CARS.indexOf(car) * 17 + 7) % 99, exModel:k.exModel || "orig",
@@ -1765,7 +1765,7 @@ const STYLE = {
   golf:        {head:"projector", tail:"block", line:"high", mirror:"body"},
   fa5:         {head:"projector", tail:"fa",   line:"none", mirror:"body", fog:"amber"},
   picape:      {head:"projector", tail:"vert", line:"high", mirror:"black"},
-  bola:        {head:"drop", tail:"block", bumper:"black", rub:1, line:"none", mirror:"black"},
+  bola:        {head:"projector", tail:"vert", line:"none", mirror:"black"},
   mille:       {head:"rect80", tail:"vert", bumper:"black", rub:1, line:"none", antenna:1, mirror:"black"},
   bug:         {head:"round", tail:"round", trim:"chrome", line:"none", mirror:"bullet"},
   chevette:    {head:"rect80", tail:"wide", trim:"chrome", line:"none", mirror:"bullet"},
@@ -1811,7 +1811,7 @@ function fenderize(M){
 }
 // the 2026 garage: every body from its real length, wheelbase, height and tyre size
 Object.assign(MODELS, {
-  bola:{len:66.68,hatchback:true,sh:14.1,pts:[[1.23,4.38],[0.0,5.78],[0.0,9.8],[0.44,14.0],[1.66,16.8],[4.55,20.48],[9.1,23.54],[15.4,24.59],[29.75,24.76],[36.4,24.36],[40.25,23.28],[50.05,16.19],[52.85,15.66],[60.9,14.7],[64.75,13.65],[66.33,11.64],[66.68,7.88],[65.98,4.38]],wins:[[[28.35,23.54],[38.33,23.54],[47.95,16.89],[28.35,16.89]],[[27.04,23.63],[27.04,16.89],[13.3,17.33],[10.5,18.38],[14.35,22.58],[17.5,23.71]]],belt:16.71,pillar:0,doors:[27.74,50.84],handles:[28.7],mirror:[48.48,17.06],wheels:[10.24,53.43],r:5.04,fx:[{t:"stubant",x:33.25}],head:[[60.2,14.88],[65.28,13.65],[66.33,11.55],[60.38,12.25]],tail:[[0.09,10.5],[0.61,15.4],[2.98,15.75],[2.71,10.68]]},
+  bola:{len:66.68,hatchback:true,gap:0.8,sh:14.3,pts:[[1.23,4.46],[0.0,5.78],[0.0,9.54],[0.53,9.98],[1.49,10.33],[1.66,15.05],[2.28,15.84],[7.0,20.48],[11.2,23.42],[14.35,24.24],[19.25,24.5],[31.5,24.59],[36.4,24.33],[39.55,23.54],[50.4,16.36],[52.5,16.01],[59.5,15.05],[63.7,14.0],[65.8,12.95],[66.5,11.38],[66.71,9.8],[66.71,6.13],[65.8,4.46]],wins:[[[28.53,23.54],[38.15,23.54],[48.3,17.01],[28.53,17.01]],[[27.3,23.54],[27.3,17.06],[15.58,17.36],[18.38,22.93],[19.43,23.54]]],belt:16.89,pillar:0,doors:[27.83,51.28],handles:[28.7],mirror:[48.39,17.15],wheels:[10.24,53.43],r:5.11,fx:[{t:"badge",x:56.88,y:12.25,tx:"16V"}],head:[[60.55,14.88],[65.45,13.74],[66.33,12.08],[60.9,12.6]],tail:[[1.75,10.85],[1.96,15.19],[4.2,15.4],[3.99,10.89]]},
   mille:{len:63.77,hatchback:true,sh:14.6,pts:[[1.05,4.2],[0.0,5.6],[0.0,9.1],[0.14,15.75],[0.53,20.65],[1.58,24.15],[3.85,25.2],[8.4,25.34],[34.12,25.29],[37.28,24.59],[47.08,17.06],[49.88,16.36],[58.28,15.66],[62.3,14.88],[63.53,12.6],[63.79,7.35],[63.0,4.2]],wins:[[[27.3,24.24],[36.23,24.24],[45.33,17.33],[27.3,17.33]],[[26.08,24.24],[26.08,17.33],[6.83,17.5],[5.78,20.65],[6.65,24.24]]],belt:17.24,pillar:0,doors:[26.69,48.65],handles:[27.65],mirror:[45.85,17.41],wheels:[9.8,51.14],r:4.92,head:[[59.33,15.58],[63.0,14.88],[63.44,12.78],[59.41,13.04]],tail:[[0.0,9.8],[0.14,16.8],[1.93,16.89],[1.93,9.8]]},
   bug:{len:71.23,chrome:true,sh:16.4,pts:[[1.93,5.78],[0.0,7.53],[0.18,11.2],[1.93,15.05],[5.78,18.55],[11.38,22.23],[18.38,25.2],[26.25,26.34],[33.25,26.25],[39.38,25.2],[44.1,22.75],[47.25,19.16],[51.63,18.29],[57.75,17.5],[63.35,16.28],[67.55,13.83],[70.18,10.5],[71.23,7.88],[70.0,5.78]],wins:[[[15.75,19.43],[19.25,22.58],[25.38,24.59],[32.03,24.94],[32.03,19.43]],[[33.34,24.99],[38.5,24.68],[42.35,22.58],[45.15,19.6],[33.34,19.6]]],belt:18.99,pillar:0,deck:17.5,doors:[32.73,47.6],handles:[34.3],mirror:[45.15,19.95],wheels:[15.4,57.4],r:5.78,fx:[{t:"beetle"}],head:[[62.3,16.89],[65.98,15.84],[66.68,13.83],[63.0,14.35]],tail:[[2.45,11.2],[3.5,15.4],[5.78,15.75],[5.08,11.2]]},
   chevette:{len:73.33,chrome:true,sh:14.6,pts:[[1.4,5.25],[0.0,6.65],[0.0,11.2],[0.44,15.05],[2.45,16.36],[14.0,16.66],[17.5,17.24],[25.9,22.75],[29.75,23.19],[41.13,23.14],[44.1,22.49],[51.8,16.94],[54.43,16.54],[68.25,15.66],[72.28,15.14],[73.15,13.3],[72.62,10.85],[73.33,7.35],[72.28,5.25]],wins:[[[19.25,17.5],[26.6,22.23],[29.75,22.61],[32.9,22.61],[32.9,17.33]],[[34.12,22.66],[42.7,22.49],[50.23,17.33],[34.12,17.33]]],belt:17.24,pillar:0,deck:16.62,doors:[33.43,52.33],handles:[35.0],mirror:[50.75,17.5],wheels:[16.8,58.71],r:5.06,fx:[{t:"stripe",y0:12.25,y1:12.95,x0:3.5,x1:70.0}],head:[[68.78,15.49],[72.45,15.02],[72.8,12.6],[68.78,12.86]],tail:[[0.0,11.2],[0.44,15.4],[3.68,15.75],[3.41,11.38]]},
