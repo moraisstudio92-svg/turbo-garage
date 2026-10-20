@@ -389,7 +389,7 @@ const SAVE_KEY = "turbo-garage-v2";
 const CARS = [
   {id:"bolinha", name:"Bolinha 1.0", tag:"Hatch 3 portas dos anos 90", spec:"1.0 16V · 70 cv · 5 marchas", model:"bola", vk:160, t100:13.5, inch:15, price:0, color:"#a9adb4", rim:"#dfe2e7", cal:"#3a3d45", spokes:10, wmodel:"v10", rimK:1.24},
   {id:"mille", name:"Mille Escada", tag:"Hatch quadradinho popular", spec:"1.0 8V · 58 cv · 5 marchas", model:"mille", vk:150, t100:15.4, inch:13, price:900, color:"#5b5e64", rim:"#e6e8ec", cal:"#3a3d45", spokes:6, wmodel:"unocal", rimK:1.2},
-  {id:"fuscao", name:"Fuscão", tag:"Clássico nacional a ar", spec:"1.6 boxer a ar · 65 cv · 4 marchas", model:"bug", vk:145, t100:16.5, inch:15, price:1500, color:"#2f63d6", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
+  {id:"fuscao", name:"Fuscão", tag:"Clássico nacional a ar", spec:"1.6 boxer a ar · 65 cv · 4 marchas", model:"bug", vk:145, t100:16.5, inch:15, price:1500, color:"#5f9a5c", rim:"#5f9a5c", cal:"#3a3d45", spokes:5, wmodel:"vwbug", rimK:1.25},
   {id:"chevetinho", name:"Chevetinho", tag:"Sedã 2 portas de tração traseira", spec:"1.6 8V · 82 cv · 4 marchas", model:"chevette", vk:165, t100:13.0, inch:13, price:2500, color:"#ff7a1a", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
   {id:"carcara",     name:"Carcará 1.6 Pick-up", tag:"Picape compacta",        spec:"1.6 16V · 120 cv · 5 marchas",         model:"picape",       vk:182, t100:10.4, inch:15, price:4200,       color:"#c8121b", rim:"#c9d0da", cal:"#3a3d45", spokes:5},
   {id:"xerao", name:"Xerão XR3", tag:"Hatch esportivo dos anos 80", spec:"1.8 8V · 99 cv · 5 marchas", model:"xr3", vk:185, t100:10.0, inch:14, price:6000, color:"#eef0ea", rim:"#c9d0da", cal:"#3a3d45", spokes:4},
@@ -1767,7 +1767,7 @@ const STYLE = {
   picape:      {head:"projector", tail:"vert", line:"high", mirror:"black"},
   bola:        {head:"projector", tail:"vert", line:"none", mirror:"black"},
   mille:       {head:"rect", tail:"vert", line:"none", mirror:"black"},
-  bug:         {head:"round", tail:"round", trim:"chrome", line:"none", mirror:"bullet"},
+  bug:         {head:"round", tail:"round", line:"none", mirror:"bullet"},
   chevette:    {head:"rect80", tail:"wide", trim:"chrome", line:"none", mirror:"bullet"},
   xr3:         {head:"rect80", tail:"wide", bumper:"black", rub:1, line:"high", fog:1, mirror:"black"},
   kadett:      {head:"rect80", tail:"wide", line:"high", fog:1, mirror:"body"},
@@ -1813,7 +1813,7 @@ function fenderize(M){
 Object.assign(MODELS, {
   bola:{len:66.13,hatchback:true,nofuel:true,gap:0.65,sh:12.3,pts:[[1.26,3.5],[0.0,5.32],[0.0,8.89],[0.77,10.4],[1.26,12.95],[1.52,15.23],[2.28,16.75],[4.06,18.52],[6.34,20.14],[8.89,21.56],[9.64,21.93],[14.46,22.49],[23.1,22.68],[34.76,22.17],[37.8,21.56],[45.17,15.73],[46.69,15.23],[52.54,14.37],[59.12,12.95],[63.18,12.34],[64.96,11.67],[65.82,10.4],[66.13,8.37],[65.98,5.32],[65.21,3.82],[62.69,3.29]],wins:[[[6.86,15.73],[11.17,20.81],[12.18,21.32],[22.09,21.47],[22.68,20.97],[22.58,15.07],[21.56,14.88],[7.35,15.52]],[[24.61,21.47],[36.79,21.37],[41.37,18.27],[43.89,15.58],[41.86,14.7],[24.61,14.82]]],belt:14.88,pillar:0,doors:[23.1,45.17],handles:[23.59],mirror:[41.62,14.98],wheels:[9.14,52.27],r:4.59,fx:[{t:"stubant",x:11.9},{t:"sport",x0:14.98,x1:44.91,y0:4.83,y1:6.34}],head:[[60.66,11.83],[64.96,11.62],[65.21,9.99],[60.9,10.31]],tail:[[1.02,15.89],[2.19,16.0],[2.28,10.4],[1.17,10.4]]},
   mille:{len:60.88,hatchback:true,nofuel:true,nomarker:true,gap:2.2,sh:14.3,pts:[[3.59,5.27],[1.84,5.48],[1.56,5.95],[0.19,8.86],[0.0,10.22],[0.58,10.8],[1.45,11.18],[1.26,12.92],[1.35,15.24],[2.42,16.61],[2.8,17.19],[4.17,19.51],[6.49,22.42],[8.23,24.26],[9.0,24.73],[10.36,24.83],[20.04,24.83],[30.7,24.26],[34.37,24.06],[34.95,23.66],[41.34,18.73],[42.3,17.47],[43.47,16.89],[45.2,16.61],[50.05,15.44],[54.88,14.28],[58.57,13.32],[59.73,12.64],[60.11,11.95],[60.5,10.03],[60.88,9.63],[60.8,7.51],[60.31,5.57],[59.54,4.88],[55.86,4.69],[41.34,4.5],[16.17,4.69]],wins:[[[22.17,23.87],[11.13,23.96],[10.26,23.47],[7.16,18.34],[7.26,17.57],[7.84,17.19],[22.17,17.08]],[[34.76,23.77],[23.91,23.77],[23.82,16.89],[40.08,16.61]]],belt:16.89,pillar:0,doors:[23.52,42.6],handles:[],mirror:[40.18,17.19],wheels:[9.4,50.73],r:4.43,lines:[[[14.23,10.12],[30.7,9.92],[46.38,9.73]],[[15.68,6.34],[30.7,6.34],[44.73,6.25]],[[58.77,12.53],[50.75,13.56],[43.09,14.61]],[[60.88,9.82],[55.65,9.82]],[[1.45,10.89],[5.04,10.89]]],exh:[0.79,4.69],winR:1.1,fx:[{t:"fueldoor",x:9.87,y:14.09},{t:"lock",x:23.71,y:15.44},{t:"recess",x:22.75,y:13.88}],head:[[59.92,12.34],[58.85,12.44],[59.24,10.12],[60.5,10.03]],tail:[[2.33,15.44],[1.16,15.44],[1.16,13.02],[2.03,13.02]]},
-  bug:{len:71.23,chrome:true,sh:16.4,pts:[[1.93,5.78],[0.0,7.53],[0.18,11.2],[1.93,15.05],[5.78,18.55],[11.38,22.23],[18.38,25.2],[26.25,26.34],[33.25,26.25],[39.38,25.2],[44.1,22.75],[47.25,19.16],[51.63,18.29],[57.75,17.5],[63.35,16.28],[67.55,13.83],[70.18,10.5],[71.23,7.88],[70.0,5.78]],wins:[[[15.75,19.43],[19.25,22.58],[25.38,24.59],[32.03,24.94],[32.03,19.43]],[[33.34,24.99],[38.5,24.68],[42.35,22.58],[45.15,19.6],[33.34,19.6]]],belt:18.99,pillar:0,deck:17.5,doors:[32.73,47.6],handles:[34.3],mirror:[45.15,19.95],wheels:[15.4,57.4],r:5.78,fx:[{t:"beetle"}],head:[[62.3,16.89],[65.98,15.84],[66.68,13.83],[63.0,14.35]],tail:[[2.45,11.2],[3.5,15.4],[5.78,15.75],[5.08,11.2]]},
+  bug:{len:68.13,nofuel:true,nomarker:true,softpaint:true,gap:0.35,sh:14.5,pts:[[5.29,4.73],[2.36,5.08],[0.33,5.41],[0.0,6.98],[1.02,8.33],[2.7,8.56],[3.05,9.45],[3.71,11.04],[4.62,11.94],[6.2,13.28],[8.0,14.98],[10.26,17.57],[12.95,19.48],[15.21,21.05],[18.13,22.4],[21.51,23.99],[23.77,24.66],[29.38,25.34],[35.02,25.34],[38.4,25.11],[41.55,24.33],[43.35,22.98],[44.92,20.49],[46.17,18.81],[47.41,18.13],[49.67,17.8],[53.04,17.34],[57.54,16.56],[61.15,15.09],[63.4,13.28],[64.75,11.6],[65.42,9.91],[65.87,8.33],[66.55,7.67],[68.01,7.44],[68.13,4.85],[65.87,4.5],[64.3,4.73],[47.18,3.94],[23.08,3.94]],wins:[[[29.61,22.3],[28.26,22.52],[22.63,22.52],[20.39,21.84],[19.02,20.49],[18.69,18.81],[19.25,17.57],[20.39,17.34],[29.38,17.34],[29.84,18.01]],[[44.26,17.22],[44.36,18.92],[43.12,21.18],[41.55,22.07],[32.2,22.4],[31.54,21.74],[31.54,17.8],[31.97,17.22]]],belt:17.12,pillar:0,deck:15.75,doors:[30.52,46.95],handles:[],mirror:[44.92,18.36],wheels:[15.54,57.54],r:5.41,exh:[0.7,4.11],winR:1.0,fx:[{t:"board",x0:23.08,x1:47.18,y0:3.83,y1:4.59},{t:"wing",w:1,pts:[[64.07,12.5],[60.92,13.51],[57.54,13.84],[54.16,13.51],[51.35,12.39],[49.44,10.69],[48.3,8.56],[47.64,6.3],[47.29,4.62]]},{t:"wing",w:0,pts:[[23.08,4.62],[22.86,7.67],[22.4,10.47],[20.95,13.06],[18.13,14.63],[14.75,15.09],[11.38,14.42],[8.0,13.51],[5.51,12.95]]},{t:"seam",pts:[[64.07,12.5],[60.92,13.51],[57.54,13.84],[54.16,13.51],[51.35,12.39],[49.44,10.69],[48.3,8.56],[47.64,6.3],[47.29,4.62]]},{t:"seam",pts:[[23.08,4.62],[22.86,7.67],[22.4,10.47],[20.95,13.06],[18.13,14.63],[14.75,15.09],[11.38,14.42],[8.0,13.51],[5.51,12.95]]},{t:"seam",pts:[[44.49,20.04],[42.89,22.52],[40.65,23.42],[31.64,23.77],[23.77,23.54],[19.25,22.52],[16.43,20.83]]},{t:"chrome",w:0.38,pts:[[46.29,15.84],[21.51,15.84]]},{t:"chrome",w:0.42,pts:[[30.75,15.02],[33.22,15.02]]},{t:"chrome",w:0.22,pts:[[43.35,17.34],[43.91,19.37]]},{t:"bumper",pts:[[68.13,7.44],[65.87,7.54],[65.64,4.62],[68.13,4.85]]},{t:"bumper",pts:[[4.62,8.33],[0.0,7.88],[0.0,5.29],[4.62,5.18]]}],head:[[64.52,11.94],[62.95,12.62],[61.93,11.94],[63.05,10.03],[64.4,10.13]],tail:[[6.2,13.28],[4.62,13.41],[3.83,12.62],[4.39,11.83],[5.74,11.94]]},
   chevette:{len:73.33,chrome:true,sh:14.6,pts:[[1.4,5.25],[0.0,6.65],[0.0,11.2],[0.44,15.05],[2.45,16.36],[14.0,16.66],[17.5,17.24],[25.9,22.75],[29.75,23.19],[41.13,23.14],[44.1,22.49],[51.8,16.94],[54.43,16.54],[68.25,15.66],[72.28,15.14],[73.15,13.3],[72.62,10.85],[73.33,7.35],[72.28,5.25]],wins:[[[19.25,17.5],[26.6,22.23],[29.75,22.61],[32.9,22.61],[32.9,17.33]],[[34.12,22.66],[42.7,22.49],[50.23,17.33],[34.12,17.33]]],belt:17.24,pillar:0,deck:16.62,doors:[33.43,52.33],handles:[35.0],mirror:[50.75,17.5],wheels:[16.8,58.71],r:5.06,fx:[{t:"stripe",y0:12.25,y1:12.95,x0:3.5,x1:70.0}],head:[[68.78,15.49],[72.45,15.02],[72.8,12.6],[68.78,12.86]],tail:[[0.0,11.2],[0.44,15.4],[3.68,15.75],[3.41,11.38]]},
   xr3:{len:70.88,hatchback:true,sh:14.0,pts:[[1.4,4.55],[0.0,5.78],[0.0,9.8],[0.35,14.53],[1.93,16.71],[4.38,17.24],[8.23,19.95],[15.4,23.24],[22.75,23.63],[37.63,23.54],[41.13,22.75],[51.63,16.36],[54.43,15.84],[64.75,14.96],[69.83,13.91],[70.7,11.38],[70.88,7.35],[70.0,4.55]],wins:[[[29.75,22.61],[38.5,22.61],[49.53,16.71],[29.75,16.71]],[[28.44,22.66],[28.44,16.71],[14.35,17.33],[10.85,18.81],[16.8,22.61]]],belt:16.62,pillar:0,doors:[29.05,51.89],handles:[30.1],mirror:[49.88,16.89],wheels:[13.83,55.83],r:5.06,fx:[{t:"badge",x:61.25,y:12.6,tx:"XR3"}],head:[[64.75,15.05],[69.83,14.09],[70.53,12.08],[64.75,12.69]],tail:[[0.0,9.8],[0.35,14.7],[3.15,15.09],[2.98,10.15]]},
   kadett:{len:70.0,hatchback:true,spoiler:"roof",sh:14.1,pts:[[1.23,4.73],[0.0,5.95],[0.0,10.5],[0.61,14.88],[2.63,16.8],[7.18,19.78],[13.83,23.28],[20.13,23.89],[35.88,23.84],[40.25,22.93],[51.63,16.36],[54.43,15.84],[63.88,14.79],[68.6,13.56],[69.91,11.03],[70.0,7.35],[68.95,4.73]],wins:[[[29.05,22.84],[38.15,22.84],[49.53,16.77],[29.05,16.77]],[[27.74,22.89],[27.74,16.77],[12.6,17.33],[9.8,18.55],[17.5,22.84]]],belt:16.71,pillar:0,doors:[28.35,52.24],handles:[29.4],mirror:[49.88,16.89],wheels:[11.55,55.65],r:5.06,fx:[{t:"badge",x:60.38,y:12.6,tx:"GSi"},{t:"skirt"}],head:[[63.88,14.96],[68.6,13.74],[69.3,12.34],[63.88,13.04]],tail:[[0.0,10.5],[0.53,15.05],[3.5,15.44],[3.33,10.85]]},
@@ -1865,7 +1865,7 @@ const CARBON = "#1b1e25";
 
 // Wheel models (side view), drawn over tyre, brake disc and caliper. rear = rear axle (drag setups).
 // lip = polished outer ring width (fraction of the rim radius): deep wheels show a wide lip and a step down to the face.
-const WHEELS = [["orig","Original"],["gti5","GTI 5 raios"],["v10","10 raios em V"],["uno6","6 raios finos"],["unocal","Calota do Mille"],["mesh","Mesh clássica"],["sixflat","6 raios forjada"],["split5","Raio duplo"],["five","5 raios côncava"],["deep3","3 peças deep dish"],
+const WHEELS = [["orig","Original"],["gti5","GTI 5 raios"],["v10","10 raios em V"],["uno6","6 raios finos"],["unocal","Calota do Mille"],["vwbug","Calotão do Fusca"],["mesh","Mesh clássica"],["sixflat","6 raios forjada"],["split5","Raio duplo"],["five","5 raios côncava"],["deep3","3 peças deep dish"],
   ["multi","Multi-raios"],["rotor","Rotor"],["turbofan","Turbofan"],["petal","Pétala"],["disco","Aero disco"],["aco","Aço furada"],["y10","10 raios em Y"],["cruz","Cruz 4 raios"],["teia","Teia"],["helice","Hélice"],["calota","Calota cromada"],["mono7","Monobloco 7 raios"],["raiada","Raiada (arame)"],["telefone","Telefone"],["drift","Drift"],["torque","Torque 5 raios"],["slotmag","Slot mag"],["dayton","Raiada 100 raios"],["spinner","Spinner"],["vip","VIP deep dish"],["torcido","Raios torcidos"],["laminas","Lâminas"],["colmeia","Colmeia"],["xcruz","Raios em X"],["seis","6 raios largos"],["jdm6","6 raios JDM côncava"],["drag","Drag runner + slick"]];
 const WHEEL_IDS = WHEELS.map(w => w[0]);
 // tyre models: tread for the dirt, slicks for the strip, and raised lettering on the sidewall in any colour
@@ -2101,6 +2101,19 @@ function drawWheel(c, cx, cy, r, o, offroad, rear){
     hg.addColorStop(0, shade(rim, 0.35)); hg.addColorStop(0.7, rim); hg.addColorStop(1, shade(rim, -0.3));
     cutFace(hg, 0.97, () => { for(let k = 0; k < 8; k++){ const a = spin + k * TAU / 8, p = P(a, 0.66); hEll(p[0], p[1], rr * 0.17, rr * 0.055, a); } });
     c.globalAlpha = 1; ring(0.97, 0.05, shade(rim, -0.4)); ring(0.42, 0.04, shade(rim, -0.25)); ring(0.86, 0.02, shade(rim, 0.3)); lugs = 4; capK = 0.15;
+  } else if(style === "vwbug"){
+    // the Beetle wheel: steel rim painted in the body colour, a cream band, and the big domed chrome hubcap with the VW roundel
+    const pg2 = c.createRadialGradient(cx - rr * 0.3, cy - rr * 0.3, rr * 0.2, cx, cy, rr);
+    pg2.addColorStop(0, shade(rim, 0.3)); pg2.addColorStop(1, shade(rim, -0.35));
+    c.fillStyle = pg2; circ(c, cx, cy, rr * 0.98); c.fill();
+    c.fillStyle = "#efdcc2"; circ(c, cx, cy, rr * 0.8); c.fill();
+    c.fillStyle = "rgba(120,90,60,.25)"; circ(c, cx, cy, rr * 0.66); c.fill();
+    const cg2 = c.createLinearGradient(cx - rr * 0.6, cy - rr * 0.6, cx + rr * 0.6, cy + rr * 0.6);
+    cg2.addColorStop(0, "#ffffff"); cg2.addColorStop(0.4, "#c9ced6"); cg2.addColorStop(0.55, "#3b4048"); cg2.addColorStop(0.7, "#e9ecf0"); cg2.addColorStop(1, "#8d939c");
+    c.fillStyle = cg2; circ(c, cx, cy, rr * 0.62); c.fill(); c.strokeStyle = "#2a2d33"; c.lineWidth = lw(0.03); c.stroke();
+    c.strokeStyle = "#4c5f72"; c.lineWidth = lw(0.035); circ(c, cx, cy, rr * 0.17); c.stroke();
+    c.beginPath(); c.moveTo(cx - rr * 0.11, cy - rr * 0.1); c.lineTo(cx - rr * 0.04, cy + rr * 0.12); c.lineTo(cx, cy - rr * 0.02); c.lineTo(cx + rr * 0.04, cy + rr * 0.12); c.lineTo(cx + rr * 0.11, cy - rr * 0.1); c.stroke();
+    c.globalAlpha = 1; lugs = 0; capK = 0;
   } else if(style === "aco"){
     const sg = c.createRadialGradient(cx, cy, rr * 0.2, cx, cy, rr);
     sg.addColorStop(0, shade(rim, -0.1)); sg.addColorStop(1, shade(rim, -0.45));
@@ -2514,6 +2527,10 @@ function drawCar(c, x, baseY, s, key, color, o){
   const PIANO = {"0.3":"#3d4656", "0.12":"#171c25", "0.22":"#252c38", "0.36":"#58637a", "-0.08":"#050608", "0.03":"#0b0e13", "0.15":"#2c3442", "-0.19":"#020203", "-0.32":"#040506", "-0.55":"#000000"};
   const pg = c.createLinearGradient(0, yT, 0, yB), st = (yy, k) => pg.addColorStop(TT(yy), piano && PIANO[String(k)] ? PIANO[String(k)] : shade(color, k));
   // sky on the roof and on the flat above the shoulder, a crisp break under the crease, the horizon across the doors, the road below
+  if(M.softpaint){
+    // a rounded body with no hard shoulder: light from above fading smoothly to the road
+    st(M.roof + 0.6, mat ? 0.1 : 0.32); st(M.belt + 1, mat ? 0.06 : 0.16); st(M.belt - 2, mat ? 0.02 : 0.06); st((M.belt + bot) / 2, mat ? -0.04 : -0.04); st(bot + 1.5, mat ? -0.14 : -0.2); st(bot - 1.6, -0.4);
+  } else {
   st(M.roof + 0.6, mat ? 0.1 : 0.3);
   st(M.belt + 1.6, mat ? 0.05 : 0.12);
   st(M.belt + 0.2, mat ? 0.06 : 0.22);
@@ -2524,6 +2541,7 @@ function drawCar(c, x, baseY, s, key, color, o){
   st(hzn - 0.2, mat ? -0.08 : -0.19);
   st(bot + 2.2, mat ? -0.14 : -0.22);
   st(bot - 1.6, -0.42);
+  }
   c.fillStyle = pg; smooth(M.pts); c.fill();
 
   c.save(); smooth(M.pts); c.clip();
@@ -2647,7 +2665,7 @@ function drawCar(c, x, baseY, s, key, color, o){
   ov.addColorStop(0, "rgba(0,0,0,0)"); ov.addColorStop(1, "rgba(0,0,0,.32)");
   c.fillStyle = ov; c.fillRect(X(-3), Y(mid), (L + 6) * s, (mid - bot + 2) * s);
   // the shoulder crease: a bright edge on top, shadow underneath, following the body's own line
-  {
+  if(!M.softpaint){
     const SL = M.shL || [[0.4, SH], [L - 0.4, SH]];
     const pl = dy => { c.beginPath(); SL.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1] + dy)) : c.moveTo(X(p[0]), Y(p[1] + dy))); c.stroke(); };
     c.lineCap = "round";
@@ -2661,7 +2679,7 @@ function drawCar(c, x, baseY, s, key, color, o){
     c.fillStyle = ch;
     c.fillRect(X(-2), Y(bot + 2.2), (M.wheels[0] - M.r - 0.4 + 2) * s, 2.4 * s);
     c.fillRect(X(M.wheels[1] + M.r + 0.4), Y(bot + 2.2), (L - M.wheels[1] - M.r + 2) * s, 2.4 * s);
-  } else if(!KD && !(STYLE[key] && (STYLE[key].bumper === "black" || STYLE[key].clad))){
+  } else if(!KD && !M.softpaint && !(STYLE[key] && (STYLE[key].bumper === "black" || STYLE[key].clad))){
     c.fillStyle = "#16181d";
     c.fillRect(X(-2), Y(bot + 0.9), (M.wheels[0] - M.r - 0.4 + 2) * s, 1.4 * s);
     c.fillRect(X(M.wheels[1] + M.r + 0.4), Y(bot + 0.9), (L - M.wheels[1] - M.r + 2) * s, 1.4 * s);
@@ -2744,6 +2762,44 @@ function drawCar(c, x, baseY, s, key, color, o){
       // the pull handle tucked into the shut line at the B-pillar
       c.fillStyle = "rgba(6,7,9,.85)"; c.beginPath(); c.ellipse(X(f.x), Y(f.y), 0.5 * s, 1.15 * s, 0, 0, TAU); c.fill();
       c.fillStyle = "rgba(255,255,255,.12)"; c.beginPath(); c.ellipse(X(f.x) - 0.15 * s, Y(f.y), 0.12 * s, 0.9 * s, 0, 0, TAU); c.fill();
+    } else if(f.t === "wing"){
+      // a bolt-on wing is its own rounded volume: a bright crest arching over the wheel, darker towards its lip and its outer edge
+      const w = M.wheels[f.w], cx = X(w), cy = Y(M.r), a0 = archR, xs = f.pts.map(p => p[0]);
+      c.save(); smooth(M.pts); c.clip();
+      c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1])));
+      c.lineTo(X(f.pts[f.pts.length - 1][0]), Y(bot - 3)); c.lineTo(X(f.pts[0][0]), Y(bot - 3)); c.closePath(); c.clip();
+      const g = c.createRadialGradient(cx, cy, a0 * 0.95, cx, cy, a0 + 6 * s);
+      g.addColorStop(0, "rgba(0,0,0,.42)"); g.addColorStop(0.1, "rgba(0,0,0,.1)"); g.addColorStop(0.26, "rgba(255,255,255,.42)"); g.addColorStop(0.4, "rgba(255,255,255,.2)");
+      g.addColorStop(0.62, "rgba(0,0,0,.04)"); g.addColorStop(1, "rgba(0,0,0,.28)");
+      c.fillStyle = g; c.fillRect(X(Math.min(...xs) - 2), Y(M.roof), (Math.max(...xs) - Math.min(...xs) + 4) * s, (M.roof - bot + 4) * s);
+      c.restore();
+      // the wing throws a soft shadow onto the body just above its edge
+      c.save(); smooth(M.pts); c.clip(); c.strokeStyle = "rgba(0,0,0,.16)"; c.lineWidth = 0.9 * s; c.lineJoin = "round";
+      c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1] + 0.45)) : c.moveTo(X(p[0]), Y(p[1] + 0.45))); c.stroke(); c.restore();
+    } else if(f.t === "seam"){
+      // where a bolt-on panel meets the body: a dark gap with the panel edge catching light above it
+      const pl = dy => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1] + dy)) : c.moveTo(X(p[0]), Y(p[1] + dy))); c.stroke(); };
+      c.lineJoin = "round"; c.strokeStyle = "rgba(0,0,0,.5)"; c.lineWidth = Math.max(0.5, 0.24 * s); pl(0);
+      c.strokeStyle = "rgba(255,255,255,.22)"; c.lineWidth = Math.max(0.4, 0.14 * s); pl(0.22);
+    } else if(f.t === "chrome"){
+      // polished trim strip: dark edge, bright core, a hot line of light
+      const pl = () => { c.beginPath(); f.pts.forEach((p, i) => i ? c.lineTo(X(p[0]), Y(p[1])) : c.moveTo(X(p[0]), Y(p[1]))); c.stroke(); };
+      c.lineCap = "round"; c.strokeStyle = "rgba(20,22,26,.6)"; c.lineWidth = (f.w + 0.12) * s; pl();
+      const ys = f.pts.map(p => p[1]), g = c.createLinearGradient(0, Y(Math.max(...ys) + f.w / 2), 0, Y(Math.min(...ys) - f.w / 2));
+      g.addColorStop(0, "#ffffff"); g.addColorStop(0.45, "#aeb4bd"); g.addColorStop(0.6, "#5d636c"); g.addColorStop(1, "#e3e6ea");
+      c.strokeStyle = g; c.lineWidth = f.w * s; pl(); c.lineCap = "butt";
+    } else if(f.t === "bumper"){
+      // chrome blade bumper seen end-on from the side, with its overrider
+      const ys = f.pts.map(p => p[1]), g = c.createLinearGradient(0, Y(Math.max(...ys)), 0, Y(Math.min(...ys)));
+      g.addColorStop(0, "#f4f6f9"); g.addColorStop(0.3, "#9aa0a9"); g.addColorStop(0.55, "#ffffff"); g.addColorStop(0.75, "#5d636c"); g.addColorStop(1, "#c9ced6");
+      c.fillStyle = g; rpoly(f.pts, 0.5); c.fill(); c.strokeStyle = "rgba(10,12,16,.7)"; c.lineWidth = Math.max(0.4, 0.2 * s); c.stroke();
+    } else if(f.t === "board"){
+      // running board between the wings: black ribbed rubber with a polished strip along its top edge
+      const rg = c.createLinearGradient(0, Y(f.y1), 0, Y(f.y0)); rg.addColorStop(0, "#2a2c31"); rg.addColorStop(1, "#060708");
+      c.fillStyle = rg; c.fillRect(X(f.x0), Y(f.y1), (f.x1 - f.x0) * s, (f.y1 - f.y0) * s);
+      c.fillStyle = "rgba(255,255,255,.07)"; for(let xx = f.x0 + 0.5; xx < f.x1; xx += 0.7) c.fillRect(X(xx), Y(f.y1 - 0.5), Math.max(0.4, 0.12 * s), (f.y1 - f.y0 - 0.8) * s);
+      const cg = c.createLinearGradient(0, Y(f.y1 + 0.25), 0, Y(f.y1 - 0.45)); cg.addColorStop(0, "#ffffff"); cg.addColorStop(0.5, "#8d939c"); cg.addColorStop(1, "#dfe2e7");
+      c.fillStyle = cg; c.fillRect(X(f.x0), Y(f.y1 + 0.2), (f.x1 - f.x0) * s, 0.55 * s);
     } else if(f.t === "fueldoor"){
       // round fuel flap: a fine cut line, a darker lock in the middle
       c.strokeStyle = "rgba(0,0,0,.45)"; c.lineWidth = Math.max(0.4, 0.2 * s); c.beginPath(); c.arc(X(f.x), Y(f.y), 1.05 * s, 0, TAU); c.stroke();
@@ -3482,7 +3538,7 @@ function drawCar(c, x, baseY, s, key, color, o){
         c.strokeStyle = "rgba(255,255,255,.4)"; c.lineWidth = Math.max(0.3, 0.12 * s); for(let j = -2; j <= 2; j++){ c.beginPath(); c.moveTo(cx + rr * 0.1 - rr * 0.3, cy + j * rr * 0.28); c.lineTo(cx + rr * 0.1 + rr * 0.3, cy + j * rr * 0.28); c.stroke(); }
       }
       c.restore();
-      c.fillStyle = "#ffb547"; rrectC(c, X(hx1 - 3.2), Y(hB - 1.6), 1.8 * s, 0.9 * s, 0.3 * s); c.fill();
+      if(!M.nomarker){ c.fillStyle = "#ffb547"; rrectC(c, X(hx1 - 3.2), Y(hB - 1.6), 1.8 * s, 0.9 * s, 0.3 * s); c.fill(); }
     } else if(HS === "hidden"){
       // hidden headlamps: a full-width grille of chrome bars across the nose
       c.save(); poly(M.head); c.clip();
