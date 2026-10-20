@@ -417,7 +417,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v145</span>
+  <span id="tgVer">v146</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -8886,7 +8886,7 @@ const SOUNDS = [["orig","Original"],["grave","Grave V8"],["bigblock","V8 big blo
 const sndCache = {};
 function getSnd(){
   const k = pvApply(S.car, custOf(S.car)), tone = k.sound || "orig", tb = tuneOf(S.car).turbo || 0, ts = k.turboSnd || "",
-    xm = k.exModel || "orig", key = S.car + ":" + (k.escape || 0) + ":" + tone + ":" + tb + ":" + ts + ":" + xm + ":" + (k.blower || 0) + ":" + (tuneOf(S.car).motor || 0), base = SND[S.car] || SND.bolinha;
+    xm = k.exModel || "orig", key = S.car + ":" + (k.escape || 0) + ":" + tone + ":" + tb + ":" + ts + ":" + xm + ":" + (k.blower || 0) + ":" + (tuneOf(S.car).motor || 0) + ":f" + (k.filtro || 0), base = SND[S.car] || SND.bolinha;
   if(!sndCache[key]){
     const t = k.escape || 0;
     if(base.ev && tone === "orig") sndCache[key] = base;
@@ -8947,6 +8947,10 @@ function getSnd(){
       // every engine stage makes it angrier: more volume, more bite, more pops
       const mot = tuneOf(S.car).motor || 0;
       pf.vol *= 1 + 0.035 * mot; pf.drive *= 1 + 0.045 * mot; pf.popChance = Math.min(0.99, pf.popChance + 0.025 * mot); pf.crackle += 0.04 * mot; pf.rasp += 0.012 * mot;
+      // filter and intake: Esportivo a little thicker, Intake clearly deeper and stronger, Duplo fluxo the fattest
+      const flt = Math.min(3, k.filtro || 0);
+      if(flt){ pf.vol *= [1, 1.14, 1.3, 1.48][flt]; pf.bass = Math.min(16, (pf.bass || 6.5) + [0, 2.5, 4.5, 6.5][flt]); pf.drive *= [1, 1.1, 1.2, 1.32][flt];
+        pf.pipe *= [1, 1.07, 1.14, 1.22][flt]; pf.grit = (pf.grit || 0) * [1, 1.06, 1.12, 1.2][flt]; pf.rasp += [0, 0.03, 0.06, 0.1][flt]; }
       pf.vol = Math.min(5, pf.vol);
       // nothing should sound thin: very bright engines keep their character but lose the whine
       if(pf.bright > 1800) pf.bright = 1800 + (pf.bright - 1800) * 0.35;
