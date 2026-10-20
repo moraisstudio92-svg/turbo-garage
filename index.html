@@ -312,6 +312,16 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .cv-price b{font-family:var(--display);font-weight:700;font-size:26px;color:var(--sodium);font-variant-numeric:tabular-nums}
 .car[data-id]{cursor:pointer}
 .car .look{font-size:12px;color:var(--sodium);font-weight:600;white-space:nowrap}
+.modal.pvbar{background:none;place-items:end center;pointer-events:none;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px))}
+.modal.pvbar .sheet{pointer-events:auto;max-width:520px;gap:8px;padding:12px 14px;text-align:left;border-color:var(--sodium);box-shadow:0 -12px 34px rgba(0,0,0,.6)}
+.pv-h{display:flex;align-items:center;gap:8px;min-width:0}
+.pv-h b{font-family:var(--display);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv-tag{flex:none;font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.12em;color:#2a1a00;background:var(--sodium);border-radius:5px;padding:3px 6px}
+.pv-m{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.pv-m small{color:var(--muted);font-size:11px;margin-left:auto}
+.modal.pvbar .big{font-size:24px}
+body.pvOn #gpanel{padding-bottom:170px}
+.g-btns{display:flex;gap:6px}
 .sheet .big{font-family:var(--display);font-weight:700;font-size:34px;color:var(--sodium);font-variant-numeric:tabular-nums}
 
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
@@ -351,7 +361,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v133</span>
+  <span id="tgVer">v134</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -368,7 +378,7 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
     <div class="g-cash num" id="gCash">$0</div>
   </header>
   <canvas id="gCv" aria-hidden="true"></canvas>
-  <div class="g-car"><span id="gCar"></span><button class="rev" id="gRev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Ouvir o ronco</button></div>
+  <div class="g-car"><span id="gCar"></span><button class="rev" id="gRev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Ouvir o ronco</button><button class="rev" id="gView" type="button">Ver interior</button></div>
   <nav class="tabs gtabs" id="gtabs" role="tablist">
     <button class="tab" role="tab" data-gtab="oficina" aria-selected="true">Preparação</button>
     <button class="tab" role="tab" data-gtab="estilo" aria-selected="false">Estilo</button>
@@ -389,13 +399,11 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
     <div class="row2" id="stBtns"></div>
   </div>
 </div>
-<div class="modal" id="buyModal" hidden style="z-index:39">
+<div class="modal pvbar" id="buyModal" hidden style="z-index:39">
   <div class="sheet">
-    <h2>Deseja instalar?</h2>
-    <p id="buyTxt"></p>
-    <div class="big" id="buyAmt">$0</div>
-    <p id="buyLack" class="lack"></p>
-    <div class="row2"><button class="btn ghost" id="buyNo">Cancelar</button><button class="btn" id="buyYes">Instalar</button></div>
+    <div class="pv-h"><span class="pv-tag">PRÉVIA</span><b id="buyTxt"></b></div>
+    <div class="pv-m"><div class="big" id="buyAmt">$0</div><p id="buyLack" class="lack"></p><small>Toque em outra opção para comparar</small></div>
+    <div class="row2"><button class="btn ghost" id="buyNo">Cancelar</button><button class="btn" id="buyYes">Comprar</button></div>
   </div>
 </div>
 <div class="modal" id="spModal" hidden style="z-index:39">
@@ -675,6 +683,13 @@ function partEff(t){
   return out.join(" · ") || "Padrão";
 }
 function wheelInch(id, tier){ return carById(id).inch + [0, 2, 3][tier || 0]; }
+// the pilot as he would look with the item being previewed
+function pvPilot(){
+  if(pv && pv.pil) return Object.assign({}, S.pilot, {[pv.pil]:pv.val});
+  if(pv && pv.acc) return Object.assign({}, S.pilot, {acc:(S.pilot.acc || []).concat([pv.acc])});
+  return S.pilot;
+}
+let gView = "out";   // garage camera: "out" = the house and the car, "in" = sitting in the cabin
 function pvApply(id, k){
   if(!pv || id !== S.car) return k;
   const o = Object.assign({}, k);
@@ -4465,7 +4480,7 @@ function paintMinis(root){
       c.fillStyle = g; c.fillRect(0, 0, w, h);
       const sc = Math.min((w * 0.62) / (M.len + 10), 2.2, 100 / (M.roof + 6));
       drawCar(c, w * 0.36, h - 16, sc, car.model, look.color, Object.assign(look, {spin:0.3}));
-      drawPilot(c, w * 0.17, h - 6, 118, S.pilot, "wave", performance.now() / 1000);
+      drawPilot(c, w * 0.17, h - 6, 118, pvPilot(), "wave", performance.now() / 1000);
     } else {
       const sc = Math.min((w - 60) / (M.len + 14), 3, 112 / (M.roof + 6));
       drawCar(c, (w - M.len * sc) / 2 + 6 * sc, h - 20, sc, car.model, look.color, Object.assign(look, {lights:true, spin:0.3, flash:true}));
@@ -5884,7 +5899,7 @@ const offCar = document.createElement("canvas"), offCtx = offCar.getContext("2d"
 const RIV_SC = 7;   // texture resolution of the rival's side profile (pixels per profile unit)
 function drawCockpit(now){
   const th = THEME[R.track.theme] || THEME.avenida, p = R.p, r = R.r;
-  const pc = carById(S.car), look = carLook(S.car), P = getSnd(), nk = drv.nk || 0, KC = custOf(S.car);
+  const pc = carById(S.car), look = carLook(S.car), P = getSnd(), nk = drv.nk || 0, KC = pvApply(S.car, custOf(S.car));
   const DS = Object.assign({}, DASH[S.car] || DASH.bolinha);
   if(KC.ckCluster) DS.cluster = KC.ckCluster;
   if(KC.ckDash){ DS.mat = KC.ckDash; DS.top = shade(KC.ckDash, 0.12); DS.door = shade(KC.ckDash, 0.06); DS.light = lumHex(KC.ckDash) > 0.55; }
@@ -7681,7 +7696,7 @@ function applyPreset(pr){
 function renderEstilo(){
   const car = carById(S.car), k = custOf(S.car);
   let h = '<div class="ph"><span>Personalizando o <b style="color:var(--fg)">' + car.name + '</b>. Peças valem só para este carro.</span></div>';
-  h += '<div class="ph"><span>Toque uma vez para ver no carro. Toque de novo para comprar.</span></div>';
+  h += '<div class="ph"><span>Toque em qualquer opção para ver no carro (e ouvir, se mudar o ronco) antes de comprar. Volante, painel e relógios aparecem na vista interna.</span></div>';
   h += '<div class="sec">Visual pronto</div><div class="opts">';
   PRESETS.forEach(pr => {
     const on = presetOn(pr), cost = presetCost(pr), look = pv && pv.preset === pr.id;
@@ -7872,13 +7887,14 @@ const onPanelClick = e => {
   else if(t.dataset.part){
     const p = PARTS.find(x => x.id === t.dataset.part), i = +t.dataset.tier, k = custOf(S.car);
     if(i > (k[p.id + "Max"] || 0)){
-      if(pv && pv.part === p.id && pv.tier === i){
+      pv = {part:p.id, tier:i}; gView = "out"; if(p.id === "escape" && garageOpen) garageRev();
+      {
         askBuy(p.name + ": " + p.tiers[i].n, partCost(p, i), () => {
           const cost = partCost(p, i); S.money -= cost; k[p.id + "Max"] = i; k[p.id] = i; applyPlayerStats(); coinSfx();
           toast(p.tiers[i].n + " instalado no " + carById(S.car).name + "!");
           if(potential(S.car) >= 1) toast(carById(S.car).name + " chegou no limite!");
         });
-      } else { pv = {part:p.id, tier:i}; if(p.id === "escape" && garageOpen) garageRev(); }
+      }
     } else {
       pv = null; k[p.id] = i; applyPlayerStats();
       if(p.id === "escape" && garageOpen) garageRev();
@@ -7898,7 +7914,7 @@ const onPanelClick = e => {
   }
   else if(t.dataset.cos && !cosOwned(t.dataset.cos, t.dataset.val || null)){
     const key = t.dataset.cos, val = t.dataset.val || null, cost = cosPrice(key, val), nm = (t.getAttribute("aria-label") || t.textContent || "").replace(/\$[\d.,]+[KMBT]?/, "").trim();
-    pv = {cos:key, val};
+    pv = {cos:key, val}; gView = /^ck/.test(key) ? "in" : "out";
     if((key === "sound" || key === "turboSnd" || key === "exModel") && garageOpen) garageRev();
     askBuy(nm || "Opção", cost, () => {
       S.money -= cost; markOwn(S.car + "|" + key + "|" + val); custOf(S.car)[key] = val; coinSfx(); setTimeout(checkChal, 300);
@@ -7907,18 +7923,20 @@ const onPanelClick = e => {
     renderPanel(true); return;
   }
   else if(t.dataset.cos){
-    custOf(S.car)[t.dataset.cos] = t.dataset.val || null;
+    custOf(S.car)[t.dataset.cos] = t.dataset.val || null; gView = /^ck/.test(t.dataset.cos) ? "in" : "out";
     setTimeout(checkChal, 300);
     if((t.dataset.cos === "sound" || t.dataset.cos === "turboSnd" || t.dataset.cos === "exModel") && garageOpen) garageRev();
   }
   else if(t.dataset.pil && !pilOwned(t.dataset.pil, t.dataset.val)){
     const key = t.dataset.pil, val = t.dataset.val, cost = pilPrice(key, val), nm = (t.getAttribute("aria-label") || t.textContent || "").replace(/\$[\d.,]+[KMBT]?/, "").trim();
+    pv = {pil:key, val};
     askBuy(nm + " para o piloto", cost, () => { S.money -= cost; markOwn("pilot|" + key + "|" + val); S.pilot[key] = val; coinSfx(); }, true);
     return;
   }
   else if(t.dataset.pil){ S.pilot[t.dataset.pil] = t.dataset.val; }
   else if(t.dataset.acc && !(S.pilot.acc || []).includes(t.dataset.acc) && !pilOwned("acc", t.dataset.acc)){
     const val = t.dataset.acc, cost = pilPrice("acc", val), nm = t.textContent.replace(/\$[\d.,]+[KMBT]?/, "").trim();
+    pv = {acc:val};
     askBuy(nm + " para o piloto", cost, () => { S.money -= cost; markOwn("pilot|acc|" + val); (S.pilot.acc || (S.pilot.acc = [])).push(val); coinSfx(); }, true);
     return;
   }
@@ -8085,6 +8103,7 @@ function pilotMigrate(){
 }
 function askBuy(what, cost, go, noCar){
   const lack = cost - S.money;
+  document.body.classList.add("pvOn");
   el("buyTxt").textContent = what + (noCar ? "" : " no " + carById(S.car).name);
   el("buyAmt").textContent = cost ? money(cost) : "Grátis";
   el("buyLack").textContent = lack > 0 ? "Faltam " + money(lack) + " no caixa" : "";
@@ -8093,7 +8112,7 @@ function askBuy(what, cost, go, noCar){
 }
 el("buyYes").addEventListener("click", () => {
   if(buyGo) buyGo();
-  buyGo = null; pv = null; el("buyModal").hidden = true; save(); renderPanel(true);
+  buyGo = null; pv = null; el("buyModal").hidden = true; document.body.classList.remove("pvOn"); save(); renderPanel(true);
 });
 el("spOpts").addEventListener("click", e => {
   const bt = e.target.closest("[data-sp]"); if(!bt || !spPick) return;
@@ -8106,7 +8125,7 @@ el("spOpts").addEventListener("click", e => {
   save(); renderPanel(true);
 });
 el("spNo").addEventListener("click", () => { spPick = null; el("spModal").hidden = true; });
-el("buyNo").addEventListener("click", () => { buyGo = null; pv = null; el("buyModal").hidden = true; renderPanel(true); });
+el("buyNo").addEventListener("click", () => { buyGo = null; pv = null; el("buyModal").hidden = true; document.body.classList.remove("pvOn"); renderPanel(true); });
 
 /* ---------- offline earnings ---------- */
 let pendingOff = 0;
@@ -8238,33 +8257,33 @@ function getSnd(){
       // Direto = no muffler at all, very loud, raw, raspy, popping on every lift;
       // Full Inox 4" = as loud as it gets: a hard metallic roar, crackle all the time, PÁ PÁ PÁ on the limiter
       const rasp0 = pf.rasp === undefined ? 0.06 : pf.rasp;
-      if(t === 0) Object.assign(pf, {popChance:pf.popChance * 0.15, crackle:pf.crackle * 0.1, drive:pf.drive * 0.75, bright:pf.bright * 0.55, grit:pf.grit * 0.5,
-        rasp:rasp0 * 0.25, straight:0.015, mufK:0.42, bass:2, vol:0.46, lpK:0.55});
-      else if(t === 1) Object.assign(pf, {popChance:Math.min(0.9, pf.popChance + 0.12), crackle:pf.crackle * 0.85, drive:pf.drive * 1.1, bright:pf.bright * 0.82, grit:pf.grit * 0.9,
-        pipe:pf.pipe * 1.2, fb:Math.min(0.72, pf.fb + 0.05), rasp:rasp0 * 0.7, straight:0.08, mufK:0.75, bass:12, vol:1.0, lpK:0.85});
+      if(t === 0) Object.assign(pf, {popChance:pf.popChance * 0.25, crackle:pf.crackle * 0.2, drive:pf.drive * 0.85, bright:pf.bright * 0.85, grit:pf.grit * 0.7,
+        rasp:rasp0 * 0.6, straight:0.05, mufK:0.65, bass:4, vol:0.75, lpK:0.9});
+      else if(t === 1) Object.assign(pf, {popChance:Math.min(0.9, pf.popChance + 0.12), crackle:pf.crackle * 0.85, drive:pf.drive * 1.1, bright:pf.bright * 0.9, grit:pf.grit * 0.9,
+        pipe:pf.pipe * 1.2, fb:Math.min(0.72, pf.fb + 0.05), rasp:rasp0 * 0.8, straight:0.1, mufK:0.8, bass:12, vol:1.15, lpK:1.0});
       else if(t >= 3) Object.assign(pf, {popChance:0.99, crackle:pf.crackle + 1.15, drive:pf.drive * 2.3, bright:pf.bright * 1.45, grit:pf.grit * 1.6 + 0.28,
-        pipe:pf.pipe * 1.3, fb:Math.min(0.77, pf.fb + 0.09), rasp:rasp0 + 0.32, straight:0.99, mufK:2.0, bass:14, vol:3.1, lpK:1.65, pa:1});
+        pipe:pf.pipe * 1.3, fb:Math.min(0.77, pf.fb + 0.09), rasp:rasp0 + 0.32, straight:0.99, mufK:2.0, bass:14, vol:3.0, lpK:1.6, pa:1});
       else Object.assign(pf, {popChance:Math.min(0.97, pf.popChance + 0.5), crackle:pf.crackle + 0.6, drive:pf.drive * 1.65, bright:pf.bright * 1.5, grit:pf.grit * 1.35 + 0.15,
-        fb:Math.min(0.74, pf.fb + 0.06), rasp:rasp0 + 0.22, straight:0.9, mufK:1.6, bass:8, vol:2.05, lpK:1.35});
-      // each tip has its own voice, not just a little more volume
+        fb:Math.min(0.74, pf.fb + 0.06), rasp:rasp0 + 0.22, straight:0.9, mufK:1.6, bass:8, vol:2.0, lpK:1.35});
+      // each tip has its own voice: a resonance of its own in the pipe (raspF), how sharp it rings (raspQ), how much it sings (raspA)
       const TIP = {
         orig:{},
-        oval:{vol:0.88, lpK:0.8, bass:2, raspM:0.5},                                   // mellow, rounded
-        quadrado:{vol:1.06, raspF:820, raspQ:4.6, raspA:0.24},                         // boxy honk
-        redondo:{vol:1.12, pipe:1.08, bass:3, drive:1.1},                              // clean and deep
-        slash:{vol:1.18, raspA:0.26, raspF:2100, lpK:1.2, grit:1.2},                   // raspy and sharp
-        titanio:{vol:1.22, raspA:0.42, raspF:2700, raspQ:6, lpK:1.45, grit:1.15},      // metallic scream
-        duplo:{vol:1.32, bass:4, drive:1.2, pipe:1.05},                                // two pipes: thicker
-        quadruplo:{vol:1.48, bass:6, drive:1.35, pipe:1.1},                            // four pipes: a wall of sound
-        canhao:{vol:1.52, pipe:1.32, bass:8, lpK:0.9, drive:1.3, crackle:0.3},         // huge can: a deep boom
-        rally:{vol:1.38, pop:0.99, crackle:1.3, raspA:0.2, drive:1.25},                // anti-lag: crackles nonstop
-        turnedown:{vol:1.42, drive:1.45, grit:1.25, bass:3},                           // barks off the road
-        lateral:{vol:1.58, straight:0.96, raspA:0.3, lpK:1.35, drive:1.4},             // short side exit: raw
-        lateraldupla:{vol:1.68, straight:0.97, raspA:0.3, lpK:1.35, drive:1.5, bass:4},
-        sidepipe:{vol:1.74, straight:0.98, raspA:0.36, lpK:1.45, drive:1.55, crackle:0.5},
-        capo:{vol:1.9, straight:1, mufK:2.3, raspA:0.46, lpK:1.7, drive:1.8, pop:0.99, crackle:1},   // open headers
-        dump:{vol:1.78, straight:1, raspA:0.3, lpK:1.5, drive:1.7, bass:5},
-        zoomies:{vol:2.0, straight:1, mufK:2.4, raspA:0.5, lpK:1.8, drive:1.9, pop:0.99, crackle:1.2}
+        oval:{vol:0.9, lpK:0.7, raspF:450, raspQ:3, raspA:0.45, pipe:1.2},
+        redondo:{vol:1.1, raspF:650, raspQ:4.5, raspA:0.55, bass:3},
+        quadrado:{vol:1.08, raspF:950, raspQ:6, raspA:0.5},
+        slash:{vol:1.15, raspF:2300, raspQ:3, raspA:0.45, lpK:1.25, grit:1.2},
+        titanio:{vol:1.2, raspF:3200, raspQ:8, raspA:0.6, lpK:1.5, grit:1.15},
+        duplo:{vol:1.3, raspF:1200, raspQ:2.5, raspA:0.35, pipe:0.9, drive:1.2, bass:4},
+        quadruplo:{vol:1.45, raspF:1500, raspQ:2.5, raspA:0.4, pipe:0.82, drive:1.35, bass:6},
+        canhao:{vol:1.5, raspF:380, raspQ:4, raspA:0.55, pipe:1.5, bass:8, lpK:0.9, drive:1.3},
+        rally:{vol:1.35, raspF:1800, raspQ:3, raspA:0.4, pop:0.99, crackle:1.3, drive:1.25},
+        turnedown:{vol:1.4, raspF:800, raspQ:4, raspA:0.65, drive:1.45, grit:1.25},
+        lateral:{vol:1.55, straight:0.96, raspF:2600, raspQ:3, raspA:0.5, lpK:1.35, drive:1.4},
+        lateraldupla:{vol:1.65, straight:0.97, raspF:2000, raspQ:2.5, raspA:0.5, lpK:1.35, drive:1.5, pipe:0.9},
+        sidepipe:{vol:1.7, straight:0.98, raspF:1350, raspQ:5, raspA:0.55, lpK:1.45, drive:1.55, crackle:0.5},
+        capo:{vol:1.85, straight:1, mufK:2.3, raspF:3600, raspQ:4, raspA:0.65, lpK:1.75, drive:1.8, pipe:0.7, pop:0.99, crackle:1},
+        dump:{vol:1.75, straight:1, raspF:1100, raspQ:3, raspA:0.55, lpK:1.5, drive:1.7, pipe:0.8},
+        zoomies:{vol:1.95, straight:1, mufK:2.4, raspF:4200, raspQ:7, raspA:0.7, lpK:1.85, drive:1.9, pipe:0.6, pop:0.99, crackle:1.2}
       }[xm] || {};
       if(TIP.vol) pf.vol *= TIP.vol;
       if(TIP.lpK) pf.lpK *= TIP.lpK;
@@ -8273,7 +8292,7 @@ function getSnd(){
       if(TIP.grit) pf.grit *= TIP.grit;
       if(TIP.pipe) pf.pipe *= TIP.pipe;
       if(TIP.raspM) pf.rasp *= TIP.raspM;
-      if(TIP.raspA) pf.rasp += TIP.raspA;
+      if(TIP.raspA) pf.rasp += TIP.raspA * 2.4;
       if(TIP.raspF) pf.raspF = TIP.raspF;
       if(TIP.raspQ) pf.raspQ = TIP.raspQ;
       if(TIP.straight) pf.straight = Math.max(pf.straight, TIP.straight);
@@ -8286,7 +8305,7 @@ function getSnd(){
       pf.vol = Math.min(5, pf.vol);
       // nothing should sound thin: very bright engines keep their character but lose the whine
       if(pf.bright > 1800) pf.bright = 1800 + (pf.bright - 1800) * 0.35;
-      if(pf.raspF && pf.raspF > 1700) pf.raspF = 1700 + (pf.raspF - 1700) * 0.3;
+      if(pf.raspF && pf.raspF > 1700 && !TIP.raspF) pf.raspF = 1700 + (pf.raspF - 1700) * 0.3;
       if(pf.tau < 1.2) pf.tau = 1.2 + (pf.tau - 1.2) * 0.4;
       if(tb > 0){ pf.turbo = 1; pf.turboV = Math.max(pf.turboV || 1, 0.9 + 0.13 * tb); }
       if(pf.turbo && ts){ pf.flutter = ts === "flutter" ? 1 : 0; pf.bov = ts === "flutter" ? 0 : 1; }
@@ -8890,6 +8909,8 @@ function garageRev(){
   grev.t = 0;
 }
 el("gRev").addEventListener("click", garageRev);
+el("gView").addEventListener("click", () => { gView = gView === "in" ? "out" : "in"; });
+setInterval(() => { const b = el("gView"); if(b) b.textContent = gView === "in" ? "Ver por fora" : "Ver interior"; }, 250);
 // in the garage the race is paused: the engine idles, and a rev runs blip, blip, limiter, overrun crackle
 function garageAudio(dt){
   if(!sfxReady()) return;
@@ -8937,6 +8958,31 @@ function drawGarage(){
   const r = Math.min(3, window.devicePixelRatio || 1), w = gCv.clientWidth || 360, h = gCv.clientHeight || 220;
   if(gCv.width !== Math.round(w * r) || gCv.height !== Math.round(h * r)){ gCv.width = Math.round(w * r); gCv.height = Math.round(h * r); }
   const c = gctx; c.setTransform(r, 0, 0, r, 0, 0);
+  if(gView === "in" && R){
+    try{
+      ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H); drawCockpit(performance.now() / 1000); ctx.restore();
+      const k = Math.max(w / W, h / H), sw = w / k, sh = h / k;
+      c.drawImage(cv, (W - sw) / 2 * dpr, (H - sh) * dpr, sw * dpr, sh * dpr, 0, 0, w, h);
+      c.fillStyle = "rgba(8,9,12,.55)"; rrectC(c, 8, 8, 92, 22, 11); c.fill();
+      c.fillStyle = "#ffb547"; c.font = "600 11px " + DISP; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("VISTA INTERNA", 18, 19);
+      requestAnimationFrame(drawGarage); return;
+    }catch(e){ gView = "out"; }
+  }
+  if(pv && !pv.pil && !pv.acc){
+    const now = performance.now() / 1000, car = carById(S.car), M = MODELS[car.model], look = carLook(S.car), gy = h * 0.8;
+    let g = c.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, "#1b2131"); g.addColorStop(1, "#0c0f17"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
+    g = c.createLinearGradient(0, gy, 0, h); g.addColorStop(0, "#2b303d"); g.addColorStop(1, "#11141b"); c.fillStyle = g; c.fillRect(0, gy, w, h - gy);
+    g = c.createRadialGradient(w / 2, -h * 0.2, 0, w / 2, -h * 0.2, h * 1.1); g.addColorStop(0, "rgba(255,240,215,.16)"); g.addColorStop(1, "rgba(255,240,215,0)"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
+    const sc = Math.min((w - 20) / (M.len + 3), (gy - 14) / (M.roof + 2)), x0 = (w - M.len * sc) / 2;
+    const revving = grev.t >= 0, hot = revving && grev.t > 1.4 && grev.t < 3.0;
+    c.save(); c.translate(0, 2 * gy); c.scale(1, -1); c.globalAlpha = 0.16; drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0, lights:false})); c.restore();
+    g = c.createLinearGradient(0, gy, 0, h); g.addColorStop(0, "rgba(17,20,27,0)"); g.addColorStop(1, "rgba(17,20,27,.9)"); c.fillStyle = g; c.fillRect(0, gy, w, h - gy);
+    drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {lights:true, spin:0,
+      shake:revving ? Math.sin(now * (hot ? 70 : 40)) * (hot ? 0.9 : 0.4) : 0, flash:now < grev.flashUntil ? 1 - (grev.flashUntil - now) / 0.14 : 0}));
+    c.fillStyle = "rgba(8,9,12,.55)"; rrectC(c, 8, 8, 64, 22, 11); c.fill();
+    c.fillStyle = "#ffb547"; c.font = "600 11px " + DISP; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("PRÉVIA", 18, 19);
+    requestAnimationFrame(drawGarage); return;
+  }
   const now = performance.now() / 1000, GL = houseLvl(), groundY = Math.round(h * 0.84);
   const LK = [
     {wall:"#9a9387", wall2:"#77716a", blocks:1, roof:"telha", door:"#7a5236", jamb:"#8d877d", inW:"#77736b", floor:"cimento", lamp:"bulb", inLight:"255,214,150", win:"grade", fdoor:"#6e4a30"},
@@ -9138,7 +9184,7 @@ function drawGarage(){
       box(chx - 17 * pu, chy - 62 * pu, 34 * pu, 2 * pu, "#f2f4f8");
       box(chx - 18 * pu, seatY - 1.5 * pu, 36 * pu, 4 * pu, "#8e1219");
     }
-    drawPilot(c, chx, chy, ph, S.pilot, "sit", now);
+    drawPilot(c, chx, chy, ph, pvPilot(), "sit", now);
   }
   // roll-up door wound up at the top, and LED strip on the higher levels
   const dh = OH * 0.1;
@@ -9187,7 +9233,7 @@ function drawGarage(){
   if(LK.garden){ for(let k = 0; k < 5; k++){ const bx = ox1 + w * 0.02 + k * w * 0.05; c.fillStyle = k % 2 ? "#3d7a34" : "#2e6129"; c.beginPath(); c.ellipse(bx, groundY + 2, w * 0.02, h * 0.035, 0, Math.PI, 0); c.fill(); }
     c.fillStyle = rg(ox1 + w * 0.08, groundY, 0, h * 0.08, [[0, "rgba(255,230,170,.35)"], [1, "rgba(255,230,170,0)"]]); c.fillRect(ox1, groundY - h * 0.08, w * 0.16, h * 0.1); }
   if(LK.palm) drawPalm(c, fx1 + w * 0.005, groundY + 2, h * 0.62, w * 0.02, now, "#5a4a36", "#2f6b34", 1);
-  if(pil) drawPilot(c, w * 0.86, h - 3, Math.min(h * 0.6, 130), S.pilot, "wave", now);
+  if(pil) drawPilot(c, w * 0.86, h - 3, Math.min(h * 0.6, 130), pvPilot(), "wave", now);
   requestAnimationFrame(drawGarage);
 }
 
