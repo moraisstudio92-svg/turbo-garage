@@ -76,8 +76,8 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .race{position:relative;border-radius:14px;overflow:hidden;background:#0b0d14;border:1px solid var(--line);flex:none}
 .race canvas{display:block;width:100%;height:210px}
 .hud-top{position:absolute;left:10px;right:10px;top:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
-.rival{background:rgba(11,13,20,.72);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12px;line-height:1.2;min-width:0}
-.rival .k{font-family:var(--display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:10px;color:var(--muted)}
+.rival{background:rgba(11,13,20,.55);border:1px solid rgba(46,53,72,.7);border-radius:6px;padding:1px 6px 2px;font-size:9.5px;line-height:1.1;min-width:0;max-width:38%;align-self:flex-start}
+.rival .k{font-family:var(--display);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:7px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rival .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .boss{color:var(--bad);font-family:var(--display);font-weight:700;margin-left:4px}
 .rainTag{color:#5ad6ff;font-family:var(--display);font-weight:700;margin-left:6px}
@@ -396,7 +396,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v137</span>
+  <span id="tgVer">v138</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -1782,7 +1782,8 @@ function finish(){
   } else { S.stats.losses++; S.series.op++; S.streak = 0; }
   if(S.series.heat === 1) S.series.first = win ? "me" : "op";
   const done = S.series.me >= 2 || S.series.op >= 2;
-  R.result = {win, amount, me:S.series.me, op:S.series.op, done, margin:Math.abs(R.p.fin - R.r.fin)};
+  (S.series.hist = S.series.hist || []).push(win ? 1 : 0);
+  R.result = {win, amount, me:S.series.me, op:S.series.op, done, margin:Math.abs(R.p.fin - R.r.fin), hist:S.series.hist.slice()};
   if(done){
     const champ = S.series.me >= 2;
     const prize = Math.max(champ ? 1200 : 0, base * (champ ? 0.85 : 0.1) * (R.rain ? 1.2 : 1) * (1 + spBonus("event")));
@@ -1794,7 +1795,7 @@ function finish(){
     const et = eventType(R.level);
     let betRes = 0;
     if(S.series.bet){ betRes = champ ? S.series.bet : -Math.min(S.money, S.series.bet); S.money += betRes; if(champ) S.stats.earned += betRes; }
-    R.event = {champ, prize, level:R.level, type:et, bet:betRes, comeback:champ && S.series.first === "op", bonus:evBonus, run:S.evStreak};
+    R.event = {champ, prize, level:R.level, type:et, bet:betRes, comeback:champ && S.series.first === "op", bonus:evBonus, run:S.evStreak, me:S.series.me, op:S.series.op};
     influencerAfterEvent(champ);
     if(champ) S.fame = (S.fame || 0) + ({boss:120, nemesis:200, aposta:60}[et] || 20) * mult * (1 + spBonus("fame")) * fameGainK();
     if(champ){
@@ -4786,7 +4787,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   if(P.hair === "capacete"){ if(P.helmet === "none"){ P.helmet = "integral"; P.helmetWear = "cabeca"; } P.hair = "curto"; }
   const hk = {baixo:0.93, medio:1, alto:1.07}[P.height] || 1, wk = {magro:0.88, medio:1, forte:1.17}[P.weight] || 1, fem = P.gender === "f";
   const u = h / 104 * hk, sk = P.skin, top = P.suit, st = P.stripe, hc = P.hairC, acc = P.acc || [], of = P.outfit;
-  const sit = pose === "sit", dropK = sit ? 20 : 0;
+  const sit = pose === "sit" || pose === "sad", dropK = sit ? 20 : 0;
   const Y = k => footY - (sit && k >= 40 ? k - dropK : k) * u, X = k => x + k * u * wk;
   const OL = "rgba(8,9,12,.55)", olw = Math.max(0.5, 0.35 * u);
   const suitLike = of === "macacao" || of === "macacao2" || of === "kart";
@@ -4973,8 +4974,17 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = Math.max(0.4, 0.3 * u); c.beginPath(); c.moveTo(hcx - headW * 0.12, Y(93)); c.quadraticCurveTo(hcx - headW * 0.18, Y(91.2), hcx - headW * 0.05, Y(90.9)); c.stroke();
     c.fillStyle = "rgba(60,30,25,.45)"; [-1, 1].forEach(sd => { c.beginPath(); c.ellipse(hcx + sd * headW * 0.1, Y(90.8), 0.3 * u, 0.2 * u, 0, 0, TAU); c.fill(); });
     const lipC = fem ? "#a8505a" : shade(sk, -0.28);
+    if(pose === "cheer" || pose === "trophy"){
+      // shouting with joy: the mouth wide open, teeth showing
+      c.fillStyle = "#3a1414"; c.beginPath(); c.moveTo(hcx - headW * 0.36, Y(89.6)); c.quadraticCurveTo(hcx, Y(89.9), hcx + headW * 0.36, Y(89.6)); c.quadraticCurveTo(hcx, Y(86.9), hcx - headW * 0.36, Y(89.6)); c.fill();
+      c.fillStyle = "#f4efe8"; c.fillRect(hcx - headW * 0.26, Y(89.75), headW * 0.52, 0.45 * u);
+    } else if(pose === "sad"){
+      // a frown, and the brows lifted in the middle
+      c.strokeStyle = shade(lipC, -0.2); c.lineWidth = Math.max(0.5, 0.42 * u); c.beginPath(); c.moveTo(hcx - headW * 0.28, Y(88.5)); c.quadraticCurveTo(hcx, Y(89.7), hcx + headW * 0.28, Y(88.5)); c.stroke();
+    } else {
     c.fillStyle = lipC; c.beginPath(); c.moveTo(hcx - headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(89.7), hcx + headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(88.5), hcx - headW * 0.3, Y(89.2)); c.fill();
     c.strokeStyle = "rgba(40,20,15,.55)"; c.lineWidth = Math.max(0.4, 0.25 * u); c.beginPath(); c.moveTo(hcx - headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(89.05), hcx + headW * 0.3, Y(89.2)); c.stroke();
+    }
     if(acc.includes("barba") && !fem){
       c.fillStyle = rgba(hc, 0.85); c.beginPath(); c.moveTo(hcx - headW * 0.98, Y(93)); c.quadraticCurveTo(hcx - headW * 0.9, Y(88.4), hcx, Y(86.6)); c.quadraticCurveTo(hcx + headW * 0.9, Y(88.4), hcx + headW * 0.98, Y(93));
       c.lineTo(hcx + headW * 0.7, Y(91)); c.quadraticCurveTo(hcx, Y(90.4), hcx - headW * 0.7, Y(91)); c.closePath(); c.fill();
@@ -5045,6 +5055,9 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   if(pose === "trophy") hands = [[X(-hipH - 3), Y(45)], [X(9), Y(104)]];
   else if(pose === "wave") hands = [[X(-hipH - 3), Y(45)], [X(16 + Math.sin(t * 8) * 1.6), Y(96)]];
   else if(pose === "clap"){ const k = Math.abs(Math.sin(t * 7)); hands = [[X(-1.6 - k * 3.2), Y(66)], [X(1.6 + k * 3.2), Y(66)]]; }
+  else if(pose === "cheer") hands = [[X(-15 - Math.sin(t * 9) * 1.2), Y(101 + Math.sin(t * 9) * 1.5)], [X(15 + Math.cos(t * 9) * 1.2), Y(101 + Math.cos(t * 9) * 1.5)]];
+  else if(pose === "present") hands = [[X(-4), Y(67)], [X(4), Y(67)]];
+  else if(pose === "sad") hands = [[X(-(legGap + legW * 0.8)), Y(52)], [X(legGap + legW * 0.8), Y(52)]];
   else if(sit) hands = [[X(-(legGap + legW * 1.5)), Y(50.5)], [X(legGap + legW * 1.5 + Math.max(0, Math.sin(t * 0.7)) * 0.6), Y(50.5)]];
   else hands = [[X(-hipH - 3.2), Y(44)], [X(hipH + 3.2), Y(44)]];
   if(helmetArm && pose !== "clap") hands[0] = [X(-hipH - 2.6), Y(56)];
@@ -5144,50 +5157,93 @@ function drawSmoke(lane, sxf, yBase, ks){
   }
 }
 
+function drawTrophyAt(c, tx, ty, tu){
+  // a gold cup: bowl, handles, stem and base; (tx, ty) is where it is held, at the bottom of the bowl
+  const gg = c.createLinearGradient(tx - 6 * tu, 0, tx + 6 * tu, 0); gg.addColorStop(0, "#8a6a14"); gg.addColorStop(0.35, "#ffe58a"); gg.addColorStop(0.6, "#e8c04a"); gg.addColorStop(1, "#7a5a10");
+  c.fillStyle = gg; c.strokeStyle = "#5a4208"; c.lineWidth = Math.max(0.5, 0.4 * tu);
+  c.beginPath(); c.moveTo(tx - 5.5 * tu, ty - 15 * tu); c.lineTo(tx + 5.5 * tu, ty - 15 * tu); c.quadraticCurveTo(tx + 5 * tu, ty - 6.5 * tu, tx, ty - 5.5 * tu); c.quadraticCurveTo(tx - 5 * tu, ty - 6.5 * tu, tx - 5.5 * tu, ty - 15 * tu); c.fill(); c.stroke();
+  c.beginPath(); c.arc(tx - 6.4 * tu, ty - 11.5 * tu, 2.2 * tu, Math.PI * 0.5, Math.PI * 1.5); c.stroke(); c.beginPath(); c.arc(tx + 6.4 * tu, ty - 11.5 * tu, 2.2 * tu, Math.PI * 1.5, Math.PI * 0.5); c.stroke();
+  c.fillRect(tx - 1 * tu, ty - 5.6 * tu, 2 * tu, 3 * tu); rrectC(c, tx - 3.5 * tu, ty - 3 * tu, 7 * tu, 2 * tu, 0.5 * tu); c.fill();
+  c.fillStyle = "rgba(255,255,255,.6)"; c.fillRect(tx - 3.6 * tu, ty - 14 * tu, 1 * tu, 6 * tu);
+}
+function drawMedalAt(c, x, y, mu){
+  // ribbon round the neck in the national colours, and the gold disc on the chest
+  c.lineWidth = 1.6 * mu; c.strokeStyle = "#1f8f4a"; c.beginPath(); c.moveTo(x - 3.2 * mu, y - 9 * mu); c.lineTo(x, y); c.stroke();
+  c.strokeStyle = "#f2d23f"; c.beginPath(); c.moveTo(x + 3.2 * mu, y - 9 * mu); c.lineTo(x, y); c.stroke();
+  const g = c.createRadialGradient(x - 0.8 * mu, y + 1.2 * mu, 0.2 * mu, x, y + 2 * mu, 2.6 * mu); g.addColorStop(0, "#fff3b0"); g.addColorStop(0.6, "#e0a91b"); g.addColorStop(1, "#8f6408");
+  c.fillStyle = g; circ(c, x, y + 2 * mu, 2.4 * mu); c.fill(); c.strokeStyle = "#6b4a06"; c.lineWidth = Math.max(0.4, 0.3 * mu); c.stroke();
+}
 function drawPodium(now){
-  const ev = R.event, t = R.t;
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, "#0a0c16"); bg.addColorStop(1, "#1b1530");
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-  [[0.2, -0.3], [0.5, 0], [0.8, 0.3]].forEach(([fx, sk]) => {
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, "rgba(255,236,190,.22)"); g.addColorStop(1, "rgba(255,236,190,0)");
-    ctx.fillStyle = g; ctx.beginPath();
-    ctx.moveTo(W * fx - 6, 0); ctx.lineTo(W * fx + 6, 0); ctx.lineTo(W * 0.5 + sk * W * 0.2 + 70, H); ctx.lineTo(W * 0.5 + sk * W * 0.2 - 70, H); ctx.fill();
+  const ev = R.event, t = R.t, th = THEME[R.track.theme] || THEME.avenida;
+  // the place: the backdrop of the track where the event was raced, the same tarmac, the crowd behind the barriers
+  const hz = H * 0.6;
+  ctx.save(); drawBackdrop(th, 140 + ev.level * 53, hz, now, false); ctx.restore();
+  let g = ctx.createLinearGradient(0, hz, 0, H); g.addColorStop(0, shade(th.road[1], 0.05)); g.addColorStop(1, shade(th.road[0], -0.35)); ctx.fillStyle = g; ctx.fillRect(0, hz, W, H - hz);
+  ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth = 1; for(let k = 1; k < 5; k++){ const yy = hz + (H - hz) * k * k / 25; ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke(); }
+  // the sponsors wall behind the podium
+  const bwl = W * 0.46, bx = (W - bwl) / 2, by0 = hz - H * 0.2, bh = H * 0.2;
+  g = ctx.createLinearGradient(0, by0, 0, hz); g.addColorStop(0, "#1b2033"); g.addColorStop(1, "#11141f"); ctx.fillStyle = g; ctx.fillRect(bx, by0, bwl, bh);
+  ctx.save(); ctx.beginPath(); ctx.rect(bx, by0, bwl, bh); ctx.clip();
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "italic 800 " + Math.round(bh * 0.3) + "px " + DISP; ctx.fillStyle = "rgba(255,181,71,.85)"; ctx.fillText("TURBO GARAGE", W / 2, by0 + bh * 0.42, bwl - 12);
+  ctx.font = "600 " + Math.round(bh * 0.13) + "px " + DISP; ctx.fillStyle = "rgba(238,240,246,.6)"; ctx.fillText(("Liga " + LEAGUES[leagueOf(ev.level)].name + " · evento " + ev.level).toUpperCase(), W / 2, by0 + bh * 0.72, bwl - 12);
+  ctx.restore();
+  ctx.fillStyle = "#ffb547"; ctx.fillRect(bx, by0, bwl, 2); ctx.fillRect(bx, hz - 2, bwl, 2);
+  // spotlights from the stands
+  [[0.18, 0.3], [0.5, 0], [0.82, -0.3]].forEach(([fx, sk], i) => {
+    g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "rgba(255,236,190,.2)"); g.addColorStop(1, "rgba(255,236,190,0)");
+    ctx.fillStyle = g; ctx.beginPath(); const sw = Math.sin(now * 0.7 + i * 2) * 20;
+    ctx.moveTo(W * fx - 5, 0); ctx.lineTo(W * fx + 5, 0); ctx.lineTo(W * 0.5 + sk * W * 0.25 + sw + 60, H); ctx.lineTo(W * 0.5 + sk * W * 0.25 + sw - 60, H); ctx.fill();
   });
-  ctx.fillStyle = "#0d0f17"; ctx.fillRect(0, H - 12, W, 12);
-  const cx = W / 2, base = H - 12, bw = Math.min(84, W * 0.25);
+  // the two drivers: you on the left, the rival on the right; the winner on the top step, the loser sitting on the low one
   const me = pvPilot(), op = Object.assign({}, rivalPilot(ev.level), {name:rivalName(ev.level)});
-  const third = Object.assign(npcPilot(ev.level + 977), {name:RIVALS[(ev.level + 5) % RIVALS.length]});
-  const first = ev.champ ? me : op, second = ev.champ ? op : me;
-  const steps = [[cx, 46, first, "1", "#e8c04a"], [cx - bw - 4, 32, second, "2", "#c9ced8"], [cx + bw + 4, 22, third, "3", "#c48a4a"]];
-  steps.forEach(([sx2, hgt, P, n, col]) => {
-    ctx.fillStyle = "#232838"; ctx.fillRect(sx2 - bw / 2, base - hgt, bw, hgt);
-    ctx.fillStyle = "#2f3548"; ctx.fillRect(sx2 - bw / 2, base - hgt, bw, 4);
-    ctx.fillStyle = col; ctx.font = "italic 700 20px " + DISP; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(n, sx2, base - hgt / 2 + 3);
-  });
-  const ph = Math.min(70, H * 0.34);
-  drawPilot(ctx, cx, base - 46, ph, first, "trophy", now);
-  drawPilot(ctx, cx - bw - 4, base - 32, ph * 0.92, second, "clap", now);
-  drawPilot(ctx, cx + bw + 4, base - 22, ph * 0.9, third, "clap", now + 0.4);
-  ctx.font = "600 10px " + DISP; ctx.fillStyle = "#eef0f6";
-  steps.forEach(([sx2, hgt, P]) => { ctx.fillText(P.name || "Piloto", sx2, base + 6); });
-  // confetti
-  const CC = ["#ffb547","#e5484d","#5ad6ff","#63d692","#ff6fb5","#eef0f6"];
-  for(let i = 0; i < 70; i++){
+  const ph = Math.min(H * 0.42, 92), u = ph / 104, ground = H - 17;
+  const lx = W * 0.25, rx = W * 0.75, champL = ev.champ, wx = champL ? lx : rx, lxs = champL ? rx : lx;
+  const stepW = Math.min(96, W * 0.26), hiH = ph * 0.22, loH = 27 * u;
+  const step = (x, hh, n, col) => {
+    g = ctx.createLinearGradient(0, ground - hh, 0, ground); g.addColorStop(0, "#3a4258"); g.addColorStop(1, "#1d2232"); ctx.fillStyle = g; ctx.fillRect(x - stepW / 2, ground - hh, stepW, hh);
+    ctx.fillStyle = col; ctx.fillRect(x - stepW / 2, ground - hh, stepW, 3);
+    ctx.fillStyle = col; ctx.font = "italic 800 " + Math.round(Math.max(10, hh * 0.55)) + "px " + DISP; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(n, x, ground - hh / 2 + 2);
+  };
+  step(wx, hiH, "1", "#e8c04a"); step(lxs, loH, "2", "#c9ced8");
+  // the handover: she holds the cup, it goes to the winner, then the medal; meanwhile the winner can't keep still
+  const T1 = 1.3, T2 = 2.1, flyK = Math.max(0, Math.min(1, (t - T1) / (T2 - T1)));
+  const hop = Math.abs(Math.sin(now * 7.5)) * ph * (t > T2 ? 0.16 : 0.1);
+  const wFoot = ground - hiH - hop;
+  // the loser: sitting on his step, head down
+  drawPilot(ctx, lxs, ground, ph, champL ? op : me, "sad", now);
+  // the girl from the organisation, in the middle
+  const girl = Object.assign(npcPilot(ev.level * 7 + 311), {gender:"f", hair:["longo", "rabo", "coque", "trancas"][ev.level % 4], outfit:"regata", suit:"#e5484d", stripe:"#ffffff", pants:"preta", shoes:"preto", glasses:"none", helmet:"none", tattoo:"none", acc:["brinco"], height:"medio", weight:"magro"});
+  drawPilot(ctx, W * 0.5, ground, ph * 0.94, girl, t < T2 ? "present" : "clap", now);
+  drawPilot(ctx, wx, wFoot, ph, champL ? me : op, t < T2 ? "cheer" : "trophy", now);
+  // the cup: in her hands, then flying in an arc to the winner's raised hand (the trophy pose draws it from there on)
+  if(t < T2){
+    const gx = W * 0.5, gy = ground - 67 * u * 0.94 + 6 * u, tx = wx + 9 * u, ty = wFoot - 104 * u;
+    const px = gx + (tx - gx) * flyK, py = gy + (ty - gy) * flyK - Math.sin(flyK * Math.PI) * ph * 0.25;
+    drawTrophyAt(ctx, px, py, u * 1.1);
+  }
+  if(t > T2 + 0.25) drawMedalAt(ctx, wx, wFoot - 70 * u, u * 1.1);
+  // names over their heads
+  const tag = (txt, x, y) => { ctx.font = "600 10px " + DISP; const tw = ctx.measureText(txt).width + 12; ctx.fillStyle = "rgba(8,10,16,.72)"; rrectC(ctx, x - tw / 2, y - 8, tw, 15, 7); ctx.fill(); ctx.fillStyle = "#eef0f6"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(txt, x, y); };
+  tag(champL ? (me.name || "Você") : op.name, wx, H - 8);
+  tag(champL ? op.name : (me.name || "Você"), lxs, H - 8);
+  // confetti, thicker when it is yours
+  const CC = ["#ffb547","#e5484d","#5ad6ff","#63d692","#ff6fb5","#eef0f6"], NC = ev.champ ? 90 : 35;
+  for(let i = 0; i < NC; i++){
     const x = mod(hash(i) * W + Math.sin(now * 1.3 + i) * 12, W), y = mod(hash(i + 7) * H + now * (28 + hash(i + 1) * 40), H);
     ctx.save(); ctx.translate(x, y); ctx.rotate(now * 3 + i); ctx.fillStyle = CC[i % CC.length]; ctx.fillRect(-2, -1, 4, 2); ctx.restore();
   }
+  // the title, on a dark band so it reads over any place
+  g = ctx.createLinearGradient(0, 0, 0, 86); g.addColorStop(0, "rgba(6,8,14,.85)"); g.addColorStop(1, "rgba(6,8,14,0)"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 86);
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillStyle = ev.champ ? "#ffb547" : "#c9ced8"; ctx.font = "italic 700 24px " + DISP;
-  ctx.fillText(ev.champ ? (ev.comeback ? "CAMPEÃO NA VIRADA!" : "CAMPEÃO!") : "VICE-CAMPEÃO", cx, 22);
+  ctx.fillText(ev.champ ? (ev.comeback ? "CAMPEÃO NA VIRADA!" : "CAMPEÃO!") : "VICE-CAMPEÃO", W / 2, 20);
   ctx.fillStyle = "#eef0f6"; ctx.font = "600 11px " + DISP;
-  ctx.fillText("Liga " + LEAGUES[leagueOf(ev.level)].name + " · evento nº " + ev.level, cx, 42);
+  ctx.fillText(R.track.name + " · Liga " + LEAGUES[leagueOf(ev.level)].name + " · evento nº " + ev.level + " · placar " + (ev.me || 0) + " × " + (ev.op || 0), W / 2, 39);
   ctx.fillStyle = "#ffb547"; ctx.font = "700 13px " + DISP;
-  ctx.fillText("+" + money(ev.prize) + (ev.bet ? (ev.bet > 0 ? "  ·  aposta +" + money(ev.bet) : "  ·  aposta −" + money(-ev.bet)) : ""), cx, 58);
-  if(ev.bonus){ ctx.fillStyle = "#5ad6ff"; ctx.font = "700 12px " + DISP; ctx.fillText(ev.run + " seguidas · bônus +" + money(ev.bonus), cx, 74); }
-  else if(ev.champ && ev.run){ ctx.fillStyle = "#c9ced8"; ctx.font = "600 10px " + DISP; ctx.fillText("Sequência " + ev.run + " · bônus a cada 3 seguidas", cx, 74); }
+  ctx.fillText("+" + money(ev.prize) + (ev.bet ? (ev.bet > 0 ? "  ·  aposta +" + money(ev.bet) : "  ·  aposta −" + money(-ev.bet)) : ""), W / 2, 55);
+  if(ev.bonus){ ctx.fillStyle = "#5ad6ff"; ctx.font = "700 12px " + DISP; ctx.fillText(ev.run + " seguidas · bônus +" + money(ev.bonus), W / 2, 71); }
+  else if(ev.champ && ev.run){ ctx.fillStyle = "#c9ced8"; ctx.font = "600 10px " + DISP; ctx.fillText("Sequência " + ev.run + " · bônus a cada 3 seguidas", W / 2, 71); }
   if(t < 0.4){ ctx.fillStyle = "rgba(0,0,0," + (1 - t / 0.4) + ")"; ctx.fillRect(0, 0, W, H); }
 }
 
@@ -7516,7 +7572,6 @@ function drawOverlays(now){
   };
   const cy = cockpit ? H * 0.62 : H * 0.47;
   if(R.phase === "count"){
-    score();
     if(R.t > 0.35 && R.t < 3.2 && !cockpit){
       const sr = S.series, et = eventType(S.level);
       let tag = "";
@@ -7540,8 +7595,6 @@ function drawOverlays(now){
       }
     }
     if(R.t < 0.4){ ctx.fillStyle = "rgba(0,0,0," + (1 - R.t / 0.4) + ")"; ctx.fillRect(0, 0, W, H); }
-  } else if(R.phase === "race"){
-    score();
   } else if((R.phase === "result" || R.phase === "black") && R.result){
     const rs = R.result;
     ctx.fillStyle = "rgba(11,13,20,.62)"; ctx.fillRect(0, 0, W, H);
@@ -7558,7 +7611,13 @@ function drawOverlays(now){
     ctx.fillStyle = "rgba(238,240,246,.8)"; ctx.font = "500 12px " + DISP;
     ctx.fillText(R.track.distName + "  ·  Você " + t2(R.p.fin) + " s  ·  Rival " + t2(R.r.fin) + " s", W / 2, H * 0.66);
     ctx.fillText("Vel. final " + kmh(R.p.top) + " km/h", W / 2, H * 0.76);
-    score();
+    // the event so far: one marker per heat, yours in gold, the rival's in red, the ones still to race empty
+    { const hs = rs.hist || [], mx = W / 2, my = H * 0.88, gap = 30;
+      ctx.font = "700 10px " + DISP; ctx.fillStyle = "rgba(238,240,246,.7)"; ctx.fillText("BATERIAS", mx - gap * 2.3, my);
+      for(let k = 0; k < 3; k++){ const x = mx - gap + k * gap, v = hs[k];
+        ctx.fillStyle = v === 1 ? "#ffb547" : v === 0 ? "#e5484d" : "rgba(238,240,246,.15)"; circ(ctx, x, my, 8); ctx.fill();
+        ctx.fillStyle = v === undefined ? "rgba(238,240,246,.5)" : "#0b0d14"; ctx.fillText(v === 1 ? "V" : v === 0 ? "D" : String(k + 1), x, my + 0.5); }
+      ctx.fillStyle = "#eef0f6"; ctx.font = "700 12px " + DISP; ctx.fillText(rs.me + " × " + rs.op, mx + gap * 2.3, my); }
   }
   if(R.phase === "black"){
     ctx.fillStyle = "rgba(0,0,0," + Math.min(1, R.t / 0.35) + ")"; ctx.fillRect(0, 0, W, H);
