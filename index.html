@@ -396,7 +396,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v136</span>
+  <span id="tgVer">v137</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -6017,9 +6017,10 @@ function drawCockpit(now){
   const pc = carById(S.car), look = carLook(S.car), P = getSnd(), nk = drv.nk || 0, KC = pvApply(S.car, custOf(S.car));
   const DS = Object.assign({}, DASH[S.car] || DASH.bolinha);
   if(KC.ckCluster) DS.cluster = KC.ckCluster;
+  if(ckGarage && !engOn()) DS.glow = "#2e3138";   // ignition off: the gauges are dark
   if(KC.ckDash){ DS.mat = KC.ckDash; DS.top = shade(KC.ckDash, 0.12); DS.door = shade(KC.ckDash, 0.06); DS.light = lumHex(KC.ckDash) > 0.55; }
   const launchK = R.phase === "race" && R.time < 1.8 ? 1 - R.time / 1.8 : 0;
-  const shake = launchK * 1.8 + nk * 1.6 + Math.min(1, p.v / 60) * 0.45;
+  const shake = ckGarage ? Math.abs(engShake(now)) * 2.2 : launchK * 1.8 + nk * 1.6 + Math.min(1, p.v / 60) * 0.45;
   ctx.save();
   if(!reduceMotion && drv.sway){ ctx.translate(W / 2, H); ctx.rotate(-drv.sway * 0.012); ctx.translate(-W / 2, -H); }   // a little body roll as it squirms
   const spinV = (drv.spinK || 0) + (drv.kick || 0) * 1.5;
@@ -6029,7 +6030,7 @@ function drawCockpit(now){
   // the car fights for grip under power: it wanders side to side and the driver keeps catching it with the wheel
   {
     const pw = Math.min(1, (p.A || 6) / 14), sp = Math.min(1, p.v / 30);
-    const want = R.phase === "race" ? (0.35 + 0.65 * pw) * (0.4 + 0.6 * sp) + 0.6 * nk + 1.2 * (drv.spinK || 0) + (R.rain ? 0.5 : 0) + (R.time < 1.8 ? 0.5 * (1 - R.time / 1.8) : 0) : R.phase === "count" && R.t > 2.4 ? 0.25 : 0;
+    const want = ckGarage ? 0 : R.phase === "race" ? (0.35 + 0.65 * pw) * (0.4 + 0.6 * sp) + 0.6 * nk + 1.2 * (drv.spinK || 0) + (R.rain ? 0.5 : 0) + (R.time < 1.8 ? 0.5 * (1 - R.time / 1.8) : 0) : R.phase === "count" && R.t > 2.4 ? 0.25 : 0;
     drv.swayAmp = (drv.swayAmp || 0) + (Math.min(1.1, want) - (drv.swayAmp || 0)) * 0.05;
     const tS = now;
     drv.sway = (Math.sin(tS * 1.7) * 0.55 + Math.sin(tS * 2.9 + 1.3) * 0.3 + Math.sin(tS * 0.83 + 0.4) * 0.35 + Math.sin(tS * 5.1 + 2.2) * 0.08) * drv.swayAmp * (reduceMotion ? 0.3 : 1);
@@ -6614,7 +6615,7 @@ function drawCockpit(now){
   // ---------- the car around you: modern sport cabin (binnacle with three dials, round vents, ambient light) ----------
   const bc = look.color, MP = MODELS[pc.model], dashY = H * 0.41;
   const nearLamp = th.lamp && !ckGarage ? mod(-camW, lampGap) : 99, sweep = th.lamp && !ckGarage ? Math.max(0, 1 - Math.abs(nearLamp - lampGap * 0.15) / (lampGap * 0.25)) : 0;
-  const red = P.ev ? 9000 : P.red, rpm = drv.rpm, frac = Math.min(1.05, rpm / red);
+  const red = P.ev ? 9000 : P.red, rpm = ckGarage ? (engOn() ? E.rpm : 0) : drv.rpm, frac = Math.min(1.05, rpm / red);
   const blink = frac > 0.97 && Math.floor(now * 14) % 2;
   const TU = tuneOf(S.car), stg = Math.round((TU.motor + TU.cambio + TU.nitro) / 3);
   const lumOf = hx => { const v = parseInt(String(hx).replace("#", "").slice(0, 6), 16); if(isNaN(v)) return 0.5; return (0.299 * (v >> 16 & 255) + 0.587 * (v >> 8 & 255) + 0.114 * (v & 255)) / 255; };
@@ -6725,7 +6726,7 @@ function drawCockpit(now){
   }
   ctx.restore();
   // rain on the glass and the wiper
-  if(R.rain){
+  if(R.rain && !ckGarage){
     const pvx = W * 0.62, pvy = dashY + 2, armL = W * 0.5, per = 1.25, ph = mod(now, per) / per;
     const sweep2 = ph < 0.5 ? ph * 2 : 2 - ph * 2, ang = Math.PI * (1.02 + 0.5 * (0.5 - 0.5 * Math.cos(sweep2 * Math.PI)));
     for(let i = 0; i < 90; i++){
@@ -6954,7 +6955,7 @@ function drawCockpit(now){
     const chN = DS.cluster === "race" ? 20 : DS.cluster === "triple" ? 46 : 26;
     const kc = Math.min((bx1 - bx0 - 6) / cwN, (byB - byT - 4) / chN);
     ctx.save(); ctx.translate(bcx, (byT + byB) / 2); ctx.scale(kc, kc);
-    drawClusterArt(ctx, 0, 0, 41, DS, {spd:kmh(p.v), sp:Math.min(1, p.v * 3.6 / (Math.ceil(p.vmax * 3.6 * 1.25 / 20) * 20)), frac, blink, gear:gearTxt});
+    drawClusterArt(ctx, 0, 0, 41, DS, {spd:kmh(ckGarage ? 0 : p.v), sp:ckGarage ? 0 : Math.min(1, p.v * 3.6 / (Math.ceil(p.vmax * 3.6 * 1.25 / 20) * 20)), frac, blink, gear:gearTxt});
     ctx.restore();
   }
   // race progress: vertical gauge on the left, start at the bottom, finish flag at the top
@@ -7102,8 +7103,9 @@ function drawCockpit(now){
         ctx.fillStyle = "rgba(120,130,150,.25)"; ctx.fillRect(tx0 + tw * 0.15, ty0 + th0 * 0.3, tw * 0.7, th0 * 0.4);
         [0.35, 0.65].forEach(f => { ctx.strokeStyle = "#5a606b"; ctx.lineWidth = 0.6; circ(ctx, tx0 + tw * f, ty0 + th0 * 0.5, th0 * 0.22); ctx.stroke(); });
         const lx0 = x0 + cw * 0.53, lw2 = cw * 0.41;
-        ctx.fillStyle = "#1e3a22"; rrectC(ctx, lx0, ty0, lw2, th0, 1); ctx.fill();
-        txt("FM 98.5", lx0 + lw2 / 2, ty0 + th0 / 2, Math.max(2, th0 * 0.5), "#8dff9a", "700 ");
+        const radioOn = !(ckGarage && !engOn());
+        ctx.fillStyle = radioOn ? "#1e3a22" : "#0c0f0d"; rrectC(ctx, lx0, ty0, lw2, th0, 1); ctx.fill();
+        if(radioOn) txt("FM 98.5", lx0 + lw2 / 2, ty0 + th0 / 2, Math.max(2, th0 * 0.5), "#8dff9a", "700 ");
         for(let k = 0; k < 6; k++){ ctx.fillStyle = "#2a2d34"; rrectC(ctx, x0 + cw * 0.06 + k * cw * 0.148, ry + rh * 0.76, cw * 0.13, rh * 0.16, 0.8); ctx.fill(); }
         const ny = H * 0.755, nh = H * 0.045;
         ctx.fillStyle = "#0b1a10"; rrectC(ctx, x0 + cw * 0.04, ny, cw * 0.92, nh, 1.5); ctx.fill();
@@ -9161,10 +9163,36 @@ function openGarage(){
   renderPanel(true); requestAnimationFrame(drawGarage);
 }
 function closeGarage(){ pv = null; garageOpen = false; garageEl.hidden = true; grev.t = -1; renderPanel(true); }
-const grev = {t:-1, flashUntil:0, lastPop:0};
+const grev = {t:-1, flashUntil:0, lastPop:0, cranked:false, caught:false};
+const GCRANK = 0.9, GIDLE = 1.9, GOFF = 1.9 + 4.2 + 1.6;
+function engOn(){ return grev.t >= GCRANK; }
+// how the body moves: a little judder on the starter, rocking at idle, shaking hard when revved
+function engShake(now){
+  const g = grev.t; if(g < 0) return 0;
+  if(g < GCRANK) return Math.sin(now * 31) * 0.16;
+  const h = g - GIDLE;
+  if(h >= 0 && h < 4.2){ const hot = h > 1.4 && h < 3.0; return Math.sin(now * (hot ? 70 : 40)) * (hot ? 0.9 : 0.4); }
+  return Math.sin(now * 26) * 0.22;
+}
+// the starter motor: a geared whine that labours on each compression stroke, a metallic grind on top
+function starterFx(){
+  if(!sfxReady()) return;
+  const ac = AU.ac, t = ac.currentTime, d = GCRANK;
+  const o = ac.createOscillator(), lfo = ac.createOscillator(), lg = ac.createGain(), am = ac.createGain(), bp = ac.createBiquadFilter(), g = ac.createGain();
+  o.type = "sawtooth"; o.frequency.setValueAtTime(140, t); o.frequency.linearRampToValueAtTime(185, t + d);
+  lfo.type = "square"; lfo.frequency.setValueAtTime(8, t); lfo.frequency.linearRampToValueAtTime(11, t + d);
+  lg.gain.value = 0.45; am.gain.value = 0.55; lfo.connect(lg); lg.connect(am.gain);
+  bp.type = "bandpass"; bp.frequency.value = 520; bp.Q.value = 1.4;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + 0.04); g.gain.setValueAtTime(0.16, t + d - 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.05);
+  o.connect(bp); bp.connect(am); am.connect(g); g.connect(AU.master);
+  o.start(t); lfo.start(t); o.stop(t + d + 0.1); lfo.stop(t + d + 0.1);
+  noiseBurst({type:"bandpass", f0:1500, f1:1900, Q:3, gain:0.05, dur:d, att:0.03, hold:d * 0.7});
+}
 function garageRev(){
   if(!AU.on){ S.sound = true; soundOn(); syncSound(); save(); }
-  grev.t = 0;
+  // already running: just do the revs again; switched off: crank it first
+  const P = getSnd();
+  if(engOn()) grev.t = GIDLE; else { grev.t = P.ev ? GCRANK : 0; grev.cranked = false; grev.caught = false; }
 }
 el("gRev").addEventListener("click", garageRev);
 el("gView").addEventListener("click", () => { gView = gView === "in" ? "out" : "in"; });
@@ -9179,26 +9207,36 @@ function garageAudio(dt){
   let thr = 0.1, target = (P.idle || 900) * 1.05, limit = P.red || 9000, gate = 0.2;
   if(grev.t >= 0){
     grev.t += dt; const g = grev.t;
-    if(g < 0.35){ thr = 1; target = (P.red || 9000) * 0.7; }
-    else if(g < 0.75){ thr = 0.04; target = P.idle || 0; gate = 1; }
-    else if(g < 1.1){ thr = 1; target = (P.red || 9000) * 0.85; }
-    else if(g < 1.4){ thr = 0.04; target = P.idle || 0; gate = 1; }
-    else if(g < 3.0){
-      thr = 1;
-      target = (P.red || 9000) * 1.1; if(stage >= 3) limit = P.launch;
-      gate = stage >= 4 || esc >= 3 ? 2.4 : esc >= 1 ? 1 : 0.3;
+    if(!grev.cranked){ grev.cranked = true; if(!P.ev && g < GCRANK) starterFx(); }
+    if(g < GCRANK){ thr = 0; target = 0; }
+    else if(g < GIDLE){
+      // it catches: a flare of revs, then it settles into idle
+      if(!grev.caught){ grev.caught = true; E.rpm = (P.idle || 900) * 1.9; E.popQ = 0; }
+      const fl = g < GCRANK + 0.3; thr = fl ? 0.35 : 0.06; target = (P.idle || 900) * (fl ? 1.8 : 1.05); gate = 0.1;
+    } else {
+      const h = g - GIDLE;
+      if(h < 0.35){ thr = 1; target = (P.red || 9000) * 0.7; }
+      else if(h < 0.75){ thr = 0.04; target = P.idle || 0; gate = 1; }
+      else if(h < 1.1){ thr = 1; target = (P.red || 9000) * 0.85; }
+      else if(h < 1.4){ thr = 0.04; target = P.idle || 0; gate = 1; }
+      else if(h < 3.0){
+        thr = 1;
+        target = (P.red || 9000) * 1.1; if(stage >= 3) limit = P.launch;
+        gate = stage >= 4 || esc >= 3 ? 2.4 : esc >= 1 ? 1 : 0.3;
+      }
+      else if(h < 4.2){ thr = 0.02; target = P.idle || 0; gate = 2; }
+      else if(g < GOFF){ thr = 0.06; target = (P.idle || 900) * 1.05; gate = 0.2; }
+      else { grev.t = -1; grev.caught = false; }
     }
-    else if(g < 4.2){ thr = 0.02; target = P.idle || 0; gate = 2; }
-    else grev.t = -1;
   }
   T(AU.wind.gain, 0, 0.2); if(AU.rainG) T(AU.rainG.gain, 0, 0.3); if(AU.tAir) T(AU.tAir.g.gain, 0, 0.1);
   if(P.ev){
     T(AU.eg.gain, 0); T(AU.tg.gain, 0); T(AU.intk.gain, 0);
-    T(AU.oe.frequency, 140 + 1400 * Math.max(0, (target - 900) / 8000)); T(AU.evg.gain, grev.t >= 0 ? 0.05 : 0);
+    T(AU.oe.frequency, 140 + 1400 * Math.max(0, (target - 900) / 8000)); T(AU.evg.gain, grev.t >= GCRANK ? 0.05 : 0);
     return;
   }
   T(AU.evg.gain, 0);
-  const revving = grev.t >= 0;
+  const revving = grev.t >= GCRANK;
   if(!revving){ thr = 0; gate = 0; E.popQ = 0; }
   E.target = target; E.thr = thr; E.limit = limit; E.popGate = gate;
   T(AU.lp.frequency, (P.lpK || 1) * (P.bright * (0.5 + 0.7 * thr) + E.rpm * 0.3), 0.04);
@@ -9235,8 +9273,8 @@ function drawGarage(){
     const revving = grev.t >= 0, hot = revving && grev.t > 1.4 && grev.t < 3.0;
     c.save(); c.translate(0, 2 * gy); c.scale(1, -1); c.globalAlpha = 0.16; drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {spin:0, lights:false})); c.restore();
     g = c.createLinearGradient(0, gy, 0, h); g.addColorStop(0, "rgba(17,20,27,0)"); g.addColorStop(1, "rgba(17,20,27,.9)"); c.fillStyle = g; c.fillRect(0, gy, w, h - gy);
-    drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {lights:true, spin:0,
-      shake:revving ? Math.sin(now * (hot ? 70 : 40)) * (hot ? 0.9 : 0.4) : 0, flash:now < grev.flashUntil ? 1 - (grev.flashUntil - now) / 0.14 : 0}));
+    drawCar(c, x0, gy, sc, car.model, look.color, Object.assign({}, look, {lights:engOn(), spin:0,
+      shake:engShake(now), flash:now < grev.flashUntil ? 1 - (grev.flashUntil - now) / 0.14 : 0}));
     c.fillStyle = "rgba(8,9,12,.55)"; rrectC(c, 8, 8, 64, 22, 11); c.fill();
     c.fillStyle = "#ffb547"; c.font = "600 11px " + DISP; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("PRÉVIA", 18, 19);
     requestAnimationFrame(drawGarage); return;
@@ -9419,8 +9457,8 @@ function drawGarage(){
   }
   c.fillStyle = rg(cx0 + M.len * sc / 2, gy, 0, M.len * sc * 0.6, [[0, "rgba(0,0,0,.45)"], [1, "rgba(0,0,0,0)"]]);
   c.save(); c.translate(0, gy); c.scale(1, 0.14); circ(c, cx0 + M.len * sc / 2, 0, M.len * sc * 0.6); c.fill(); c.restore();
-  drawCar(c, cx0, gy, sc, car.model, look.color, Object.assign({}, look, {lights:false, spin:0,
-    shake:revving ? Math.sin(now * (hot ? 70 : 40)) * (hot ? 0.9 : 0.4) : 0, flash:now < grev.flashUntil ? 1 - (grev.flashUntil - now) / 0.14 : 0}));
+  drawCar(c, cx0, gy, sc, car.model, look.color, Object.assign({}, look, {lights:engOn(), spin:0,
+    shake:engShake(now), flash:now < grev.flashUntil ? 1 - (grev.flashUntil - now) / 0.14 : 0}));
   // the pilot on a chair beside the car (on the pilot tab he stands outside so the outfit can be seen)
   const ph = 30.7 * sc, pu = ph / 104, chx = ox0 + OW * 0.86, chy = gy + 1;
   if(!pil){
