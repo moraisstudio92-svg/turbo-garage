@@ -3623,6 +3623,16 @@ function drawCar(c, x, baseY, s, key, color, o){
   // exhaust pipe
   const ts = 1 + 0.12 * (o.tip || 0), exm = o.exModel || "orig";
   let ex = X(M.exh ? M.exh[0] : -1.3), ey = Y(M.exh ? M.exh[1] - KD * 0.3 : bot + 0.75 - KD * 0.3);   // tip where the real car has it, else just behind the bumper
+  if(M.exh && !EX_SIDE[exm] && !EX_HOOD[exm] && exm !== "turnedown" && exm !== "zoomies"){
+    // the pipe behind the tip: it runs forward under the bumper and bends up into the floor, so the tip is held by something
+    const px0 = M.exh[0] + 0.8, py0 = M.exh[1] - KD * 0.3, px1 = M.exh[0] + 2.4, py1 = bot - 0.05, pw = 0.62 * ts;
+    const bend = () => { c.beginPath(); c.moveTo(X(px0), Y(py0)); c.lineTo(X(px0 + 0.5), Y(py0)); c.quadraticCurveTo(X(px1 + 0.1), Y(py0), X(px1), Y(py1)); };
+    c.lineCap = "round";
+    bend(); c.strokeStyle = "#0b0c0f"; c.lineWidth = (pw + 0.22) * s; c.stroke();
+    bend(); c.strokeStyle = "#4b4f57"; c.lineWidth = pw * s; c.stroke();
+    c.save(); c.translate(0, -pw * 0.28 * s); bend(); c.strokeStyle = "rgba(255,255,255,.28)"; c.lineWidth = pw * 0.22 * s; c.stroke(); c.restore();
+    c.lineCap = "butt";
+  }
   const FT = [];   // every outlet that shoots fire: x, y, direction the flame leaves in (screen), size
   // the bonnet surface at a given x, from the body outline
   const hoodAt = x => { let best = null; M.pts.forEach((p, i) => { const q = M.pts[(i + 1) % M.pts.length]; if((p[0] - x) * (q[0] - x) <= 0 && p[0] !== q[0] && p[1] > bot + 3){ const y = p[1] + (q[1] - p[1]) * (x - p[0]) / (q[0] - p[0]); if(best === null || y > best) best = y; } }); return best === null ? M.belt : best; };
