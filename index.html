@@ -261,7 +261,15 @@ button:focus-visible{outline:2px solid var(--sodium);outline-offset:2px}
 .modal{z-index:38}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--sodium);color:var(--fg);padding:10px 14px;border-radius:10px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:20;transition:opacity .25s, transform .25s}
 .toast.hide{opacity:0;transform:translate(-50%,10px);pointer-events:none}
-.toast{pointer-events:none}
+.toast{pointer-events:none;z-index:60}
+#askHint small{display:block;font-size:11.5px;font-weight:500;color:var(--muted)}
+#askHint{position:absolute;left:50%;transform:translateX(-50%);z-index:6;width:max-content;max-width:calc(100% - 48px);padding:6px 11px;border-radius:12px;background:rgba(10,12,16,.88);border:1px solid var(--sodium);color:var(--fg);font-size:12.5px;font-weight:600;line-height:1.3;text-align:center;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.5);animation:askP 1.4s ease-in-out infinite}
+#askHint b{color:var(--sodium)}
+@keyframes askP{0%,100%{box-shadow:0 6px 18px rgba(0,0,0,.5),0 0 0 0 rgba(255,181,71,.45)}50%{box-shadow:0 6px 18px rgba(0,0,0,.5),0 0 0 6px rgba(255,181,71,0)}}
+button.askNow{outline:2px solid var(--sodium)!important;outline-offset:2px}
+.car .sellRow{grid-column:1 / -1;display:flex;justify-content:flex-end;margin-top:2px}
+.car .act .btn{white-space:nowrap;flex:0 0 auto}.car .act .tag{min-width:0}
+.car .sellRow .btn{padding:8px 14px;font-size:14px}
 .saveDot{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top,0px));transform:translate(-50%,-6px);background:rgba(10,12,16,.85);border:1px solid rgba(70,200,120,.6);color:#9be8b4;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;z-index:21;opacity:0;pointer-events:none;transition:opacity .3s, transform .3s}
 .saveDot.on{opacity:1;transform:translate(-50%,0)}
 
@@ -409,7 +417,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v143</span>
+  <span id="tgVer">v144</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -426,6 +434,7 @@ body.pvOn #gpanel{padding-bottom:170px}
     <div class="g-cash num" id="gCash">$0</div>
   </header>
   <canvas id="gCv" aria-hidden="true"></canvas>
+  <div id="askHint" hidden></div>
   <div class="g-car"><span id="gCar"></span><button class="rev" id="gRev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Ouvir o ronco</button><button class="rev" id="gView" type="button">Ver interior</button></div>
   <nav class="tabs gtabs" id="gtabs" role="tablist">
     <button class="tab" role="tab" data-gtab="oficina" aria-selected="true">Preparação</button>
@@ -4836,7 +4845,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   const u = h / 104 * hk, sk = P.skin, top = P.suit, st = P.stripe, hc = P.hairC, acc = P.acc || [];
   const sit = pose === "sit" || pose === "sad", dropK = sit ? 20 : 0;
   const Y = k => footY - (sit && k >= 40 ? k - dropK : k) * u, X = k => x + k * u * wk;
-  const OL = "rgba(8,9,12,.55)", olw = Math.max(0.5, 0.35 * u);
+  const OL = "rgba(8,9,12,.4)", olw = Math.max(0.45, 0.28 * u);
   const suitLike = of === "macacao" || of === "macacao2" || of === "kart";
   const helmetOn = P.helmet !== "none" && P.helmetWear === "cabeca";
   const helmetArm = P.helmet !== "none" && P.helmetWear === "braco";
@@ -4891,8 +4900,18 @@ function drawPilot(c, x, footY, h, P0, pose, t){
       c.fillStyle = "rgba(255,255,255,.16)"; c.beginPath(); c.ellipse((hipJ[0] + knee[0]) / 2, knee[1] - legW * 0.75 * u, Math.abs(knee[0] - hipJ[0]) / 2 + legW * 0.6 * u * wk, legW * 0.32 * u, 0, 0, TAU); c.fill();
       c.strokeStyle = "rgba(0,0,0,.3)"; c.lineWidth = Math.max(0.4, 0.4 * u); c.beginPath(); c.arc(knee[0], knee[1] + 0.5 * u, legW * 0.95 * u * wk, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke();
     } else {
-    limb(hipJ, knee, legW * u * wk * 1.02, legW * u * wk * 0.8, legCol);
-    limb(knee, ank, legW * u * wk * 0.8, legW * u * wk * 0.58, legCol);
+      // [height, centre offset, half width outward, half width inward] in body units
+      const KF = [[50, 0.97, 1.12, 1.0], [42, 0.92, 1.06, 0.98], [33, 0.82, 0.88, 0.84], [27, 0.76, 0.74, 0.72], [21, 0.74, 0.84, 0.72], [13, 0.66, 0.62, 0.6], [6, 0.62, 0.5, 0.5]];
+      const outer = KF.map(([yy, cc, wo]) => [X(sd * (legGap + legW * cc + legW * wo)), Y(yy)]), inner = KF.map(([yy, cc, wo, wi]) => [X(sd * (legGap + legW * cc - legW * wi)), Y(yy)]).reverse();
+      const pts = outer.concat(inner);
+      c.beginPath(); c.moveTo(pts[0][0], pts[0][1]);
+      for(let k = 1; k < pts.length - 1; k++){ const m = [(pts[k][0] + pts[k + 1][0]) / 2, (pts[k][1] + pts[k + 1][1]) / 2]; if(k === outer.length - 1){ c.lineTo(pts[k][0], pts[k][1]); c.lineTo(pts[k + 1][0], pts[k + 1][1]); k++; continue; } c.quadraticCurveTo(pts[k][0], pts[k][1], m[0], m[1]); }
+      c.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]); c.closePath();
+      const x0 = X(sd * (legGap + legW * 2.1)), x1 = X(sd * legGap * 0.2), lg = c.createLinearGradient(Math.min(x0, x1), 0, Math.max(x0, x1), 0);
+      lg.addColorStop(0, shade(legCol, sd < 0 ? 0.18 : -0.36)); lg.addColorStop(0.5, legCol); lg.addColorStop(1, shade(legCol, sd < 0 ? -0.22 : 0.06));
+      fillOL(lg);
+      // the knee catches the light, the back of the calf falls into shadow
+      { const kx = X(sd * (legGap + legW * 0.7)), ky = Y(27.5), kg = c.createRadialGradient(kx, ky, 0, kx, ky, legW * 0.8 * u * wk); kg.addColorStop(0, "rgba(255,255,255,.08)"); kg.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = kg; c.beginPath(); c.arc(kx, ky, legW * 0.8 * u * wk, 0, TAU); c.fill(); }
     }
     // seams, creases, pockets
     c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = Math.max(0.4, 0.3 * u);
@@ -4910,7 +4929,7 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   const boot = ["bota", "coturno", "cowboy", "chelsea"].includes(P.shoes);
   const shoeTop = P.shoes === "coturno" ? 14 : P.shoes === "cowboy" ? 13 : P.shoes === "chelsea" ? 9.5 : P.shoes === "bota" ? 12 : P.shoes === "skate" ? 7 : P.shoes === "cano" || P.shoes === "basquete" ? 10 : P.shoes === "corrida" ? 9 : P.shoes === "chinelo" ? 1.6 : 6.2;
   [-1, 1].forEach(sd => {
-    const cx = X(sd * (legGap + legW * (sit ? 1.45 : 0.62))) + sd * 0.6 * u, w = legW * (sit ? 1.35 : 1.25) * u * wk;
+    const cx = X(sd * (legGap + legW * (sit ? 1.45 : 0.62))) + sd * 0.4 * u, w = legW * (sit ? 1.22 : 1.08) * u * Math.sqrt(wk);
     if(P.shoes === "chinelo"){
       c.fillStyle = sk; smoothPath([[cx - w * 0.75, Y(5.5)], [cx + w * 0.75, Y(5.5)], [cx + w * 0.95, Y(1.2)], [cx - w * 0.95, Y(1.2)]]); c.fill();
       c.fillStyle = SHOE[0]; rrectC(c, cx - w, Y(1.3), w * 2, 1.3 * u, 0.6 * u); c.fill();
@@ -4933,18 +4952,21 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   const T = {
     sh:[X(-swH), Y(81.5)], shR:[X(swH), Y(81.5)],
   };
-  const torsoPts = [[X(-swH + 1.4), Y(83.6)], [X(swH - 1.4), Y(83.6)], [X(swH + 0.3), Y(80.5)], [X(swH - 0.4), Y(73)], [X(waistH + 0.6), Y(62)], [X(hipH), Y(52)], [X(hipH - 0.2), Y(47.5)],
-    [X(-hipH + 0.2), Y(47.5)], [X(-hipH), Y(52)], [X(-waistH - 0.6), Y(62)], [X(-swH + 0.4), Y(73)], [X(-swH - 0.3), Y(80.5)]];
+  const torsoPts = [[X(-3.6), Y(85.6)], [X(3.6), Y(85.6)], [X(swH - 2.6), Y(84.2)], [X(swH + 0.5), Y(81.2)], [X(swH - 0.2), Y(74)], [X(waistH + 0.8), Y(63)], [X(hipH), Y(52.5)], [X(hipH - 0.2), Y(47.5)],
+    [X(-hipH + 0.2), Y(47.5)], [X(-hipH), Y(52.5)], [X(-waistH - 0.8), Y(63)], [X(-swH + 0.2), Y(74)], [X(-swH - 0.5), Y(81.2)], [X(-swH + 2.6), Y(84.2)]];
   const topCol = of === "couro" ? "#17181c" : top;
   smoothPath(torsoPts); fillOL(shadeFill(topCol, X(-swH), X(swH)));
   // chest and abdomen form, fabric folds
   c.save(); smoothPath(torsoPts); c.clip();
   const vg = c.createLinearGradient(0, Y(84), 0, Y(47)); vg.addColorStop(0, "rgba(255,255,255,.1)"); vg.addColorStop(0.35, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.22)");
   c.fillStyle = vg; c.fillRect(X(-20), Y(86), 40 * u * wk, 40 * u);
-  c.strokeStyle = "rgba(0,0,0,.18)"; c.lineWidth = Math.max(0.4, 0.35 * u);
+  { const lgx = c.createLinearGradient(X(-swH), 0, X(swH), 0); lgx.addColorStop(0, "rgba(0,0,0,.2)"); lgx.addColorStop(0.16, "rgba(0,0,0,0)"); lgx.addColorStop(0.84, "rgba(0,0,0,0)"); lgx.addColorStop(1, "rgba(0,0,0,.26)");
+    c.fillStyle = lgx; c.fillRect(X(-20), Y(86), 40 * u * wk, 40 * u);
+    const cg = c.createRadialGradient(X(-4), Y(75), 0, X(-4), Y(75), 9 * u * wk); cg.addColorStop(0, "rgba(255,255,255,.07)"); cg.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = cg; c.fillRect(X(-14), Y(86), 22 * u * wk, 22 * u); }
+  c.strokeStyle = "rgba(0,0,0,.1)"; c.lineWidth = Math.max(0.4, 0.3 * u);
   [[-1, 66], [1, 64], [-1, 56]].forEach(([sd, yy]) => { c.beginPath(); c.moveTo(X(sd * (waistH - 0.5)), Y(yy)); c.quadraticCurveTo(X(sd * 3), Y(yy - 1.5), X(sd * 0.5), Y(yy - 0.5)); c.stroke(); });
   if(fem){ c.strokeStyle = "rgba(0,0,0,.2)"; c.lineWidth = Math.max(0.4, 0.4 * u); [-1, 1].forEach(sd => { c.beginPath(); c.arc(X(sd * 4), Y(72.5), 3.6 * u, Math.PI * 0.15, Math.PI * 0.85); c.stroke(); }); }
-  else { c.strokeStyle = "rgba(0,0,0,.14)"; c.beginPath(); c.moveTo(X(-6.5), Y(71.5)); c.quadraticCurveTo(X(0), Y(70), X(6.5), Y(71.5)); c.stroke(); }
+  else { c.strokeStyle = "rgba(0,0,0,.1)"; [-1, 1].forEach(sd => { c.beginPath(); c.moveTo(X(sd * 0.6), Y(77.5)); c.quadraticCurveTo(X(sd * 4), Y(70.4), X(sd * 7.4), Y(73.4)); c.stroke(); }); }
   // outfit details
   if(of === "macacao" || of === "macacao2" || of === "kart"){
     if(of === "macacao2"){ c.fillStyle = st; c.fillRect(X(-20), Y(64), 40 * u * wk, 17 * u); c.fillStyle = top; c.fillRect(X(-20), Y(64), 40 * u * wk, 2.2 * u); }
@@ -4997,7 +5019,19 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   const hairBack = () => {
     c.fillStyle = shade(hc, -0.1);
     const hs = P.hair;
-    if(hs === "longo"){ smoothPath([[hcx - headW * 1.2, Y(98)], [hcx + headW * 1.2, Y(98)], [hcx + headW * 1.3, Y(fem ? 80 : 85)], [hcx - headW * 1.3, Y(fem ? 80 : 85)]]); c.fill(); }
+    if(hs === "longo"){
+      const end = fem ? 79.5 : 84.5;
+      c.beginPath(); c.ellipse(hcx, Y(95.5), headW * 1.18, headH * 0.42, 0, 0, TAU); c.fill();
+      [-1, 1].forEach(sd => {
+        const lg = c.createLinearGradient(hcx + sd * headW * 0.8, 0, hcx + sd * headW * 1.6, 0); lg.addColorStop(0, shade(hc, -0.28)); lg.addColorStop(0.45, hc); lg.addColorStop(1, shade(hc, -0.18)); c.fillStyle = lg;
+        c.beginPath(); c.moveTo(hcx + sd * headW * 0.7, Y(99)); c.quadraticCurveTo(hcx + sd * headW * 1.32, Y(97.5), hcx + sd * headW * 1.3, Y(91));
+        c.quadraticCurveTo(hcx + sd * headW * 1.32, Y(85), hcx + sd * headW * 1.72, Y(end + 1.4)); c.quadraticCurveTo(hcx + sd * headW * 1.5, Y(end - 0.6), hcx + sd * headW * 1.18, Y(end + 0.4));
+        c.quadraticCurveTo(hcx + sd * headW * 0.98, Y(end + 2.5), hcx + sd * headW * 0.94, Y(87.5)); c.quadraticCurveTo(hcx + sd * headW * 0.92, Y(92), hcx + sd * headW * 0.7, Y(99)); c.closePath(); c.fill();
+        c.strokeStyle = "rgba(255,255,255,.12)"; c.lineWidth = Math.max(0.3, 0.22 * u);
+        for(let k = 0; k < 3; k++){ c.beginPath(); c.moveTo(hcx + sd * headW * (1.05 + k * 0.1), Y(95)); c.quadraticCurveTo(hcx + sd * headW * (1.1 + k * 0.12), Y(88), hcx + sd * headW * (1.25 + k * 0.12), Y(end + 2)); c.stroke(); }
+        c.fillStyle = hc;
+      });
+    }
     if(hs === "black"){ c.beginPath(); c.ellipse(hcx, Y(96.5), headW * 1.75, headH * 0.58, 0, 0, TAU); c.fill(); }
     if(hs === "rabo"){ c.beginPath(); c.ellipse(hcx + headW * 0.9, Y(90), 1.5 * u, 4.5 * u, -0.25, 0, TAU); c.fill(); }
     if(hs === "trancas") [-1, 1].forEach(sd => { for(let k = 0; k < 7; k++){ c.beginPath(); c.ellipse(hcx + sd * headW * 1.02, Y(93 - k * 1.5), 0.95 * u, 0.85 * u, 0, 0, TAU); c.fill(); } });
@@ -5005,26 +5039,52 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   };
   if(!helmetOn) hairBack();
   // ears
-  c.fillStyle = shade(sk, -0.06); [-1, 1].forEach(sd => { c.beginPath(); c.ellipse(hcx + sd * headW * 0.98, Y(93.2), 0.9 * u, 1.7 * u, 0, 0, TAU); c.fill(); });
+  [-1, 1].forEach(sd => { c.fillStyle = shade(sk, -0.08); c.beginPath(); c.ellipse(hcx + sd * headW * 0.98, Y(93.2), 0.95 * u, 1.75 * u, sd * 0.12, 0, TAU); c.fill(); c.strokeStyle = shade(sk, -0.32); c.lineWidth = Math.max(0.3, 0.22 * u); c.beginPath(); c.arc(hcx + sd * headW * 1.0, Y(93.2), 0.6 * u, sd < 0 ? Math.PI * 0.6 : -Math.PI * 0.4, sd < 0 ? Math.PI * 1.4 : Math.PI * 0.4); c.stroke(); });
   if(acc.includes("brinco") && !helmetOn){ c.fillStyle = "#e8c04a"; [-1, 1].forEach(sd => { circ(c, hcx + sd * headW * 1.02, Y(91.6), 0.45 * u); c.fill(); }); }
   // skull and jaw: wider at the cheekbones, tapering to the chin
-  const face = [[hcx - headW * 0.92, Y(97.5)], [hcx - headW, Y(93.5)], [hcx - headW * 0.86, Y(90)], [hcx - headW * (fem ? 0.5 : 0.58), Y(87.6)], [hcx, Y(86.9)],
-    [hcx + headW * (fem ? 0.5 : 0.58), Y(87.6)], [hcx + headW * 0.86, Y(90)], [hcx + headW, Y(93.5)], [hcx + headW * 0.92, Y(97.5)], [hcx, Y(100.2)]];
+  const face = [[hcx - headW * 0.92, Y(97.5)], [hcx - headW * 1.0, Y(93.5)], [hcx - headW * (fem ? 0.86 : 0.92), Y(90.2)], [hcx - headW * (fem ? 0.48 : 0.62), Y(87.5)], [hcx - headW * 0.2, Y(86.7)], [hcx + headW * 0.2, Y(86.7)],
+    [hcx + headW * (fem ? 0.48 : 0.62), Y(87.5)], [hcx + headW * (fem ? 0.86 : 0.92), Y(90.2)], [hcx + headW * 1.0, Y(93.5)], [hcx + headW * 0.92, Y(97.5)], [hcx, Y(100.2)]];
   const fg = c.createRadialGradient(hcx - headW * 0.35, Y(95), headW * 0.2, hcx, Y(93.5), headW * 1.5);
   fg.addColorStop(0, shade(sk, 0.12)); fg.addColorStop(0.6, sk); fg.addColorStop(1, shade(sk, -0.3));
   smoothPath(face); fillOL(fg);
+  c.save(); smoothPath(face); c.clip();
+  { const jg = c.createLinearGradient(0, Y(91), 0, Y(86.6)); jg.addColorStop(0, "rgba(0,0,0,0)"); jg.addColorStop(1, "rgba(40,18,10,.22)"); c.fillStyle = jg; c.fillRect(hcx - headW * 1.2, Y(91), headW * 2.4, 5 * u);
+    c.fillStyle = "rgba(255,255,255,.1)"; c.beginPath(); c.ellipse(hcx - headW * 0.25, Y(97.4), headW * 0.5, 1.4 * u, -0.1, 0, TAU); c.fill();
+    [-1, 1].forEach(sd => { const qx = hcx + sd * headW * 0.82, qy = Y(91), r = headW * 0.42, g = c.createRadialGradient(qx, qy, 0, qx, qy, r); g.addColorStop(0, "rgba(60,25,15,.12)"); g.addColorStop(1, "rgba(60,25,15,0)"); c.fillStyle = g; c.beginPath(); c.arc(qx, qy, r, 0, TAU); c.fill();
+      if(fem){ const bx = hcx + sd * headW * 0.55, by = Y(91.8), br = headW * 0.3, b = c.createRadialGradient(bx, by, 0, bx, by, br); b.addColorStop(0, "rgba(225,95,95,.12)"); b.addColorStop(1, "rgba(225,95,95,0)"); c.fillStyle = b; c.beginPath(); c.arc(bx, by, br, 0, TAU); c.fill(); } }); }
+  c.restore();
   if(!helmetOn){
     // features: brows, eyes with whites and iris, nose shadow, lips; small and placed where they are on a real face
     const ey = Y(93.6), ex = headW * 0.42;
     c.fillStyle = "rgba(0,0,0,.12)"; c.beginPath(); c.ellipse(hcx + headW * 0.15, Y(91.6), headW * 0.12, 1.6 * u, 0.1, 0, TAU); c.fill();
+    const iris = lum(sk) > 0.55 && (P.hairC === "#c9a24a" || P.hairC === "#b5442e") ? "#4f7a8c" : "#4a2f1d";
     [-1, 1].forEach(sd => {
-      c.fillStyle = "#f4efe8"; c.beginPath(); c.ellipse(hcx + sd * ex, ey, headW * 0.19, 0.55 * u, 0, 0, TAU); c.fill();
-      c.fillStyle = "#3a2a1e"; circ(c, hcx + sd * ex, ey, 0.48 * u); c.fill(); c.fillStyle = "#0b0b0d"; circ(c, hcx + sd * ex, ey, 0.24 * u); c.fill();
-      c.strokeStyle = "rgba(20,14,10,.75)"; c.lineWidth = Math.max(0.4, 0.32 * u); c.beginPath(); c.ellipse(hcx + sd * ex, ey + 0.1 * u, headW * 0.2, 0.62 * u, 0, Math.PI * 1.08, Math.PI * 1.92); c.stroke();
-      c.strokeStyle = shade(hc, -0.15); c.lineWidth = Math.max(0.5, (fem ? 0.38 : 0.55) * u); c.beginPath(); c.moveTo(hcx + sd * ex * 0.45, Y(94.9)); c.quadraticCurveTo(hcx + sd * ex, Y(95.6), hcx + sd * ex * 1.55, Y(95)); c.stroke();
+      const exx = hcx + sd * ex, ew = headW * 0.23, eh = 0.62 * u;
+      // the socket shades in a little above and beside the eye
+      { const sg2 = c.createRadialGradient(exx, ey + 0.3 * u, 0, exx, ey + 0.3 * u, ew * 1.4); sg2.addColorStop(0, "rgba(60,30,20,.1)"); sg2.addColorStop(1, "rgba(60,30,20,0)"); c.fillStyle = sg2; c.beginPath(); c.arc(exx, ey + 0.3 * u, ew * 1.4, 0, TAU); c.fill(); }
+      c.save(); c.beginPath(); c.moveTo(exx - ew, ey); c.quadraticCurveTo(exx - ew * 0.2, ey - eh * 1.25, exx + ew, ey - eh * 0.05); c.quadraticCurveTo(exx + ew * 0.1, ey + eh * 1.05, exx - ew, ey); c.closePath();
+      c.fillStyle = "#f2ece4"; c.fill(); c.clip();
+      const ix = exx + sd * -0.05 * u; c.fillStyle = iris; circ(c, ix, ey - 0.05 * u, 0.5 * u); c.fill();
+      c.fillStyle = "#0a0a0c"; circ(c, ix, ey - 0.05 * u, 0.24 * u); c.fill();
+      c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(exx - ew, ey - eh * 1.3, ew * 2, eh * 0.55);
+      c.restore();
+      c.fillStyle = "rgba(255,255,255,.9)"; circ(c, ix - 0.18 * u, ey - 0.25 * u, 0.12 * u); c.fill();
+      // upper lid line, heavier on women for the lashes, and the crease above it
+      c.strokeStyle = "rgba(18,12,10,.85)"; c.lineWidth = Math.max(0.4, (fem ? 0.42 : 0.3) * u);
+      c.beginPath(); c.moveTo(exx - ew * 1.02, ey + 0.02 * u); c.quadraticCurveTo(exx - ew * 0.2, ey - eh * 1.3, exx + ew * 1.05, ey - eh * 0.05); c.stroke();
+      if(fem){ c.beginPath(); c.moveTo(exx + sd * ew * 1.0, ey - eh * 0.1); c.lineTo(exx + sd * ew * 1.3, ey - eh * 0.6); c.stroke(); }
+      c.strokeStyle = "rgba(60,30,20,.35)"; c.lineWidth = Math.max(0.3, 0.2 * u); c.beginPath(); c.moveTo(exx - ew * 0.8, ey - eh * 1.25); c.quadraticCurveTo(exx, ey - eh * 2.0, exx + ew * 0.85, ey - eh * 1.1); c.stroke();
+      c.strokeStyle = "rgba(60,30,20,.25)"; c.beginPath(); c.moveTo(exx - ew * 0.7, ey + eh * 0.95); c.quadraticCurveTo(exx, ey + eh * 1.3, exx + ew * 0.7, ey + eh * 0.8); c.stroke();
+      // brow: thick at the inner end, thinning out
+      const bt = (fem ? 0.32 : 0.5) * u, sadK = pose === "sad" ? 0.7 : 0;
+      c.fillStyle = shade(hc, -0.12); c.beginPath(); c.moveTo(hcx + sd * ex * 0.42, Y(95.0 + sadK)); c.quadraticCurveTo(hcx + sd * ex * 1.0, Y(95.85), hcx + sd * ex * 1.62, Y(95.1));
+      c.quadraticCurveTo(hcx + sd * ex * 1.0, Y(95.85) + bt * 1.7, hcx + sd * ex * 0.42, Y(95.0 + sadK) + bt * 1.6); c.closePath(); c.fill();
     });
-    c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = Math.max(0.4, 0.3 * u); c.beginPath(); c.moveTo(hcx - headW * 0.12, Y(93)); c.quadraticCurveTo(hcx - headW * 0.18, Y(91.2), hcx - headW * 0.05, Y(90.9)); c.stroke();
-    c.fillStyle = "rgba(60,30,25,.45)"; [-1, 1].forEach(sd => { c.beginPath(); c.ellipse(hcx + sd * headW * 0.1, Y(90.8), 0.3 * u, 0.2 * u, 0, 0, TAU); c.fill(); });
+    { const ng = c.createLinearGradient(hcx - headW * 0.1, 0, hcx + headW * 0.25, 0); ng.addColorStop(0, "rgba(60,28,18,0)"); ng.addColorStop(1, "rgba(60,28,18,.28)");
+      c.fillStyle = ng; c.beginPath(); c.moveTo(hcx + headW * 0.05, Y(94.6)); c.quadraticCurveTo(hcx + headW * 0.22, Y(92.2), hcx + headW * 0.26, Y(91.1)); c.lineTo(hcx + headW * 0.04, Y(91.2)); c.closePath(); c.fill();
+      c.fillStyle = "rgba(255,255,255,.18)"; c.beginPath(); c.ellipse(hcx - headW * 0.03, Y(91.6), headW * 0.08, 0.35 * u, 0, 0, TAU); c.fill();
+      c.strokeStyle = "rgba(70,32,22,.5)"; c.lineWidth = Math.max(0.3, 0.24 * u); [-1, 1].forEach(sd => { c.beginPath(); c.arc(hcx + sd * headW * 0.15, Y(91.0), 0.42 * u, sd < 0 ? Math.PI * 0.5 : -Math.PI * 0.1, sd < 0 ? Math.PI * 1.1 : Math.PI * 0.5); c.stroke(); });
+      c.fillStyle = "rgba(50,22,18,.55)"; [-1, 1].forEach(sd => { c.beginPath(); c.ellipse(hcx + sd * headW * 0.09, Y(90.75), 0.28 * u, 0.16 * u, sd * 0.3, 0, TAU); c.fill(); }); }
     const lipC = fem ? "#a8505a" : shade(sk, -0.28);
     if(pose === "cheer" || pose === "trophy"){
       // shouting with joy: the mouth wide open, teeth showing
@@ -5034,8 +5094,12 @@ function drawPilot(c, x, footY, h, P0, pose, t){
       // a frown, and the brows lifted in the middle
       c.strokeStyle = shade(lipC, -0.2); c.lineWidth = Math.max(0.5, 0.42 * u); c.beginPath(); c.moveTo(hcx - headW * 0.28, Y(88.5)); c.quadraticCurveTo(hcx, Y(89.7), hcx + headW * 0.28, Y(88.5)); c.stroke();
     } else {
-    c.fillStyle = lipC; c.beginPath(); c.moveTo(hcx - headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(89.7), hcx + headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(88.5), hcx - headW * 0.3, Y(89.2)); c.fill();
-    c.strokeStyle = "rgba(40,20,15,.55)"; c.lineWidth = Math.max(0.4, 0.25 * u); c.beginPath(); c.moveTo(hcx - headW * 0.3, Y(89.2)); c.quadraticCurveTo(hcx, Y(89.05), hcx + headW * 0.3, Y(89.2)); c.stroke();
+    const mw = headW * (fem ? 0.3 : 0.33);
+    c.fillStyle = shade(lipC, -0.04); c.beginPath(); c.moveTo(hcx - mw, Y(89.3)); c.quadraticCurveTo(hcx - mw * 0.4, Y(89.7), hcx, Y(89.5)); c.quadraticCurveTo(hcx + mw * 0.4, Y(89.7), hcx + mw, Y(89.3)); c.quadraticCurveTo(hcx, Y(89.05), hcx - mw, Y(89.3)); c.closePath(); c.fill();
+    c.fillStyle = lipC; c.beginPath(); c.moveTo(hcx - mw * 0.92, Y(89.18)); c.quadraticCurveTo(hcx, Y(fem ? 88.25 : 88.5), hcx + mw * 0.92, Y(89.18)); c.closePath(); c.fill();
+    c.fillStyle = "rgba(255,255,255,.22)"; c.beginPath(); c.ellipse(hcx, Y(88.85), mw * 0.35, 0.14 * u, 0, 0, TAU); c.fill();
+    c.strokeStyle = "rgba(40,18,14,.45)"; c.lineWidth = Math.max(0.35, 0.2 * u); c.beginPath(); c.moveTo(hcx - mw, Y(89.32)); c.quadraticCurveTo(hcx, Y(88.95), hcx + mw, Y(89.32)); c.stroke();
+    c.fillStyle = "rgba(60,28,18,.14)"; c.beginPath(); c.ellipse(hcx, Y(87.8), mw * 0.5, 0.35 * u, 0, 0, TAU); c.fill();
     }
     if(acc.includes("barba") && !fem){
       c.fillStyle = rgba(hc, 0.85); c.beginPath(); c.moveTo(hcx - headW * 0.98, Y(93)); c.quadraticCurveTo(hcx - headW * 0.9, Y(88.4), hcx, Y(86.6)); c.quadraticCurveTo(hcx + headW * 0.9, Y(88.4), hcx + headW * 0.98, Y(93));
@@ -5141,6 +5205,9 @@ function drawPilot(c, x, footY, h, P0, pose, t){
   [shL, shR].forEach((s0, i) => {
     const hd = hands[i], sd = i ? 1 : -1, el = ik(s0, hd, upperL, foreL, sd);
     const aw0 = (fem ? 2.6 : 3.1) * u * wk, aw1 = (fem ? 2.1 : 2.5) * u * wk, aw2 = (fem ? 1.5 : 1.8) * u * wk;
+    { const dc = longS || shortS ? sleeve : sk, dg = c.createRadialGradient(s0[0] - sd * aw0 * 0.3 - aw0 * 0.3, s0[1] - aw0 * 0.6, aw0 * 0.1, s0[0], s0[1], aw0 * 1.6);
+      dg.addColorStop(0, shade(dc, 0.16)); dg.addColorStop(0.6, dc); dg.addColorStop(1, shade(dc, -0.25));
+      c.fillStyle = dg; c.beginPath(); c.ellipse(s0[0] + sd * aw0 * 0.05, s0[1] + aw0 * 0.35, aw0 * 1.04, aw0 * 1.2, sd * -0.12, 0, TAU); c.fill(); }
     if(longS){ limb(s0, el, aw0 * 1.08, aw1 * 1.05, sleeve); limb(el, hd, aw1 * 1.05, aw2 * 1.15, sleeve);
       if(suitLike){ const g = limb; c.strokeStyle = st; c.lineWidth = 0.9 * u; c.beginPath(); c.moveTo(s0[0] + sd * aw0 * 0.6, s0[1]); c.lineTo(el[0] + sd * aw1 * 0.6, el[1]); c.lineTo(hd[0] + sd * aw2 * 0.5, hd[1]); c.stroke();
         c.fillStyle = shade(top, -0.3); c.beginPath(); c.ellipse(hd[0], hd[1] - (hd[1] - el[1]) * 0.08, aw2 * 1.25, aw2 * 0.6, Math.atan2(hd[1] - el[1], hd[0] - el[0]) + Math.PI / 2, 0, TAU); c.fill(); }
@@ -5148,7 +5215,6 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     } else {
       limb(s0, el, aw0 * 0.95, aw1 * 0.9, sk); limb(el, hd, aw1 * 0.9, aw2, sk);
       if(shortS){ const mid = [s0[0] + (el[0] - s0[0]) * 0.45, s0[1] + (el[1] - s0[1]) * 0.45]; limb(s0, mid, aw0 * 1.12, aw0 * 1.05, sleeve); }
-      if(of === "regata"){ c.fillStyle = shade(top, -0.1); c.beginPath(); c.ellipse(s0[0] - sd * 0.6 * u, s0[1] + 1.6 * u, 1.4 * u, 2.6 * u, 0, 0, TAU); c.fill(); }
       if(P.tattoo === "braco" || P.tattoo === "tribal"){
         c.strokeStyle = "rgba(25,32,45,.75)"; c.lineWidth = Math.max(0.4, 0.35 * u);
         const pts2 = [0.25, 0.45, 0.65, 0.85].map(k => [el[0] + (hd[0] - el[0]) * k, el[1] + (hd[1] - el[1]) * k]).concat(shortS ? [] : [[s0[0] + (el[0] - s0[0]) * 0.6, s0[1] + (el[1] - s0[1]) * 0.6]]);
@@ -5163,8 +5229,9 @@ function drawPilot(c, x, footY, h, P0, pose, t){
     const handG = c.createLinearGradient(-hw, 0, hw, 0); handG.addColorStop(0, shade(gc, -0.25)); handG.addColorStop(0.5, gc); handG.addColorStop(1, shade(gc, 0.1));
     c.beginPath(); c.moveTo(-hw, -0.4 * u); c.lineTo(-hw * 1.05, hl * 0.55); c.quadraticCurveTo(-hw * 0.9, hl, 0, hl * 1.05); c.quadraticCurveTo(hw * 0.9, hl, hw * 1.05, hl * 0.55); c.lineTo(hw, -0.4 * u); c.closePath(); fillOL(handG);
     if(G === "meio"){ c.fillStyle = sk; c.beginPath(); c.moveTo(-hw * 1.02, hl * 0.62); c.quadraticCurveTo(-hw * 0.9, hl, 0, hl * 1.05); c.quadraticCurveTo(hw * 0.9, hl, hw * 1.02, hl * 0.62); c.closePath(); c.fill(); }
-    c.strokeStyle = "rgba(0,0,0,.3)"; c.lineWidth = Math.max(0.3, 0.22 * u); for(let k = -1; k <= 1; k++){ c.beginPath(); c.moveTo(k * hw * 0.5, hl * 0.6); c.lineTo(k * hw * 0.55, hl * 0.98); c.stroke(); }
-    c.fillStyle = shade(gc, -0.08); c.beginPath(); c.ellipse(-sd * hw * 0.95, hl * 0.35, hw * 0.4, hl * 0.32, sd * 0.4, 0, TAU); c.fill();
+    c.strokeStyle = "rgba(0,0,0,.32)"; c.lineWidth = Math.max(0.3, 0.2 * u); for(let k = -1; k <= 1; k++){ c.beginPath(); c.moveTo(k * hw * 0.5, hl * 0.52); c.quadraticCurveTo(k * hw * 0.56, hl * 0.8, k * hw * 0.5, hl * 1.0); c.stroke(); }
+    c.fillStyle = "rgba(255,255,255,.12)"; for(let k = -1.5; k <= 1.5; k++){ c.beginPath(); c.ellipse(k * hw * 0.5, hl * 0.5, hw * 0.18, 0.25 * u, 0, 0, TAU); c.fill(); }
+    c.fillStyle = shade(gc, -0.06); c.beginPath(); c.ellipse(-sd * hw * 1.0, hl * 0.42, hw * 0.36, hl * 0.36, sd * 0.5, 0, TAU); c.fill(); c.strokeStyle = OL; c.lineWidth = olw; c.stroke();
     if(G === "corrida" || G === "drift"){ c.fillStyle = G === "drift" ? "#14161b" : st; c.fillRect(-hw, -0.6 * u, hw * 2, 1.1 * u); }
     c.restore();
   });
@@ -7863,6 +7930,28 @@ function renderCasa(){
   h += '<div class="ph"><span>Todas as reformas</span></div><div class="hlist">' + HOUSE.map((x, i) => '<div class="' + (i <= L ? "own" : "") + '"><i>' + (i <= L ? "✓" : i) + '</i><span>' + x.n + '</span><span class="p">' + (i === 0 ? "início" : i <= L ? "feito" : money(x.cost)) + '</span></div>').join("") + '</div>';
   return h;
 }
+function tuneSpent(id){
+  const car = carById(id), k = (S.cust || {})[id] || {}; let v = 0;
+  PARTS.forEach(p => { for(let i = 1; i <= (k[p.id + "Max"] || 0); i++) v += (PART_BRL[p.id] || [0, 3000, 6000, 10000, 15000, 20000])[i] * carK(car); });
+  Object.keys(S.own || {}).forEach(o => { if(o.startsWith(id + "|")){ const [, key, val] = o.split("|"); try{ v += cosPrice(key, val === "null" ? null : val, id); }catch(e){} } });
+  return v;
+}
+function sellValue(id){
+  const car = carById(id), base = Math.max(car.price || 0, 0) * 0.8, cap = Math.max(car.price || 0, 15000) * 0.25;
+  return nicePrice(Math.max(500, base + Math.min(cap, tuneSpent(id) * 0.35)));
+}
+let sellAsk = null;
+function sellCar(id){
+  if(id === S.car || S.owned.length < 2 || !S.owned.includes(id)) return;
+  const v = sellValue(id), car = carById(id);
+  if(!sellAsk || sellAsk.id !== id || Date.now() - sellAsk.t > 30000){ sellAsk = {id, t:Date.now()}; renderPanel(true); showAsk('Vender <b>' + car.name + '</b> por ' + money(v) + '<small>toque de novo para confirmar</small>'); return; }
+  sellAsk = null; hideAsk();
+  S.money += v; S.owned = S.owned.filter(x => x !== id);
+  if(S.cust) delete S.cust[id];
+  Object.keys(S.own || {}).forEach(o => { if(o.startsWith(id + "|")) delete S.own[o]; });
+  coinSfx(); toast(car.name + " vendido por " + money(v) + "!");
+  save(); renderPanel(true);
+}
 function renderGaragem(){
   let h = '<div class="ph"><span>Cada carro tem um limite. Quando chegar nele, é hora do próximo.</span></div>';
   CARS.forEach(c => {
@@ -7871,9 +7960,10 @@ function renderGaragem(){
     if(sel) act = '<span class="pill">Na pista</span>';
     else if(own) act = '<button class="btn ghost" data-use="' + c.id + '">Correr com este</button>';
     else act = '<button class="btn" data-car="' + c.id + '"' + (S.money >= c.price ? "" : " disabled") + '>' + money(c.price) + '</button>';
+    const sellB = own && !sel && S.owned.length > 1 ? '<div class="sellRow"><button class="btn ghost sell" data-sell="' + c.id + '">' + (sellAsk && sellAsk.id === c.id ? "Confirmar venda · " : "Vender · ") + money(sellValue(c.id)) + '</button></div>' : '';
     h += '<div class="car' + (sel ? " sel" : "") + '" data-id="' + c.id + '"><canvas class="mini" data-id="' + c.id + '" aria-hidden="true"></canvas><div class="name">' + c.name + ' <span class="look">Ver ›</span></div>' +
       '<div class="stats"><span>Máx <b>' + Math.round(pf.vk) + '</b> km/h</span><span>0–100 <b>' + dec1(pf.t100) + '</b> s</span><span>' + c.spec + '</span></div>' +
-      '<div class="act"><span class="tag">' + c.tag + (own ? ' · potencial ' + Math.round(potential(c.id) * 100) + '%' : '') + '</span>' + act + '</div></div>';
+      '<div class="act"><span class="tag">' + c.tag + (own ? ' · potencial ' + Math.round(potential(c.id) * 100) + '%' : '') + '</span>' + act + '</div>' + sellB + '</div>';
   });
   return h;
 }
@@ -8118,10 +8208,13 @@ el("gtabs").addEventListener("click", e => {
 gpanel.addEventListener("input", e => {
   if(e.target.id === "pilotName"){ S.pilot.name = e.target.value.trim().slice(0, 14) || "Você"; save(); }
 });
+let askSel = "";
 const onPanelClick = e => {
   const card = e.target.closest(".car[data-id]");
   if(card && !e.target.closest("button")){ openCarView(card.dataset.id); return; }
   const t = e.target.closest("button"); if(!t || t.disabled) return;
+  askSel = Object.keys(t.dataset).map(k => "[data-" + k.replace(/[A-Z]/g, m => "-" + m.toLowerCase()) + '="' + String(t.dataset[k]).replace(/"/g, '\\"') + '"]').join("");
+  if(t.dataset.sell){ sellCar(t.dataset.sell); return; }
   if(t.dataset.mode !== undefined){ S.buyMode = +t.dataset.mode; }
   else if(t.dataset.buy){
     const u = UPG.find(x => x.id === t.dataset.buy), b = buyInfo(u);
@@ -8184,15 +8277,15 @@ const onPanelClick = e => {
   else if(t.dataset.pil && !pilOwned(t.dataset.pil, t.dataset.val)){
     const key = t.dataset.pil, val = t.dataset.val, cost = pilPrice(key, val), nm = (t.getAttribute("aria-label") || t.textContent || "").replace(/\$[\d.,]+[KMBT]?/, "").trim();
     pv = {pil:key, val};
-    askBuy(nm + " para o piloto", cost, () => { S.money -= cost; markOwn("pilot|" + key + "|" + val); S.pilot[key] = val; coinSfx(); }, true);
-    return;
+    askBuy(nm + " para o piloto", cost, () => { S.money -= cost; markOwn("pilot|" + key + "|" + val); S.pilot[key] = val; coinSfx(); toast(nm + " comprado!"); }, true);
+    renderPanel(true); return;
   }
   else if(t.dataset.pil){ S.pilot[t.dataset.pil] = t.dataset.val; }
   else if(t.dataset.acc && !(S.pilot.acc || []).includes(t.dataset.acc) && !pilOwned("acc", t.dataset.acc)){
     const val = t.dataset.acc, cost = pilPrice("acc", val), nm = t.textContent.replace(/\$[\d.,]+[KMBT]?/, "").trim();
     pv = {acc:val};
-    askBuy(nm + " para o piloto", cost, () => { S.money -= cost; markOwn("pilot|acc|" + val); (S.pilot.acc || (S.pilot.acc = [])).push(val); coinSfx(); }, true);
-    return;
+    askBuy(nm + " para o piloto", cost, () => { S.money -= cost; markOwn("pilot|acc|" + val); (S.pilot.acc || (S.pilot.acc = [])).push(val); coinSfx(); toast(nm + " comprado!"); }, true);
+    renderPanel(true); return;
   }
   else if(t.dataset.acc){ const a = S.pilot.acc || (S.pilot.acc = []), i = a.indexOf(t.dataset.acc); if(i >= 0) a.splice(i, 1); else a.push(t.dataset.acc); }
   else if(t.dataset.stk && !(custOf(S.car).stickers || []).includes(t.dataset.stk) && !cosOwned("stickers", t.dataset.stk)){
@@ -8524,6 +8617,10 @@ el("pace").addEventListener("click", () => {
 function syncPace(){ const p = el("pace"); p.textContent = S.pace + "x"; p.setAttribute("aria-pressed", S.pace === 2); }
 
 let toastTimer = 0;
+// if anything breaks on the phone, say so on screen (once per message) so it can be reported
+(() => { const seen = new Set(); const rep = m => { m = String(m || "").slice(0, 140); if(!m || seen.has(m)) return; seen.add(m); try{ toast("Erro: " + m); }catch(e){} };
+  window.addEventListener("error", e => rep(e.message + (e.lineno ? " (linha " + e.lineno + ")" : "")));
+  window.addEventListener("unhandledrejection", e => rep(e.reason && e.reason.message || e.reason)); })();
 function toast(msg){
   const t = el("toast"); t.textContent = msg; t.classList.remove("hide");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add("hide"), 2600);
@@ -8587,15 +8684,24 @@ function pilotMigrate(){
   ["pants", "gloves", "helmet", "helmetWear"].forEach(k => { if(P[k] === undefined) P[k] = defaultPilot()[k]; });
 }
 let lastAsk = null;
+// the hint over the preview, and the tapped option outlined; both go once something is bought or the preview ends
+function showAsk(html){
+  const hb = el("askHint"), cv = el("gCv");
+  if(garageOpen && hb && cv){ hb.innerHTML = html; hb.style.top = (cv.offsetTop + 10) + "px"; hb.hidden = false; }
+  else toast(html.replace(/<small>/g, " — ").replace(/<[^>]+>/g, ""));
+  const mark = () => { document.querySelectorAll("button.askNow").forEach(b => b.classList.remove("askNow")); if(askSel){ const b = gpanel.querySelector("button" + askSel) || panel.querySelector("button" + askSel); if(b) b.classList.add("askNow"); } };
+  mark(); setTimeout(mark, 0); setTimeout(mark, 60);
+}
+function hideAsk(){ const hb = el("askHint"); if(hb) hb.hidden = true; document.querySelectorAll("button.askNow").forEach(b => b.classList.remove("askNow")); }
 function askBuy(what, cost, go, noCar){
   const key = what + "|" + cost + "|" + (noCar ? "p" : S.car);
   if(lastAsk && lastAsk.key === key && Date.now() - lastAsk.t < 30000){
-    lastAsk = null;
+    lastAsk = null; hideAsk();
     if(S.money < cost){ toast("Faltam " + money(cost - S.money) + " para comprar " + what); return; }
     go(); buyGo = null; pv = null; save(); renderPanel(true); return;
   }
   lastAsk = {key, t:Date.now()};
-  toast(what + " · " + (cost ? money(cost) : "grátis") + " — toque de novo para comprar");
+  showAsk('<b>' + what.replace(" para o piloto", "").replace(/</g, "&lt;") + '</b> · ' + (cost ? money(cost) : "grátis") + (S.money < cost ? '<small>faltam ' + money(cost - S.money) + '</small>' : '<small>toque de novo para comprar</small>'));
   return;
   const lack = cost - S.money;
   document.body.classList.add("pvOn");
@@ -9416,7 +9522,7 @@ function openGarage(){
   garageOpen = true; garageEl.hidden = false; gpanel.scrollTop = 0;
   renderPanel(true); requestAnimationFrame(drawGarage);
 }
-function endPreview(){ pv = null; buyGo = null; lastAsk = null; el("buyModal").hidden = true; document.body.classList.remove("pvOn"); }
+function endPreview(){ pv = null; buyGo = null; lastAsk = null; hideAsk(); el("buyModal").hidden = true; document.body.classList.remove("pvOn"); }
 function closeGarage(){ endPreview(); gView = "out"; garageOpen = false; garageEl.hidden = true; grev.t = -1; renderPanel(true); }
 const grev = {t:-1, flashUntil:0, lastPop:0, cranked:false, caught:false};
 const GCRANK = 0.9, GIDLE = 1.9, GOFF = 1.9 + 4.2 + 1.6;
