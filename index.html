@@ -419,7 +419,7 @@ body.pvOn #gpanel{padding-bottom:170px}
 </div>
 
 <div class="title" id="title">
-  <span id="tgVer">v152</span>
+  <span id="tgVer">v153</span>
   <canvas id="titleCv" aria-hidden="true"></canvas>
   <h1 class="logo"><b>TURBO</b><span>GARAGE</span><small>CARREIRA DE RACHA · IDLE</small></h1>
   <div class="title-bottom">
@@ -4193,8 +4193,20 @@ function drawCar(c, x, baseY, s, key, color, o){
 
   // exhaust pipe
   const ts = 1 + 0.12 * (o.tip || 0), exm = o.exModel || "orig";
-  let ex = X(M.exh ? M.exh[0] : -1.3), ey = Y(M.exh ? M.exh[1] - KD * 0.3 : bot + 0.75 - KD * 0.3);   // tip where the real car has it, else just behind the bumper
-  if(M.exh && !M.nobend && !EX_SIDE[exm] && !EX_HOOD[exm] && exm !== "turnedown" && exm !== "zoomies"){
+  const tipSeat = (() => {
+    // lowest edge of the rear bumper (the outline's low points near the tail), then the bumper's rear face at the tip's height
+    // the outline as it is actually drawn: corners rounded by the same quadratic smoothing the body uses
+    const P = (() => { const q = M.pts, out = [q[0]]; let cur = q[0]; for(let i = 1; i < q.length - 1; i++){ const end = [(q[i][0] + q[i + 1][0]) / 2, (q[i][1] + q[i + 1][1]) / 2]; for(let k = 1; k <= 6; k++){ const t = k / 6, a = (1 - t) * (1 - t), b2 = 2 * t * (1 - t), e = t * t; out.push([a * cur[0] + b2 * q[i][0] + e * end[0], a * cur[1] + b2 * q[i][1] + e * end[1]]); } cur = end; } out.push(q[q.length - 1]); return out; })();
+    const rear = P.filter(p => p[0] < L * 0.1), yb = rear.length ? Math.min(...rear.map(p => p[1])) : bot;
+    const rTip = (exm === "canhao" ? 1.0 : (o.tip || 0) >= 3 && exm === "orig" ? 1.05 : exm === "orig" ? 0.5 : 0.75) * ts;
+    const cy = (exm === "orig" && (o.tip || 0) < 3 ? yb + 0.02 : yb - rTip * 0.3) - KD * 0.7;
+    const rearAt = y => { let best = null; for(let i = 0; i < P.length; i++){ const a = P[i], b = P[(i + 1) % P.length]; if((a[1] - y) * (b[1] - y) <= 0 && a[1] !== b[1]){ const x = a[0] + (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]); if(x < L * 0.5 && (best === null || x < best)) best = x; } } return best; };
+    const lowX = Math.min(...rear.filter(p => p[1] < yb + 0.9).map(p => p[0]));
+    const faceX = rearAt(Math.min(yb + 0.2, cy + rTip * 0.6));
+    return [Math.min(isFinite(lowX) ? lowX : 0, faceX !== null ? faceX : lowX) - 0.4, cy];
+  })();
+  let ex = X(tipSeat[0]), ey = Y(tipSeat[1]);
+  if(false){
     // the pipe behind the tip: it runs forward under the bumper and bends up into the floor, so the tip is held by something
     const px0 = M.exh[0] + 0.8, py0 = M.exh[1] - KD * 0.3, px1 = M.exh[0] + 2.4, py1 = bot - 0.05, pw = 0.62 * ts;
     const bend = () => { c.beginPath(); c.moveTo(X(px0), Y(py0)); c.lineTo(X(px0 + 0.5), Y(py0)); c.quadraticCurveTo(X(px1 + 0.1), Y(py0), X(px1), Y(py1)); };
@@ -8042,9 +8054,106 @@ function renderOficina(){
   });
   return h;
 }
+// the pets: drawn in profile facing right, standing on footY; size is the height at the shoulder (dogs) or the head (cats)
+const PETS = [
+  {id:"caramelo", kind:"dog", n:"Vira-lata caramelo", price:400, c:"#c98a3c", c2:"#e8c48a", ear:"semi", tail:"up"},
+  {id:"pastor", kind:"dog", n:"Pastor alemão", price:3500, c:"#b07a3c", c2:"#1c1612", ear:"up", tail:"down", saddle:1, k:1.25},
+  {id:"golden", kind:"dog", n:"Golden retriever", price:3000, c:"#d9a85a", c2:"#efd29a", ear:"flop", tail:"plume", k:1.2},
+  {id:"husky", kind:"dog", n:"Husky siberiano", price:3200, c:"#6c727c", c2:"#eef0f3", ear:"up", tail:"curl", mask:1, k:1.15},
+  {id:"pug", kind:"dog", n:"Pug", price:2500, c:"#d9c3a0", c2:"#1b1a1c", ear:"flop", tail:"curl", flat:1, k:0.7},
+  {id:"salsicha", kind:"dog", n:"Salsicha", price:1800, c:"#7a3e1c", c2:"#a8603a", ear:"flop", tail:"straight", long:1, k:0.62},
+  {id:"pitbull", kind:"dog", n:"Pitbull", price:2200, c:"#5d5f66", c2:"#eef0f3", ear:"semi", tail:"straight", bib:1, k:1.05},
+  {id:"gatolaranja", kind:"cat", n:"Gato laranja", price:300, c:"#e08a3a", c2:"#f6c58a", stripes:1},
+  {id:"gatopreto", kind:"cat", n:"Gato preto", price:300, c:"#1b1b1f", c2:"#2a2a30", eye:"#f2c22e"},
+  {id:"siames", kind:"cat", n:"Siamês", price:1500, c:"#eadfca", c2:"#3a2a22", points:1, eye:"#5ab4ff"},
+  {id:"frajola", kind:"cat", n:"Frajola", price:400, c:"#18181c", c2:"#f2f2f0", tux:1},
+  {id:"persa", kind:"cat", n:"Persa cinza", price:2800, c:"#8e939c", c2:"#c9cdd4", fluffy:1, eye:"#e8a23a"}
+];
+const petById = id => PETS.find(p => p.id === id);
+function drawPet(c, x, footY, size, P, t){
+  if(!P) return;
+  const k = size / 10 * (P.k || 1), base = P.c, sec = P.c2, OL = "rgba(8,9,12,.45)", olw = Math.max(0.4, 0.12 * k);
+  const shadeG = (cx, cy, r, col) => { const g = c.createRadialGradient(cx - r * 0.35, cy - r * 0.45, r * 0.1, cx, cy, r * 1.2); g.addColorStop(0, shade(col, 0.22)); g.addColorStop(0.6, col); g.addColorStop(1, shade(col, -0.32)); return g; };
+  const ell = (cx, cy, rx, ry, rot, fill) => { c.fillStyle = fill; c.beginPath(); c.ellipse(cx, cy, Math.max(0.3, rx), Math.max(0.3, ry), rot || 0, 0, TAU); c.fill(); };
+  c.save(); c.lineCap = "round"; c.lineJoin = "round";
+  // contact shadow
+  const sg = c.createRadialGradient(x, footY, 0, x, footY, 7 * k); sg.addColorStop(0, "rgba(0,0,0,.4)"); sg.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = sg; c.beginPath(); c.ellipse(x, footY, 7 * k, 1.2 * k, 0, 0, TAU); c.fill();
+  if(P.kind === "dog"){
+    const L = P.long ? 1.45 : 1, legH = P.long ? 2.4 : P.flat ? 3.4 : 4.6, bodyY = footY - (legH + 2.2) * k, br = Math.sin(t * 3) * 0.08 * k, wag = Math.sin(t * 11) * 0.5;
+    const leg = (lx, far) => { const col = far ? shade(base, -0.25) : base; c.strokeStyle = col; c.lineWidth = 1.25 * k; c.beginPath(); c.moveTo(lx, bodyY + 0.6 * k); c.lineTo(lx + 0.15 * k, footY - 0.5 * k); c.stroke();
+      c.fillStyle = P.bib && !far ? sec : shade(col, -0.05); c.beginPath(); c.ellipse(lx + 0.45 * k, footY - 0.45 * k, 0.8 * k, 0.45 * k, 0, 0, TAU); c.fill(); };
+    leg(x + 3.3 * k * L, 1); leg(x - 3.6 * k * L, 1);
+    // tail
+    c.strokeStyle = P.tail === "plume" ? shade(base, 0.08) : base; c.lineWidth = (P.tail === "plume" ? 1.05 : P.tail === "curl" ? 0.9 : 0.6) * k;
+    c.beginPath(); const tx = x - 5.1 * k * L, ty = bodyY - 0.8 * k; c.moveTo(tx + 0.6 * k, ty);
+    if(P.tail === "curl"){ c.arc(tx - 0.4 * k, ty - 1.5 * k, 1.3 * k, 0.6 + wag * 0.3, 0.6 + wag * 0.3 + Math.PI * 1.6, true); }
+    else if(P.tail === "down") c.quadraticCurveTo(tx - 2 * k, ty + 1.5 * k + wag * k * 0.4, tx - 2.4 * k, ty + 3.8 * k);
+    else c.quadraticCurveTo(tx - 1.6 * k, ty - 1 * k, tx - 2.2 * k + wag * k, ty - 3.4 * k);
+    c.stroke();
+    // body with chest
+    ell(x, bodyY + br, 5.4 * k * L, 2.5 * k, 0, shadeG(x, bodyY, 5 * k, base));
+    if(P.saddle){ c.save(); c.beginPath(); c.ellipse(x, bodyY + br, 5.4 * k * L, 2.5 * k, 0, 0, TAU); c.clip(); ell(x - 0.8 * k, bodyY - 1.6 * k, 4.6 * k, 1.9 * k, -0.05, sec); c.restore(); }
+    if(P.mask || P.bib){ c.save(); c.beginPath(); c.ellipse(x, bodyY + br, 5.4 * k * L, 2.5 * k, 0, 0, TAU); c.clip(); ell(x + 1 * k, bodyY + 2 * k, 5 * k * L, 1.3 * k, 0, sec); c.restore(); }
+    ell(x + 4.4 * k * L, bodyY - 0.2 * k + br, 1.6 * k, 2.0 * k, -0.25, P.bib || P.mask ? sec : shadeG(x + 4.4 * k * L, bodyY - 0.2 * k, 2 * k, base));
+    // the haunch: a round thigh where the near back leg meets the body
+    ell(x - 3.5 * k * L, bodyY + 0.5 * k + br, 1.9 * k, 2.1 * k, 0.2, shadeG(x - 3.5 * k * L, bodyY + 0.5 * k, 2 * k, base));
+    leg(x + 2.9 * k * L, 0); leg(x - 3.2 * k * L, 0);
+    // neck and head
+    const hx = x + 5.9 * k * L, hy = bodyY - 3.4 * k + br;
+    c.strokeStyle = base; c.lineWidth = 2.2 * k; c.beginPath(); c.moveTo(x + 4.0 * k * L, bodyY - 0.8 * k); c.lineTo(hx - 0.5 * k, hy + 0.5 * k); c.stroke();
+    ell(hx, hy, 2.0 * k, 1.85 * k, 0, shadeG(hx, hy, 2 * k, base));
+    const sn = P.flat ? 0.8 : 2.3;
+    const muzzleC = P.mask ? sec : P.flat ? sec : shade(base, 0.08);
+    c.fillStyle = muzzleC; rrectC(c, hx + 0.6 * k, hy - 0.2 * k, sn * k + 0.8 * k, 1.5 * k, 0.7 * k); c.fill();
+    ell(hx + (sn + 1.35) * k, hy + 0.1 * k, 0.5 * k, 0.42 * k, 0, "#121214");
+    c.strokeStyle = "rgba(0,0,0,.45)"; c.lineWidth = Math.max(0.3, 0.15 * k); c.beginPath(); c.moveTo(hx + 0.9 * k, hy + 1.1 * k); c.quadraticCurveTo(hx + (sn * 0.6 + 1) * k, hy + 1.35 * k, hx + (sn + 1.2) * k, hy + 0.9 * k); c.stroke();
+    if(P.mask){ ell(hx + 0.2 * k, hy + 0.6 * k, 1.4 * k, 0.9 * k, 0, sec); }
+    // eye with a glint
+    ell(hx + 0.8 * k, hy - 0.55 * k, 0.32 * k, 0.32 * k, 0, "#1a1210"); ell(hx + 0.9 * k, hy - 0.65 * k, 0.1 * k, 0.1 * k, 0, "rgba(255,255,255,.9)");
+    // ears
+    const earC = P.saddle ? sec : P.flat ? sec : shade(base, -0.12);
+    if(P.ear === "up"){ c.fillStyle = earC; c.beginPath(); c.moveTo(hx - 1.1 * k, hy - 1.2 * k); c.lineTo(hx - 0.6 * k, hy - 3.6 * k); c.lineTo(hx + 0.3 * k, hy - 1.5 * k); c.closePath(); c.fill(); }
+    else if(P.ear === "semi"){ c.fillStyle = earC; c.beginPath(); c.moveTo(hx - 1.1 * k, hy - 1.3 * k); c.quadraticCurveTo(hx - 0.7 * k, hy - 3.2 * k, hx + 0.3 * k, hy - 2.6 * k); c.lineTo(hx + 0.1 * k, hy - 1.4 * k); c.closePath(); c.fill(); }
+    else { ell(hx - 1.0 * k, hy + 0.3 * k, 0.8 * k, 1.7 * k, 0.25, earC); }
+    // collar
+    c.strokeStyle = "#d93a3a"; c.lineWidth = 0.55 * k; c.beginPath(); c.moveTo(hx - 1.5 * k, hy + 1.4 * k); c.lineTo(hx - 0.2 * k, hy + 1.9 * k); c.stroke();
+    ell(hx - 0.7 * k, hy + 2.3 * k, 0.3 * k, 0.3 * k, 0, "#e8c04a");
+  } else {
+    // cat sitting: haunch, upright chest, front legs, the tail wrapped round the paws
+    const blink = (t % 4) < 0.12, flick = Math.sin(t * 2.2) * 0.6, fl = P.fluffy ? 1.18 : 1;
+    const ptC = P.points ? sec : P.tux ? base : base;
+    c.strokeStyle = P.points ? sec : base; c.lineWidth = 1.0 * k * fl; c.beginPath(); c.moveTo(x - 2.4 * k, footY - 0.8 * k); c.quadraticCurveTo(x + 1 * k, footY + 0.2 * k, x + 3.2 * k, footY - 0.6 * k); c.quadraticCurveTo(x + 4.2 * k, footY - 1.2 * k + flick * 0.5 * k, x + 4.4 * k, footY - 2 * k + flick * k); c.stroke();
+    ell(x - 0.6 * k, footY - 2.9 * k, 3.1 * k * fl, 2.8 * k * fl, 0, shadeG(x - 0.6 * k, footY - 2.9 * k, 3 * k, base));
+    ell(x + 1.5 * k, footY - 5.6 * k, 2.1 * k * fl, 3.4 * k * fl, 0.15, shadeG(x + 1.5 * k, footY - 5.6 * k, 3 * k, base));
+    if(P.tux){ ell(x + 2.2 * k, footY - 5.0 * k, 1.2 * k, 2.6 * k, 0.15, sec); }
+    if(P.stripes){ c.strokeStyle = shade(base, -0.28); c.lineWidth = 0.4 * k; [[-2.2, -3.6], [-1.2, -4.4], [-0.1, -4.7]].forEach(([dx, dy]) => { c.beginPath(); c.arc(x + dx * k, footY + dy * k, 1.5 * k, -0.4, 0.9); c.stroke(); }); }
+    [2.0, 2.9].forEach((lx, i) => { c.strokeStyle = i ? base : shade(base, -0.15); c.lineWidth = 0.85 * k; c.beginPath(); c.moveTo(x + lx * k, footY - 4.5 * k); c.lineTo(x + lx * k + 0.2 * k, footY - 0.4 * k); c.stroke(); ell(x + lx * k + 0.45 * k, footY - 0.35 * k, 0.6 * k, 0.35 * k, 0, P.tux || P.points ? sec : base); });
+    const hx = x + 2.2 * k, hy = footY - 9.7 * k;
+    ell(hx, hy, 2.2 * k * fl, 1.95 * k * fl, 0, shadeG(hx, hy, 2.2 * k, base));
+    if(P.points){ ell(hx + 0.9 * k, hy + 0.5 * k, 1.3 * k, 1.1 * k, 0, sec); }
+    if(P.tux){ ell(hx + 1.0 * k, hy + 0.9 * k, 1.2 * k, 0.8 * k, 0, sec); }
+    [[-1.3, -0.3], [0.4, 0.7]].forEach(([a, b], i) => { c.fillStyle = i ? (P.points ? sec : base) : shade(P.points ? sec : base, -0.2); c.beginPath(); c.moveTo(hx + a * k, hy - 1.3 * k); c.lineTo(hx + (a + b) * k * 0.5 + 0.1 * k, hy - 3.6 * k); c.lineTo(hx + (b + 0.9) * k, hy - 1.5 * k); c.closePath(); c.fill(); });
+    c.fillStyle = "rgba(255,170,170,.55)"; c.beginPath(); c.moveTo(hx + 0.55 * k, hy - 1.6 * k); c.lineTo(hx + 0.75 * k, hy - 2.9 * k); c.lineTo(hx + 1.2 * k, hy - 1.7 * k); c.closePath(); c.fill();
+    const eyeC = P.eye || "#8bd450";
+    if(blink){ c.strokeStyle = "#111"; c.lineWidth = 0.25 * k; c.beginPath(); c.moveTo(hx + 0.8 * k, hy - 0.3 * k); c.lineTo(hx + 1.6 * k, hy - 0.3 * k); c.stroke(); }
+    else { ell(hx + 1.2 * k, hy - 0.35 * k, 0.48 * k, 0.36 * k, 0, eyeC); ell(hx + 1.3 * k, hy - 0.35 * k, 0.12 * k, 0.3 * k, 0, "#0b0b0d"); ell(hx + 1.1 * k, hy - 0.5 * k, 0.09 * k, 0.09 * k, 0, "rgba(255,255,255,.9)"); }
+    ell(hx + 2.1 * k, hy + 0.35 * k, 0.28 * k, 0.2 * k, 0, "#e88f9a");
+    c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = Math.max(0.25, 0.08 * k); [-0.25, 0, 0.25].forEach(d => { c.beginPath(); c.moveTo(hx + 2.0 * k, hy + 0.6 * k); c.lineTo(hx + 3.8 * k, hy + 0.6 * k + d * 2 * k); c.stroke(); });
+  }
+  c.restore();
+}
+function renderPets(){
+  const own = S.pets || [], cur = S.pet || "";
+  const row = (kind, title) => '<div class="sec">' + title + '</div><div class="opts">' + PETS.filter(p => p.kind === kind).map(p => {
+    const has = own.includes(p.id), on = cur === p.id, look = pv && pv.pet === p.id;
+    return '<button class="opt' + (on ? " on" : "") + (look ? " pv" : "") + '" data-pet="' + p.id + '" aria-pressed="' + on + '"><b>' + p.n + '</b><small>' + (kind === "dog" ? "Cachorro" : "Gato") + '</small><i>' + (on ? "Na garagem" : has ? "Levar pra garagem" : look ? "Comprar?" : money(p.price)) + '</i></button>';
+  }).join("") + '</div>';
+  return '<div class="ph"><span>Um companheiro pra garagem: toque para ver, toque de novo para adotar. Ele fica do lado do piloto.</span></div>' + row("dog", "Cachorros") + row("cat", "Gatos") +
+    (cur ? '<div class="opts"><button class="opt" data-pet="none"><b>Deixar em casa</b><small>Esconde o pet da garagem</small></button></div>' : '');
+}
 function renderCasa(){
   const L = houseLvl(), H = HOUSE[L], nx = HOUSE[L + 1], fame = S.fame || 0, pct = v => "+" + Math.round(v * 100) + "%";
-  let h = '<div class="card"><div class="house-h"><b>' + H.n + '</b><small>Nível ' + L + ' de ' + (HOUSE.length - 1) + '</small></div><p>' + H.d + '</p>' +
+  let h = renderPets() + '<div class="card"><div class="house-h"><b>' + H.n + '</b><small>Nível ' + L + ' de ' + (HOUSE.length - 1) + '</small></div><p>' + H.d + '</p>' +
     '<div class="hstats"><span>Fama do piloto</span><b>' + Math.round(fame).toLocaleString("pt-BR") + ' · ' + fameTitle(fame) + '</b>' +
     '<span>Bônus de fama em todos os prêmios</span><b class="ok">' + pct(fameBonus()) + '</b>' +
     '<span>Limite do bônus com esta casa</span><b>' + pct(fameCap()) + '</b>' +
@@ -8352,6 +8461,14 @@ const onPanelClick = e => {
   const t = e.target.closest("button"); if(!t || t.disabled) return;
   askSel = Object.keys(t.dataset).map(k => "[data-" + k.replace(/[A-Z]/g, m => "-" + m.toLowerCase()) + '="' + String(t.dataset[k]).replace(/"/g, '\\"') + '"]').join("");
   if(t.dataset.sell){ sellCar(t.dataset.sell); return; }
+  if(t.dataset.pet){
+    const id = t.dataset.pet; S.pets = S.pets || [];
+    if(id === "none"){ S.pet = ""; save(); renderPanel(true); return; }
+    if(S.pets.includes(id)){ endPreview(); S.pet = id; save(); renderPanel(true); return; }
+    const pt = petById(id); pv = {pet:id};
+    askBuy(pt.n, pt.price, () => { S.money -= pt.price; S.pets.push(id); S.pet = id; coinSfx(); toast(pt.n + " adotado! Já está na garagem."); }, true);
+    renderPanel(true); return;
+  }
   if(t.dataset.mode !== undefined){ S.buyMode = +t.dataset.mode; }
   else if(t.dataset.buy){
     const u = UPG.find(x => x.id === t.dataset.buy), b = buyInfo(u);
@@ -9774,6 +9891,7 @@ function pvFocus(p){
     return {capo:"exhood", dump:"exhood", zoomies:"zoomies", lateral:"exside", lateraldupla:"exside", sidepipe:"sidepipe"}[xm] || "tip";
   }
   if(key === "blowerC") return pvFocus({part:"blower"});
+  if(p.pet) return "pet";
   if(["flame", "flameSize"].includes(key)) return "flame";
   if(key === "light") return "front";
   if(key === "neon") return "neon";
@@ -9797,7 +9915,10 @@ function drawPreview(c, w, h){
     let g = c.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, dark ? "#07080c" : "#1b2131"); g.addColorStop(1, dark ? "#05060a" : "#0c0f17"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
     g = c.createLinearGradient(0, gy, 0, h); g.addColorStop(0, dark ? "#14161c" : "#2b303d"); g.addColorStop(1, "#0b0d12"); c.fillStyle = g; c.fillRect(0, gy, w, h - gy);
     g = c.createRadialGradient(w / 2, -h * 0.2, 0, w / 2, -h * 0.2, h * 1.1); g.addColorStop(0, dark ? "rgba(255,240,215,.04)" : "rgba(255,240,215,.16)"); g.addColorStop(1, "rgba(255,240,215,0)"); c.fillStyle = g; c.fillRect(0, 0, w, gy);
-    if(keep.pil || keep.acc){
+    if(keep.pet){
+      const pt = petById(held ? S.pet : keep.pet);
+      if(pt) drawPet(c, w / 2 - (pt.kind === "cat" ? 16 : 10), gy, gy * (pt.kind === "cat" ? 0.5 : 0.55), pt, now);
+    } else if(keep.pil || keep.acc){
       // fitting room: the driver at full height, a mirror strip behind, zooming in on what changes
       const P = pvPilot(), ph = gy * 0.9, px = w / 2, u = ph / 104;
       c.fillStyle = "rgba(255,255,255,.04)"; c.fillRect(w * 0.18, h * 0.06, w * 0.64, gy - h * 0.06);
@@ -9831,7 +9952,7 @@ function drawPreview(c, w, h){
     }
     // labels: what you are seeing, how to switch, how to compare
     { const bg = c.createLinearGradient(0, h - 44, 0, h); bg.addColorStop(0, "rgba(8,9,12,0)"); bg.addColorStop(1, "rgba(8,9,12,.85)"); c.fillStyle = bg; c.fillRect(0, h - 44, w, 44); }
-    const tag = held ? "ATUAL" : "PRÉVIA", hint = held ? "solte para voltar à prévia" : (focus === "full" || focus === "neon" || focus === "rearview" ? "segure para ver como está" : (pvWhole ? "toque: detalhe" : "toque: ver inteiro") + " · segure: como está");
+    const tag = held ? "ATUAL" : "PRÉVIA", hint = held ? "solte para voltar à prévia" : (focus === "full" || focus === "neon" || focus === "rearview" || focus === "pet" ? "segure para ver como está" : (pvWhole ? "toque: detalhe" : "toque: ver inteiro") + " · segure: como está");
     c.font = "600 11px " + DISP; const tw = c.measureText(tag).width;
     c.fillStyle = held ? "rgba(255,181,71,.9)" : "rgba(8,9,12,.6)"; rrectC(c, 8, h - 30, tw + 20, 22, 11); c.fill();
     c.fillStyle = held ? "#1a1200" : "#ffb547"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText(tag, 18, h - 19);
@@ -10071,6 +10192,8 @@ function drawGarage(){
       box(chx - 18 * pu, seatY - 1.5 * pu, 36 * pu, 4 * pu, "#8e1219");
     }
     drawPilot(c, chx, chy, ph, pvPilot(), "sit", now);
+    const petNow = petById(pv && pv.pet ? pv.pet : S.pet);
+    if(petNow) drawPet(c, chx - 36 * pu, chy, ph * (petNow.kind === "cat" ? 0.22 : 0.28), petNow, now);
   }
   // roll-up door wound up at the top, and LED strip on the higher levels
   const dh = OH * 0.1;
@@ -10113,12 +10236,52 @@ function drawGarage(){
   box(0, groundY, w, h - groundY, lg(0, groundY, 0, h, [[0, "#6f6c67"], [1, "#4a4844"]]));
   c.fillStyle = rg((ox0 + ox1) / 2, groundY, 0, OW * 0.7, [[0, inL(0.25)], [1, inL(0)]]); c.save(); c.translate(0, groundY); c.scale(1, 0.25); c.fillRect(0, 0, w, (h - groundY) * 4); c.restore();
   c.strokeStyle = "rgba(0,0,0,.2)"; c.lineWidth = 0.8; for(let x = ox0 + OW / 4; x < ox1; x += OW / 4){ c.beginPath(); c.moveTo(x, groundY); c.lineTo(x - (x - (ox0 + ox1) / 2) * 0.25, h); c.stroke(); }
-  box(ox1 + 4, groundY + 1, w - ox1 - 4, (h - groundY) * 0.55, lg(0, groundY, 0, h, [[0, "#3e6a34"], [1, "#2b4a25"]]));
-  box(0, h - 4, w, 4, "#8f8b84");
-  if(LK.bush){ [ox1 + w * 0.03, fx1 - w * 0.04].forEach((bx, i) => { c.fillStyle = i ? "#2f5a2a" : "#386b31"; c.beginPath(); c.ellipse(bx, groundY, w * 0.028, h * 0.05, 0, Math.PI, 0); c.fill(); }); }
-  if(LK.garden){ for(let k = 0; k < 5; k++){ const bx = ox1 + w * 0.02 + k * w * 0.05; c.fillStyle = k % 2 ? "#3d7a34" : "#2e6129"; c.beginPath(); c.ellipse(bx, groundY + 2, w * 0.02, h * 0.035, 0, Math.PI, 0); c.fill(); }
+  {
+    // sidewalk and curb along the bottom, the driveway apron crossing it
+    const swY = groundY + (h - groundY) * 0.62, cbY = h - 3;
+    box(0, swY, w, cbY - swY, lg(0, swY, 0, cbY, [[0, "#9c9890"], [1, "#857f77"]]));
+    c.strokeStyle = "rgba(0,0,0,.18)"; c.lineWidth = 0.7; for(let x = 6; x < w; x += 22){ c.beginPath(); c.moveTo(x, swY); c.lineTo(x - 3, cbY); c.stroke(); }
+    box(0, cbY, w, 3, "#bdb8ae"); box(0, cbY + 2.2, w, 1, "rgba(0,0,0,.35)");
+    // the lawn: from the house wall to the sidewalk, right of the driveway (and a strip on the left)
+    const lawn = (x0, x1) => {
+      if(x1 - x0 < 3) return;
+      const g = lg(0, groundY, 0, swY, [[0, "#22401d"], [0.25, "#2f5a26"], [1, "#3d6e2e"]]);
+      box(x0, groundY, x1 - x0, swY - groundY, g);
+      // a mown stripe and the light of the garage spilling across it
+      c.fillStyle = "rgba(255,255,255,.035)"; for(let x = x0; x < x1; x += 14) c.fillRect(x, groundY, 7, swY - groundY);
+      c.fillStyle = rg((ox0 + ox1) / 2, groundY, 0, OW * 0.75, [[0, inL(0.18)], [1, inL(0)]]); c.fillRect(x0, groundY, x1 - x0, swY - groundY);
+      // blades: short strokes of several greens, denser and darker near the wall, a ragged edge along the sidewalk
+      c.lineCap = "round";
+      for(let i = 0; i < (x1 - x0) * 3.2; i++){
+        const hx = hash(i * 1.37 + x0), hy = hash(i * 2.11 + 7), bx = x0 + hx * (x1 - x0), by = groundY + 2 + hy * (swY - groundY);
+        const len = 1.6 + hash(i * 3.7) * 2.8, lean = (hash(i * 5.3) - 0.5) * 1.4;
+        c.strokeStyle = ["#2a4d22", "#36632b", "#44783a", "#507f3f", "#264520"][Math.floor(hash(i * 9.1) * 5)]; c.lineWidth = 0.7;
+        c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + lean, by - len); c.stroke();
+      }
+      for(let x = x0; x < x1; x += 1.6){ const l = 1.5 + hash(x * 4.1) * 2.2; c.strokeStyle = hash(x * 2.3) > 0.5 ? "#3f7233" : "#2e5a26"; c.lineWidth = 0.8; c.beginPath(); c.moveTo(x, swY + 0.5); c.lineTo(x + (hash(x) - 0.5), swY + 0.5 - l); c.stroke(); }
+      c.lineCap = "butt";
+      // the shade right under the wall
+      box(x0, groundY, x1 - x0, 2.5, "rgba(0,0,0,.28)");
+    };
+    lawn(ox1 + 4, w); lawn(0, ox0 - 4);
+    // a path of pavers from the front door to the sidewalk
+    const px0 = dx0 + 1, px1 = dx1 - 1, rows = 4;
+    for(let r2 = 0; r2 < rows; r2++){
+      const y0 = groundY + (swY - groundY) * r2 / rows + 0.6, y1 = groundY + (swY - groundY) * (r2 + 1) / rows - 0.6, sp = (r2 - 0) * 0.6;
+      const pg2 = lg(0, y0, 0, y1, [[0, "#b9b2a6"], [1, "#958e83"]]);
+      c.fillStyle = pg2; rrectC(c, px0 - sp, y0, (px1 - px0) / 2 - 0.6 + sp, y1 - y0, 1); c.fill(); rrectC(c, (px0 + px1) / 2 + 0.6, y0, (px1 - px0) / 2 - 0.6 + sp, y1 - y0, 1); c.fill();
+    }
+    // the driveway apron, and a concrete edging strip between the drive and the lawn on each side
+    box(ox0 - 4, swY, OW + 8, 1.2, "rgba(255,255,255,.12)");
+    [ox1 + 1, ox0 - 7].forEach(ex2 => { if(ex2 > 0) box(ex2, groundY, 3, swY - groundY, lg(ex2, 0, ex2 + 3, 0, [[0, "#b5afa4"], [1, "#8a847a"]])); });
+  }
+  if(LK.garden){
     c.fillStyle = rg(ox1 + w * 0.08, groundY, 0, h * 0.08, [[0, "rgba(255,230,170,.35)"], [1, "rgba(255,230,170,0)"]]); c.fillRect(ox1, groundY - h * 0.08, w * 0.16, h * 0.1); }
   if(LK.palm) drawPalm(c, fx1 + w * 0.005, groundY + 2, h * 0.62, w * 0.02, now, "#5a4a36", "#2f6b34", 1);
+  if(LK.bush || LK.garden){ /* plants were drawn before the lawn: draw them again on top of it */
+    if(LK.bush){ [ox1 + w * 0.03, fx1 - w * 0.04].forEach((bx, i) => { const g = rg(bx - w * 0.008, groundY - h * 0.03, 0, w * 0.03, [[0, i ? "#3c6f34" : "#457c3a"], [1, i ? "#1f3d1b" : "#24461f"]]); c.fillStyle = g; c.beginPath(); c.ellipse(bx, groundY + 1, w * 0.028, h * 0.05, 0, Math.PI, 0); c.fill(); }); }
+    if(LK.garden){ for(let k = 0; k < 5; k++){ const bx = ox1 + w * 0.02 + k * w * 0.05; c.fillStyle = rg(bx, groundY - h * 0.02, 0, w * 0.022, [[0, k % 2 ? "#4c8a3f" : "#3c7333"], [1, "#1f3d1b"]]); c.beginPath(); c.ellipse(bx, groundY + 2, w * 0.02, h * 0.035, 0, Math.PI, 0); c.fill(); } }
+  }
   if(pil) drawPilot(c, w * 0.86, h - 3, Math.min(h * 0.6, 130), pvPilot(), "wave", now);
   requestAnimationFrame(drawGarage);
 }
