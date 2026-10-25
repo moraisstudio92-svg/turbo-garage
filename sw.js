@@ -1,5 +1,5 @@
 // Turbo Garage service worker. Each release has its own cache; a new release waits until the player taps BORA!
-const V = "turbo-garage-v154";
+const V = "turbo-garage-v155";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(V).then(c => Promise.all(CORE.map(u => fetch(new Request(u, {cache:"reload"})).then(r => c.put(u, r))))));
@@ -12,6 +12,7 @@ self.addEventListener("fetch", e => {
   const req = e.request; if(req.method !== "GET") return;
   const url = new URL(req.url);
   if(url.pathname.endsWith("/version.json") || url.pathname.endsWith("/sw.js")) return;   // always straight from the network
+  if(url.pathname.endsWith(".mp4") || url.pathname.endsWith(".webm")) return;   // video is streamed with range requests: let the browser handle it
   // the game page is served from this release's copy, so the version only changes when the player accepts the update
   if(req.mode === "navigate"){
     e.respondWith(caches.open(V).then(c => c.match("index.html")).then(hit => hit || fetch(req)));
